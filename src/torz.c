@@ -53,11 +53,9 @@ RUN_HEAD(torz)
 }
 RUN_TAIL(torz)
 
-#include "argsused.h"
 DESTROY_HEAD(torz)
 DESTROY_TAIL(torz)
 
-#include "argsused.h"
 CREATE_HEAD(torz) {
   ACCEPTI(v0,INONE,0,vmax-1);
   ACCEPTI(v1,INONE,0,vmax-1);

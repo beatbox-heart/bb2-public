@@ -55,11 +55,9 @@ RUN_HEAD(tory)
 }
 RUN_TAIL(tory)
 
-#include "argsused.h"
 DESTROY_HEAD(tory)
 DESTROY_TAIL(tory)
 
-#include "argsused.h"
 CREATE_HEAD(tory)
 {
   ACCEPTI(v0,INONE,0,vmax-1);

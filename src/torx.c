@@ -53,11 +53,9 @@ RUN_HEAD(torx)
 }
 RUN_TAIL(torx)
 
-#include "argsused.h"
 DESTROY_HEAD(torx)
 DESTROY_TAIL(torx)
 
-#include "argsused.h"
 CREATE_HEAD(torx)
 {
   ACCEPTI(v0,INONE,0,vmax-1);

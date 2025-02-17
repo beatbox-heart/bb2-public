@@ -32,8 +32,8 @@
 #include "system.h"
 #include "beatbox.h"
 #include "error.h"
-#include "device.h"
 #include "state.h"
+#include "device.h"
 #include "qpp.h"
 
 #define POSITIVE 1
@@ -41,22 +41,23 @@
 #define NEGATIVE -1
 
 typedef struct {
+  int v0;		/* layer of the source point */
 #if MPI
   int root;		/* rank of process holding the point to be sampled */
 #endif
   int first;		/* flags the first use, so we don't detect a crossing from the default value */
   real then;		/* value of result when last run. */
   real cross;		/* value at the crossing point. */
-  REAL *result; 	/* k_var to which result will be assigned. */
-  char *resultname;
-  REAL *timestep; 	/* k_var to which the timestep at which the crossing occurs will be assigned. */
-  char *timestepname; 
+  KREAL(result); 	/* k_var to which result will be assigned. */
+  KREAL(timestep); 	/* k_var to which the timestep at which the crossing occurs will be assigned. */
   int sign;		/* POSITIVE/NEGATIVE/BOTH: direction in which crossings should be detected */
-  int lasttime;	     /* the value of t this device was last called */
+  int lasttime;	     	/* the value of t this device was last called */
 } STR;
 
 /******************/
 RUN_HEAD(poincare)
+{
+  DEVICE_CONST(int,v0);
 #if MPI
   DEVICE_CONST(int,root);
   real buffer[2];
@@ -72,7 +73,7 @@ RUN_HEAD(poincare)
 #if MPI
   if (mpi_rank == root) {
 #endif
-    now = New[ind(s.x0,s.y0,s.z0,s.v0)];	/* Current value */
+    now = New[ind(s.x0,s.y0,s.z0,v0)];	/* Current value */
 #if MPI
   } /* if root */
 #endif
@@ -87,7 +88,7 @@ RUN_HEAD(poincare)
 	  (sign != NEGATIVE && (then < cross && cross <= now)) ){ /* Positive crossing */
 	crossingDetected = 1;
 	/* printf("Crossing detected at t=%ld.\n",t); */
-	if(timestep!=NULL) *timestep=(t*then+lasttime*now)/(then+now);
+	if(timestep) *timestep=(t*then+lasttime*now)/(then+now);
       }
       *result = crossingDetected;
       
@@ -103,6 +104,7 @@ RUN_HEAD(poincare)
   }/* first=0 */
   S->then = now;
   S->lasttime = t;
+}
 RUN_TAIL(poincare)
 
 /******************/
@@ -111,19 +113,22 @@ DESTROY_TAIL(poincare)
 
 /******************/
 CREATE_HEAD(poincare)
-  DEVICE_ALWAYS_RUNS
-  DEVICE_OPERATES_ON_A_SINGLE_POINT
-  ACCEPTV(result);
-  S->timestep = NULL;
-  if (find_key("timestep=",w)) {
-    ACCEPTV(timestep);
-  }
+{
+  DEVICE_ALWAYS_RUNS;
+  DEVICE_OPERATES_ON_A_SINGLE_POINT;
+  ACCEPTI(v0,INONE,0,(int)vmax-1);
+  ACCEPTKR(result,1,NULL);
+/* #define ACCEPTKR(b,c,d)   if (!acceptkr(#b"=",c,d,&(S->b[0]),&(S->b##name),w)) return(0); */
+/*   if (!acceptkr("result=",1,NULL,&(S->res[0]),&(S->b##name),w)) return(0); */
+/* int acceptkr (const char *key,const int writable,const char *deflt,REAL **varaddr,char *varname,char *w); */
+  ACCEPTKR(timestep,1,"");
   ACCEPTR(cross,RNONE,RNONE,RNONE);
   ACCEPTI(sign,BOTH,NEGATIVE,POSITIVE);
   S->first = 1;
 #if MPI
   S->root = getRankContainingPoint(dev->s.global_x0,dev->s.global_y0,dev->s.global_z0);
 #endif
+}
 CREATE_TAIL(poincare,1)
 
 #undef POSITIVE
