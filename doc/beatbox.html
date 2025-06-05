@@ -1377,8 +1377,8 @@ The block parameters expect the values in the form of text enclosed by
 curly brackets, <code>{...}</code>. Such block text may span several
 lines of the script and may contain contain its own set of
 <code>&lt;name&gt;=&lt;value&gt;</code> pairs (what we shall call a
-<code>codeblock</code>) or list of k-expressions
-(<code>listblock</code>).
+<a name="codeblock"><em>codeblock</em></a>) or list of k-expressions
+(<a name="listblock"><em>listblock</em></a>).
 There may be defaults for block parameters, but of course not minimal
 or maximal values. 
 </p>
@@ -1784,8 +1784,8 @@ literal values, but as a codestring,  <novel>a varlink, a codelink</novel> or a 
 </p> 
 
 <ul>
-
-  <li> A <em>codestring</em> is provided in the same way as a string
+  <li> A <a name="codestring"><em>codestring</em></a>
+  is provided in the same way as a string
   parameter, with the exception that the string must be a valid
   Beatbox script expression. Equivalently, it is provided in the same
   way as a literal value, but is evaluated not just as the parse time,
@@ -1795,11 +1795,13 @@ literal values, but as a codestring,  <novel>a varlink, a codelink</novel> or a 
   expression as the simulation is running, rather than reduce it to a
   literal value.  </li>
 
-  <li class="novel"> A <em>varlink</em> is like a codestring, except it must be just
+  <li class="novel"> A <a name="varlink"><em>varlink</em></a>
+  is like a codestring, except it must be just
   a single global k-variable.  </li>
 
   <li class="novel">
-  A <em>codelink</em> has the same function as a codestring, but is
+  A <a name="codelink"><em>codelink</em></a>
+  has the same function as a codestring, but is
   used in cases when the user might prefer to have a choice between
   literal value (i.e. assign the value of the parameter at the parse
   time) and the value recalculatable each time the device instance is
@@ -1825,7 +1827,7 @@ literal values, but as a codestring,  <novel>a varlink, a codelink</novel> or a 
   <code>=~</code> is an error. 
   </li>
 
-  <li> A <em>block</em> is a string enclosed in braces (<code>{...}</code>). The contents of a
+  <li> A <a name="block"><em>block</em></a> is a string enclosed in braces (<code>{...}</code>). The contents of a
   block will be passed literally to the device, without intervention
   from the script interpreter. This allows a block to contain
   characters such as ';' or '&quot;' that could not be included in a
@@ -1833,11 +1835,22 @@ literal values, but as a codestring,  <novel>a varlink, a codelink</novel> or a 
   block to accept a number of script statements. For instance, <code>euler</code>
   uses a block to pass parameters assignments to its <code>rhs</code> module.
   </li>
+
+  <li>
+  The block parameters expect the values in the form of text enclosed by
+  curly brackets, <code>{...}</code>. Such block text may span several
+  lines of the script and may contain contain its own set of
+  <code>&lt;name&gt;=&lt;value&gt;</code> pairs (what we shall call a
+  <a name="codeblock"><em>codeblock</em></a>) or list of k-expressions
+  (<a name="listblock"><em>listblock</em></a>).
+  There may be defaults for block parameters, but of course not minimal
+  or maximal values. 
+  </li>
   
 </ul>
 
 <p>
-Example uses of a codestring and a block are shown below. 
+Example uses of a <a href="#codelink"><code>codelink</code></a> and a <a href="#block"><code>block</code></a> are shown below. 
 </p>
 
 <p>
@@ -1965,7 +1978,7 @@ for <code>name</code> is the device name.
 The device's "condition". The value given for <code>when</code> must be the name
 of a real k-variable.  The device will be run only on timesteps (loops of the
 device ring) when the value of this variable is nonzero.  Think of this
-parameter as a codestring, where the code is restricted to just one real
+parameter as a <a href="#codestring"><code>codestring</code></a>, where the code is restricted to just one real
 variable; allowing here a generic k-expression would be more consistent but
 also more expensive. In particular, a literal value (i.e. a numerical
 constant) cannot be used for this parameter.  For devices that should run on
@@ -2109,7 +2122,7 @@ default.
 
 
 <tr class="novel">
-<td class="left"><code>real codestring</code></td>
+<td class="left"><code>real <a href="#codestring"><code>codestring</code></a></code></td>
 <td class="left"><code>where</code></td>
 <td class="left"><code>-</code></td>
 <td class="left">n/a</td>
@@ -2133,7 +2146,7 @@ default.
 </tr>
 
 <tr class="novel">
-<td class="left"><code>real varlink</code></td>
+<td class="left"><code>real <a href="#varlink"<code>varlink</code></a></code></td>
 <td class="left"><code>relist</code></td>
 <td class="left"><code>never</code></td>
 <td class="left">n/a</td>
@@ -2503,8 +2516,8 @@ integer enumerators, hence the format string should be one accepting
 integer values, e.g. <code>%d</code>. In the device descriptions in
 this manual, the parameters defining the file masks used with this
 method, are designated as type
-<a name="sequence"><code>sequence</code></a>. Such
-<code>sequence</code> parameters by themselves are character strings, but they
+<a name="sequence"><em>sequence</em></a>. Such <a href="#sequence"><code>sequence</code></a>
+parameters by themselves are character strings, but they
 are implicitly accompanied by the
 following parameters optional with fixed names:
 <ul>  
@@ -5805,7 +5818,7 @@ below the table of parameters.
 </tr>
 
 <tr>
-  <td><code>real varlink</code></td>
+  <td><code>real <a href="#varlink"<code>varlink</code></a></code></td>
   <td><code>reweight</code></td>
   <td><code>never</code></td>
   <td>-</td>
@@ -7087,7 +7100,7 @@ description of the parameters that follows, and
 </tr>
   
 <tr>
-<td><code>real varlink</code></td>
+<td><code>real <a href="#varlink"<code>varlink</code></a></code></td>
 <td><code>xtip</code></td>
 <td><code>""</code></td>
 <td>-</td>
@@ -7097,7 +7110,7 @@ description of the parameters that follows, and
 </tr>
   
 <tr>
-<td><code>real varlink</code></td>
+<td><code>real <a href="#varlink"<code>varlink</code></a></code></td>
 <td><code>ytip</code></td>
 <td><code>""</code></td>
 <td>-</td>
@@ -7131,7 +7144,7 @@ printing a floating-point value, e.g. "%.0f" which can be used to enumerate the
 </tr>
 
 <tr>
-<td><code>real codestring</code></td>
+<td><code>real <a href="#codestring"><code>codestring</code></a></code></td>
 <td><code>filtercode</code></td>
 <td><code>"t"</code></td>
 <td>-</td>
@@ -7198,7 +7211,7 @@ by <code>filter</code> to produce the actuall shell command. </td>
   
 
 <tr>
-<td><code>real codestring</code></td>
+<td><code>real <a href="#codestring"><code>codestring</code></a></code></td>
 <td><code>titlecode</code></td>
 <td><code>"t"</code></td>
 <td>-</td>
@@ -8506,7 +8519,7 @@ More explanation
 </tr>
 
 <tr>
-<td><code>real codestring</code></td>
+<td><code>real <a href="#codestring"><code>codestring</code></a></code></td>
 <td><code>imagescode</code></td>
 <td><code>"t"</code></td>
 <td>-</td>
@@ -8525,7 +8538,7 @@ More explanation
 </tr>
 
 <tr>
-<td><code>real codestring</code></td>
+<td><code>real <a href="#codestring"><code>codestring</code></a></code></td>
 <td><code>titlecode</code></td>
 <td><code>"t"</code></td>
 <td>-</td>
@@ -8820,7 +8833,7 @@ new file every time it is run, enumerated in a prescribed way.
 </tr>
   
 <tr>
-  <td><code>codestring</code></td>
+  <td><code><a href="#codestring"><code>codestring</code></a></code></td>
   <td><code>code</code></td>
   <td><code>"t"</code></td>
   <td>-</td>
@@ -9017,7 +9030,7 @@ parameters
 </tr>
 
 <tr>
-  <td><code>real codestring</code></td>
+  <td><code>real <a href="#codestring"><code>codestring</code></a></code></td>
   <td><code>code</code></td>
   <td>"t"</td>
   <td>-</td>
@@ -9296,7 +9309,7 @@ predefined k-functions <code>u(.,.,.,.)</code> and/or
       to enumerate the output files. </td>
   </tr>
   <tr>
-    <td><code>codestring</code></td>
+    <td><code><a href="#codestring"><code>codestring</code></a></code></td>
     <td><code>filtercode</code></td>
     <td><code>t</code></td>
     <td></td>
@@ -9557,7 +9570,7 @@ in its
   </tr>
 
   <tr>
-    <td><code>codestring</code></td>
+    <td><code><a href="#codestring"><code>codestring</code></a></code></td>
     <td><code>titlecode</code></td>
     <td><code>"t"</code></td>
     <td>-</td>
@@ -9734,7 +9747,7 @@ in its
   </tr>
 
   <tr>
-    <td><code>codestring</code></td>
+    <td><code><a href="#codestring"><code>codestring</code></a></code></td>
     <td><code>filtercode</code></td>
     <td><code>"t"</code></td>
     <td>-</td>
@@ -10159,7 +10172,7 @@ The device is spaceless, as it works only with global k-variables.
   </tr>
   
   <tr>
-    <td><code>codestring</code></td>
+    <td><code><a href="#codestring"><code>codestring</code></a></code></td>
     <td><code>headcode</code></td>
     <td>""</td>
     <td>-</td>
@@ -10683,7 +10696,7 @@ are unused by this device.
 </tr>
 
 <tr>
-  <td><code>real varlink</code></td>
+  <td><code>real <a href="#varlink"<code>varlink</code></a></code></td>
   <td><code>result</code></td>
   <td>-</td>
   <td>-</td>
@@ -10693,7 +10706,7 @@ are unused by this device.
 </tr>
 
 <tr>
-  <td><code>real varlink</code></td>
+  <td><code>real <a href="#varlink"<code>varlink</code></a></code></td>
   <td><code>timestep</code></td>
   <td>-</td>
   <td>-</td>
@@ -10767,7 +10780,7 @@ This device is rectangular. Further parameters are:
 </tr>
 
 <tr>
-  <td><code>int codestring</code></td>
+  <td><code>int <a href="#codestring"><code>codestring</code></a></code></td>
   <td><code>filecode</code></td>
   <td>""</td>
   <td>-</td>
@@ -11018,27 +11031,27 @@ This device is rectangular. Further parameters are:
 <tr>
   <td><code>int</code></td>
   <td><code>bgr</code></td>
-  <td>-</td>
-  <td>-</td>
-  <td>-</td>
+  <td><code>255</code></td>
+  <td><code>0</code></td>
+  <td><code>255</code></td>
   <td> Red value of the background colour, to be displayed at void points.</td>
 </tr>
 
 <tr>
   <td><code>int</code></td>
   <td><code>bgg</code></td>
-  <td>-</td>
-  <td>-</td>
-  <td>-</td>
+  <td><code>255</code></td>
+  <td><code>0</code></td>
+  <td><code>255</code></td>
   <td> Green value of the background colour, to be displayed at void points.</td>
 </tr>
 
 <tr>
   <td><code>int</code></td>
   <td><code>bgb</code></td>
-  <td>-</td>
-  <td>-</td>
-  <td>-</td>
+  <td><code>255</code></td>
+  <td><code>0</code></td>
+  <td><code>255</code></td>
   <td> Blue value of the background colour, to be displayed at void points.</td>
 </tr>
 </table>
@@ -11069,12 +11082,6 @@ distribution. Examples of <code>ppmout</code> device can be found in the followi
 beatbox/data/scripts/sequential/fhn2.bbs
 </pre>
 
-<p>
-##########################
-revised this far
-##########################
-</p>
-
 <!-- ========================= -->
 <h2 class="numbered">record</h2>
 
@@ -11091,81 +11098,164 @@ runs of the record device.
 
 <h3>Parameters</h3>
 
+This device is rectangular. Further parameters are:
+
 <table border="1">
 <tr>
-  <th>Type</th><th>Name</th><th>Default</th><th>Description</th>
-</tr><tr>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v0</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Lower bound of the layer range to be output</td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v1</code></td>
+  <td>-</td>
+  <td><code>v0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Upper bound of the layer range to be output</td>
+</tr>
+
+
+<tr>
   <td><a href="#sequence"><code>sequence</code></a></td>
-  <td>filesequence</td>
+  <td><code>filesequence</code></td>
   <td><code>""</code></td>
+  <td>-</td>
+  <td>-</td>
   <td>Format specifier for the sequence of files produced. This is alternative to <code>file</code>. Exactly one of these must be specified. </td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>str</code></td>
   <td><code>file</code></td>
   <td><code>""</code></td>
+  <td>-</td>
+  <td>-</td>
   <td> Path to the (single) file to be written. This is alternative to <code>filesequence</code>. Exactly one of these must be specified. </td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>int</code></td>
   <td><code>append</code></td>
   <td><code>1</code></td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
   <td> Should the file be appended to? (0/1) </td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>str</code></td>
   <td><code>filehead </code></td>
   <td><code>""</code></td>  
+  <td>-</td>
+  <td>-</td>
   <td> Text to be placed at the top of (each of) the record file(s).</td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>int</code></td>
   <td><code>timestamp</code></td>
   <td><code>0</code></td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
   <td>Should a time stamp showing the current value value of <code>t</code> precede each record? (0/1)</td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>str</code></td>
   <td><code>timestampformat</code></td>
   <td><code>"%-6ld\t"</code></td>
+  <td>-</td>
+  <td>-</td>
   <td>Format of the time stamp. May contain text but must contain a C format specifier for an integer.</td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>int</code></td>
   <td><code>timestampwidth</code></td>
   <td><code>8</code></td>
+  <td><code>1</code></td>
+  <td>-</td>
   <td>Number of characters to be occupied by a time stamp. Agreement with <code>timestampformat</code> is responsibility of the user.</td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>str</code></td>
   <td><code>format</code></td>
   <td><code>"%38f"</code></td>
+  <td>-</td>
+  <td>-</td>
   <td>Format for writing the recorded grid values. Must contain a C format specifier for a float.</td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>int</code></td>
   <td><code>formatwidth</code></td>
   <td><code>38</code></td>
+  <td><code>2</code></td>
+  <td>-</td>
   <td>Number of characters to be occupied by a grid value record. Agreement with <code>format</code> is responsibility of the user.</td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>str</code></td>
   <td><code>vsep</code></td>
   <td><code>"  "</code></td>
+  <td>-</td>
+  <td>-</td>
   <td> v-axis separator. Must be at most 2 characters in length.</td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>str</code></td>
   <td><code>zsep</code></td>
   <td><code>", "</code></td>
+  <td>-</td>
+  <td>-</td>
   <td> z-axis separator. Must be at most 2 characters in length.</td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>str</code></td>
   <td><code>ysep</code></td>
   <td><code>"; "</code></td>
+  <td>-</td>
+  <td>-</td>
   <td> y-axis separator. Must be at most 2 characters in length.</td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>str</code></td>
   <td><code>xsep</code></td>
   <td><code>" \n"</code></td>  
+  <td>-</td>
+  <td>-</td>
   <td> x-axis separator. Must be at most 2 characters in length.</td>
-</tr><tr>
+</tr>
+
+<tr>
   <td><code>str</code></td>
   <td><code>recordsep</code>
   <td><code>"\n\n"</code></td>  
-  </td><td> Record separator. Must be at most 2 characters in length.</td>
+  <td>-</td>
+  <td>-</td>
+  <td> Record separator. Must be at most 2 characters in length.</td>
 </tr>
 </table>
+
 <h3>Typical Syntax</h3>
 The typical syntax of <code>record</code> device is as follows.
 <pre>
@@ -11191,17 +11281,61 @@ specified k-variable.
 
 <h3>Parameters</h3>
 
+This device is rectangular. Further parameters are:
+
 <table border="1">
 <tr>
-<th>Type </th><th> Name </th><th> Description </th>
-</tr><tr>
-<td><code>k-variable</code></td><td><code>result</code></td><td>Name of the k-variable into which the result should be stored.</td>
-</tr><tr>
-<td><code>str</code></td><td><code>operation</code></td><td> Name of the operation to
-perform. Accepted values are “sum”, “product”, “min” and “max”. </td>
-</tr><tr>
-<td><code>str</code></td><td><code>debug</code></td><td> Name of the
-  file to print debugging information to, possibly "stdout". </td>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v0</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Lower bound of the layer range to be output</td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v1</code></td>
+  <td>-</td>
+  <td><code>v0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Upper bound of the layer range to be output</td>
+</tr>
+
+<tr>
+  <td> <a href="#varlink"<code>varlink</code></a> </td>
+  <td><code>result</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td>Name of the k-variable into which the result should be stored.</td>
+</tr>
+
+<tr>
+  <td><code>str</code></td>
+  <td><code>operation</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td> Name of the operation to perform. Accepted values are “sum”, “product”, “min” and “max”. </td>
+</tr>
+
+<tr>
+  <td><code>str</code></td>
+  <td><code>debug</code></td>
+  <td><code>""</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td> Name of the file to print debugging information to, possibly "stdout". </td>
 </tr>
 </table>
 
@@ -11217,6 +11351,12 @@ All example scripts can be found in data/scripts of the package distribution. Ex
 beatbox/data/scripts/sequential/fhn0.bbs
 beatbox/data/scripts/sequential/fhn1.bbs
 </pre>
+
+<p>
+##########################
+revised this far
+##########################
+</p>
 
 <!-- ========================= -->
 <h2 class="numbered">rk4</h2>
