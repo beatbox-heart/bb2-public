@@ -1,0 +1,295 @@
+def str geom [1];
+def real hx [2];
+def real ht [3];
+def str out [4];
+def str outdir [out].dir;
+
+// The names of dynamic variables and their layers
+def str Volt	0;
+def str Cai	1;
+def str CaSR	2;
+def str CaSS	3;
+def str Nai	4;
+def str Ki	5;
+def str M	6;
+def str H	7;
+def str J	8;
+def str Xr1	9;
+def str Xr2	10;
+def str Xs	11;
+def str R	12;
+def str S	13;
+def str D	14;
+def str F	15;
+def str F2	16;
+def str FCass	17;
+def str RR	18;
+
+def int vmin [Volt];
+def int vmax [RR];
+
+// Diffusion term
+def str i	19;
+// Previous voltage
+def str p	20;
+// Activation time
+def str a	21;
+
+/* Activation measured at this level */
+def real Vact 0.0;
+
+// Surface/volume ratio, mm^{-1}
+def real chi 140.0;
+// Membrane capacitance, uF/mm^2=pC/(mV*mm^2)=(uA*ms)/(mV*mm^22)
+def real Cm 0.01;
+// Conductivities, S/m = mS/mm = uA/(mV*mm)
+def real sigmaix 0.17;
+def real sigmaiy 0.019;
+def real sigmaex 0.62;
+def real sigmaey 0.24;
+def real sigmax sigmaix*sigmaex/(sigmaix+sigmaex);
+def real sigmay sigmaiy*sigmaey/(sigmaiy+sigmaey);
+// Diffusivities
+def real Dx sigmax/(chi*Cm);
+def real Dy sigmay/(chi*Cm);
+
+def real Dmax max(Dx,Dy);
+
+// The stimulating current is not defined in the paper in eq. (3.1)
+// so we need to guess its meaning based on dimensionality, 
+// A = 50000 uA/cm^3=50000 uA/(10mm)^3=50 uA/mm^3
+// [I_ion]=uA/mm^2
+// [chi*Iion]=1/mm * uA/mm^2=uA/mm^3=[A]
+// So the extra term in the reaction diffusion equation is A/(chi*Cm).
+// From the other hand: 
+// [nabla sigma nabla V] = 1/mm^2 * uA/(mV*mm) * mV = uA/mm^3 - agrees. 
+def real Astim 50.0;
+def real Istim Astim/(chi*Cm);
+
+// Stimulation volume size, mm
+def real Xstim 1.5;
+def real xstim Xstim/hx;
+// Stimulation duration, ms
+def real Tstim 2.0;
+def real tstim Tstim/ht;
+
+
+state geometry=[geom] anisotropy=1 vmax=[a]+1;
+shell when=never nowhere=1 advance=1 echo=1 cmd="mkdir [outdir]";
+
+/* Working grid: [1..nx] x [1..ny] x [1..nz] */
+def int nx xmax-2;
+def int ny ymax-2;
+def int nz zmax-2;
+/* Center point, or the nearest to it */
+def int xc 0.5*(1.0+nx);
+def int yc 0.5*(1.0+ny);
+def int zc 0.5*(1.0+nz);
+
+/* Positions of the registration points */
+/* NB the enumeration of the points as in the fig. in the Supplement */
+/*  not as in fig. 1(b) in the main text!!! */
+def str P1 x0=1  y0=1  z0=1 ;
+def str P2 x0=nx y0=1  z0=1 ;
+def str P3 x0=1  y0=1  z0=nz;
+def str P4 x0=nx y0=1  z0=nz;
+def str P5 x0=1  y0=ny z0=1 ;
+def str P6 x0=nx y0=ny z0=1 ;
+def str P7 x0=1  y0=ny z0=nz;
+def str P8 x0=nx y0=ny z0=nz;
+def str P9 x0=xc y0=yc z0=zc;
+/* same as coord sets */
+def str p1 1  ,1  ,1 ;
+def str p2 nx ,1  ,1 ;
+def str p3 1  ,1  ,nz;
+def str p4 nx ,1  ,nz;
+def str p5 1  ,ny ,1 ;
+def str p6 nx ,ny ,1 ;
+def str p7 1  ,ny ,nz;
+def str p8 nx ,ny ,nz;
+def str p9 xc ,yc ,zc;
+
+/* Measured signals at selected points */
+def real V1;def real V2;def real V3;
+def real V4;def real V5;def real V6;
+def real V7;def real V8;def real V9;
+
+/* Activation times at these points */
+def real T1;def real T2;def real T3;
+def real T4;def real T5;def real T6;
+def real T7;def real T8;def real T9;
+
+// Schedule and display parameters
+def long t_screen 1.0/ht;	// screen output period
+def long t_file   10.0/ht;	// files output period
+def long t_dump   50.0/ht;	// dump period
+def long t_end    200.0/ht;	// total duration
+def real T;			// model time, milliseconds
+def real begin;
+def real stim;
+def real screentime;
+def real filetime;
+def real dumptime;
+def real end;
+k_func name=timing nowhere=1 pgm={
+  T		=t*ht;
+  begin		=eq(t,0);
+  stim		=lt(t,tstim);
+  filetime	=eq(mod(t,t_file),0);
+  screentime	=eq(mod(t,t_screen),0)+filetime;
+  dumptime	=eq(mod(t,t_dump),0)+ge(t,t_end);
+  end		=ge(t,t_end); /* long enought for all fronts to be detected */
+};
+dump when=dumptime v0=vmin v1=vmax file=[outdir]/dump.dat;
+
+/* Steady state initial conditions */
+k_func name=initial when=begin pgm={
+  u[Volt]=	-85.23;
+  u[Cai]=	0.000126;
+  u[CaSR]=	3.64;
+  u[CaSS]=	0.00036;
+  u[Nai]=	8.604;
+  u[Ki]=	136.89;
+  u[M]=		0.00172;
+  u[H]=		0.7444;
+  u[J]=		0.7045;
+  u[Xr1]=	0.00621;
+  u[Xr2]=	0.4712;
+  u[Xs]=	0.0095;
+  u[R]=		2.42e-8;
+  u[S]=		0.999998;
+  u[D]=		3.373e-5;
+  u[F]=		0.7888;
+  u[F2]=	0.9755;
+  u[FCass]=	0.9953;
+  u[RR]=	0.9073;
+};
+
+/* The computation */
+diff v0=[Volt] v1=[i] hx=hx Dpar=Dx Dtrans=Dy;
+k_func when=stim x0=1 x1=xstim y0=1 y1=xstim z0=1 z1=xstim pgm={u[i]=u[i]+Istim;};
+euler v0=vmin v1=vmax ht=ht ode=ttp06 par={ht=ht; IV=@[i];};
+
+/* Activation time throughout, new way */
+activation v0=[Volt] vd=[p] v1=[a] threshold=Vact sign=1;
+
+/* Activation time at selected points, old way */
+/* Measure the signals */
+sample when=always [P1] v0=[Volt] result=V1;
+sample when=always [P2] v0=[Volt] result=V2;
+sample when=always [P3] v0=[Volt] result=V3;
+sample when=always [P4] v0=[Volt] result=V4;
+sample when=always [P5] v0=[Volt] result=V5;
+sample when=always [P6] v0=[Volt] result=V6;
+sample when=always [P7] v0=[Volt] result=V7;
+sample when=always [P8] v0=[Volt] result=V8;
+sample when=always [P9] v0=[Volt] result=V9;
+
+/* Registering the activation times */
+def real act; // this flag is not used so can be recycled for all reg devices
+k_poincare when=always nowhere=1 sign=1 which=0 pgm={act=V1-Vact;T1=T};
+k_poincare when=always nowhere=1 sign=1 which=0 pgm={act=V2-Vact;T2=T};
+k_poincare when=always nowhere=1 sign=1 which=0 pgm={act=V3-Vact;T3=T};
+k_poincare when=always nowhere=1 sign=1 which=0 pgm={act=V4-Vact;T4=T};
+k_poincare when=always nowhere=1 sign=1 which=0 pgm={act=V5-Vact;T5=T};
+k_poincare when=always nowhere=1 sign=1 which=0 pgm={act=V6-Vact;T6=T};
+k_poincare when=always nowhere=1 sign=1 which=0 pgm={act=V7-Vact;T7=T};
+k_poincare when=always nowhere=1 sign=1 which=0 pgm={act=V8-Vact;T8=T};
+k_poincare when=always nowhere=1 sign=1 which=0 pgm={act=V9-Vact;T9=T};
+
+
+/* Visualization parameters */
+def real Vmin -87.0; def real Vmax  17.0; def real Vmid  0.5*(Vmax+Vmin);
+def real fmin  0.20; def real fmax  0.67; def real fmid  0.5*(fmax+fmin);
+def real xrmin 0.25; def real xrmax 0.93; def real xrmid 0.5*(xrmax+xrmin);
+def real amin  0; def real amax 128.0/ht; def real amid  0.5*(amin+amax);
+
+/* Run-time graphics, sequential mode only */
+def int grain 600/nx;
+def int col0 10;      def int col1 col0+nx*grain+2;
+def int row0 30;      def int row1 row0+ny*grain+2;
+def int row2 row1+10; def int row3 row2+(row1-row0);
+def str win1 col0=col0 col1=col1 row0=row0 row1=row1 color=15*16+15;
+def str win2 col0=col0 col1=col1 row0=row2 row1=row3 color=15*16+15 N=nx lines=1 linewidth=3;
+screen WINX=-10 WINY=10 XMAX=col1+10 YMAX=row3+10;
+clock   when=screentime color=0*16+15 row0=1 col0=1;
+k_clock when=screentime color=0*16+15 row0=1 col0=10 format="T=%.3f" code=T; 
+def str aslant abs,ord,nz*(abs*0.5/nx+ord*0.5/ny);
+k_paint when=screentime [win1] nabs=nx nord=ny pgm={
+  col=
+  LIGHTRED*ge(u([aslant],[Volt]),Vmid )+
+     GREEN*ge(u([aslant],[F]   ),fmid )+
+      BLUE*ge(u([aslant],[a]   ),amid)
+};
+// Start at 1,1,1; end at nx,ny,nz when abs=i=N-1=nx-1
+def str along_diag 1+abs,1+abs*(ny-1)*1.0/(nx-1),1+abs*(nz-1)*1.0/(nx-1);
+k_plot when=screentime [win2] clean=1 ordmin=Vmin  ordmax=Vmax  pgm={ord=u([along_diag],[Volt]);col=LIGHTRED};
+k_plot when=screentime [win2] clean=0 ordmin=fmin  ordmax=fmax  pgm={ord=u([along_diag],[F]);   col=LIGHTGREEN};
+k_plot when=screentime [win2] clean=0 ordmin=xrmin ordmax=xrmax pgm={ord=u([along_diag],[Xr1]); col=LIGHTBLUE};
+update when=screentime;
+
+/* Graphics file output */
+ppmout when=filetime file=[outdir]/%06d.ppm mode="w"
+  r=[Volt] r0=Vmin  r1=Vmax 
+  g=[F]    g0=fmin  g1=fmax
+  b=[a]    b0=amin  b1=amax
+;
+imgout when=filetime x0=1 x1=nx y0=1 y1=ny z0=zc z1=zc 
+  filter="pnmflip -tb | pnmtopng > [outdir]/c%06.0f.png" code="T"
+  r=[Volt] r0=Vmin  r1=Vmax 
+  g=[F]    g0=fmin  g1=fmax
+  b=[a]    b0=amin  b1=amax
+;
+def str askew 1+i,1+j,1+(nz-1)*(i*0.5/(nx-1)+j*0.5/(ny-1));
+k_imgout when=filetime 
+  filter="pnmflip -tb | pnmtopng > [outdir]/a%06.0f.png"
+  filtercode="t*ht"
+  width=nx height=ny  pgm={
+  r=(u([askew],[Volt])-Vmin)/(Vmax-Vmin);
+  g=(u([askew],[F])-fmin)/(fmax-fmin);
+  b=(u([askew],[a])-amin)/(amax-amin);
+};
+
+/********************/
+/* The main answers */
+
+/* The activation times at selected points, as in the table in Supplement */
+/* Via point record */
+k_print when=end nowhere=1 file=stdout          valuesep="\t" list={T1;T2;T3;T4;T5;T6;T7;T8;T9};
+k_print when=end nowhere=1 file=[out]  append=0 valuesep="\t" list={T1;T2;T3;T4;T5;T6;T7;T8;T9};
+/* From 3D activation time map - should produce the same answers */
+k_print when=end nowhere=1 file=stdout          valuesep="\t" list={
+  ht*u([p1],[a]);ht*u([p2],[a]);ht*u([p3],[a]);
+  ht*u([p4],[a]);ht*u([p5],[a]);ht*u([p6],[a]);
+  ht*u([p7],[a]);ht*u([p8],[a]);ht*u([p9],[a])
+};
+k_print when=end nowhere=1 file=[out].other append=0  valuesep="\t" list={
+  ht*u([p1],[a]);ht*u([p2],[a]);ht*u([p3],[a]);
+  ht*u([p4],[a]);ht*u([p5],[a]);ht*u([p6],[a]);
+  ht*u([p7],[a]);ht*u([p8],[a]);ht*u([p9],[a])
+};
+/* To make the activation time map as in fig 4 (further processing by netpbm) */
+k_imgout when=end filter="pnmflip -tb > [outdir]/activation.ppm"
+  width=xmax-2 height=ymax-2  pgm={
+  r=u([askew],[a])*ht/128.0; /* byte increment = 0.5ms activation time */
+  g=r;
+  b=r;
+};
+
+/* To make the activation time graph as in fig. 2 */
+def int Np=200;	/* number of points on the graph */
+def real Lx=20;	/* x-size, ... */
+def real Ly=7;	/* y-size and ... */
+def real Lz=3;	/* z-size of the domain (should agree with the geometry) */
+def real Ls sqrt(Lx^2+Ly^2+Lz^2); /* diagonal length */
+/* i=0 <=> s=0; i=N-1 <=> Ls, etc */
+def real ds Ls/((Np-1));    /* this is in mm */
+def real dx Lx/((Np-1)*hx); /* these are converted */
+def real dy Ly/((Np-1)*hx); /* from mm to */
+def real dz Lz/((Np-1)*hx); /* grid dimensions */
+k_print when=end nowhere=1 file=[outdir]/actdiag.txt 
+  N=Np valuesep="\t" fieldsep="\n"
+  list={i*ds; u(1+i*dx,1+i*dy,1+i*dz,[a])*ht};
+
+stop when=end;
+end;

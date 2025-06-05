@@ -1,0 +1,123 @@
+/* 1D cable with Courtemanche et al. 1998 kinetics: */
+/* two different implementations run in parallel. */
+
+/* Layer allocation for the Courtemanche's author implementation */
+def str     V0 0;
+def str     m0 1;
+def str     h0 2;
+def str     j0 3;
+def str     d0 4;
+def str     f0 5;
+def str    xr0 6;
+def str    xs0 7;
+def str   nai0 8;
+def str   cai0 9;
+def str    ki0 10;
+def str  caup0 11;
+def str carel0 12;
+def str    oa0 13;
+def str    oi0 14;
+def str    ua0 15;
+def str    ui0 16;
+def str   fca0 17;
+def str  cmdn0 18;
+def str  trpn0 19;
+def str  csqn0 20;
+def str    uu0 21;
+def str    vv0 22;
+def str    ww0 23;
+
+/* Layer allocation for the new implementation, in rushlarsen format */
+def str     V1 24;
+def str   nai1 25;
+def str   cai1 26;
+def str    ki1 27;
+def str  caup1 28;
+def str carel1 29;
+def str   fca1 30;
+def str    uu1 31;
+def str    vv1 32;
+def str    ww1 33;
+def str     m1 34;
+def str     h1 35;
+def str     j1 36;
+def str     d1 37;
+def str     f1 38;
+def str    xr1 39;
+def str    xs1 40;
+def str    oa1 41;
+def str    oi1 42;
+def str    ua1 43;
+def str    ui1 44;
+
+def str aux 45;
+
+/* Diffusivity, by tradition */
+def real D 0.0735;
+
+/* Discretization */
+def real ht 0.05; /* time step, ms */
+def real hx 0.2; /* space step, mm */
+def int nx 800;   /* number of space grid internal points */
+
+/* 1D grid encompassing both implementations */
+state xmax=nx+2 ymax=1 zmax=1 vmax=[aux]+1;
+
+/* Scheduling */
+def int dt max(1,1.0/ht);	// output once per ms 
+def real Tmax 400;		// duration of simulation in ms 
+def real Tstim 10;		// left-end stimulation lasts so many ms 
+def real T;			// current time in ms 
+def int tstim Tstim/ht;		// stimulation lasts so many time steps
+def real stim;			// when stimulation is on
+def real out;			// when it is time to do output
+def real end;			// when it is time to end
+k_func nowhere=1 pgm={
+  T=ht*t;
+  stim=le(T,Tstim);
+  out=eq(0,mod(t,dt));
+  end=ge(T,Tmax);
+};
+
+/* Stimulation: fix voltage at -30mV at left end */
+/* for the first Tstim milliseconds in both formulations */
+k_func when=stim x0=1 x1=1 pgm={u[V0]=-30;u[V1]=-30};
+
+/* Time step of the first formulation, in two substeps */
+diffstep v0=[V0] v1=[aux] D=D hx=hx ht=ht;
+euler v0=[V0] v1=[ww0] ht=ht ode=crn par={ht=ht;};
+
+/* Time step of the second formulation, in two substeps */
+diffstep v0=[V1] v1=[aux] D=D hx=hx ht=ht;
+rushlarsen v0=[V1] v1=[ui1] ht=ht ionic=crn98 order=tog exp_ngate=1 par={;};
+
+/* Graphical outputs */
+def real Vmin -100;		// voltage at the lower edge of graph
+def real Vmax +50;		// voltage at the higher edge of graph
+screen WINX=-10 WINY=10 XMAX=640 YMAX=480; // coordinates if the graphical window
+def int row0 30; def int row1 469; // coords of graph within the graphical window
+def int col0 10; def int col1 629; // coords of graph within the graphical window
+clock   when=out color=WHITE row0=1 col0=1; // this shows the integer step counter 
+k_clock when=out color=WHITE row0=1 col0=21 code=t*ht format="T=%4.0f ms"; // this shows real model time
+k_plot name=V0plot when=out 
+  col0=col0 col1=col1 row0=row0 row1=row1 // defines the part of the graph window for this output
+  color=WHITE*16+WHITE			  // colour of the "window" border	
+  lines=1				  // connect the dots
+  clean=1                                 // clean window before drawing this graph
+  ordmin=Vmin ordmax=Vmax		  // limits for the ordinate of the plot
+  N=nx					  // the abscissa will be
+  pgm={ord=u(abs,0,0,[V0]);col=LIGHTRED}; // ordinate is value of [V0] variable, plot in light red
+k_plot name=V1plot when=out 
+  col0=col0 col1=col1 row0=row0 row1=row1 // in the same window, 
+  color=WHITE*16+WHITE			  // ...
+  lines=1				  // ...
+  clean=0                                 // but do not clean it beforehand
+  ordmin=Vmin ordmax=Vmax		  // ...
+  N=nx					  // ...
+  pgm={ord=u(abs,0,0,[V1]);col=LIGHTBLUE}; // ordinate is value of [V0] variable, plot in light blue
+update when=out;  // this signals that the graphics output buffer is flushed to the screen
+
+pause when=end seconds=-1;	// in the end, program will stop until Enter key is pressed,
+stop when=end;			// and then stopped. 
+
+end;

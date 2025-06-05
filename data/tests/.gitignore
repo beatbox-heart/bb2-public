@@ -1,0 +1,13 @@
+*.BAK
+*.ctl
+*.log
+*.out
+admitfailure
+closeenough
+ball*.exact
+bkl3.full
+bkl3.half
+bkl3cont-*.exact
+fhn0.rec
+fhn1.rec
+tmp

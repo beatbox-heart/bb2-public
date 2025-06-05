@@ -1,0 +1,31 @@
+// Test script for reduce device
+def str out [1];
+
+def real hx 0.5;
+def real Lx 10;
+def real Ly 10;
+def int nx Lx/hx;
+def int ny Ly/hx;
+state xmax=nx+2 ymax=ny+2 vmax=2;
+k_func x0=1 x1=nx y0=1 y1=ny pgm={
+  def real X=(x-0.5*(nx-1))*hx;
+  def real Y=(y-0.5*(ny-1))*hx;
+  u0=X*X+Y**3;
+  u1=X^3-Y*Y;
+};
+
+def str area x0=1 x1=nx y0=1 y1=ny/3;
+def real umin; def real umax; def real usum; def real uprod;
+def real vmin; def real vmax; def real vsum; def real vprod;
+reduce [area]  v0=0 v1=0 operation=min  result=umin;
+reduce [area]  v0=0 v1=0 operation=max  result=umax;
+reduce [area]  v0=0 v1=0 operation=sum  result=usum;
+reduce [area]  v0=0 v1=0 operation=prod result=uprod;
+reduce [area]  v0=1 v1=1 operation=min  result=vmin;
+reduce [area]  v0=1 v1=1 operation=max  result=vmax;
+reduce [area]  v0=1 v1=1 operation=sum  result=vsum;
+reduce [area]  v0=1 v1=1 operation=prod result=vprod;
+
+k_print nowhere=1 file=[out] valuesep="\n" list={ umin;  umax;  usum;  uprod; vmin;  vmax;  vsum;  vprod};
+stop;
+end;

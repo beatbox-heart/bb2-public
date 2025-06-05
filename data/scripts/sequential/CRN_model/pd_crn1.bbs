@@ -1,0 +1,172 @@
+/* Beatbox example bbs scripts for FHN, CRN, LRD cell to 3D simulations. 
+ * This is distributed with the SVN repository. Use these bbs scripts to make your 
+ * own as most of the devices are shown here. 
+ * 
+ * To run the bbs script sequentially at the command line (in a terminal), use: 
+ *  Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ * 
+ * This program simulates FHN CRN LRD 0D (cell) 1D 2D 3D box 3D geometry. The geometry is the ffr.bbg geometry. 
+ *        
+ */ 
+
+// Some model parameters
+def real ms 1.0;        /* assume that CRN model has time unit of 1 ms */
+def real Cm 100; 	/* cell membrn capctnce, pF */
+def real umin -120; // minimum expected voltage
+def real umax 80.; // maximum expected voltage
+
+// Discretization
+
+/* ht is the constant time step used by the Euler device. */ 
+def real ht  0.01; /* MC's default time step was 0.005 (msec) */
+/* HX is the uniform space step in all directions. Units are that used in your simulation. */ 
+def real hx 0.125;
+/* D is the diffusion constant. Units are that used in your simulation. */ 
+def real D 0.05;
+
+def real L  37.5;	/* Length of strand */
+def int nx L/hx; // number of FD nodes in strand
+
+// Dynamic variables and layer allocation
+/* Allocation of layers to the state varables. */ 
+def str v 0;   
+def real Vmin -90.0; def real Vmax 50.0; def real Vmid -40.0;
+/* Allocation of layers to the state varables. */ 
+def str oi 14; 
+def real oimin -0.1; def real oimax 1.1; def real oimid  0.5;
+def int neqn 24;
+/* Allocation of layers to the state varables. */ 
+def str i neqn;
+
+// The computational grid
+/* The size of the model is xmax*ymax*zmax*vmax 
+ * where vmax is the number of dynamical variables in the cell model of ODEs. 
+ * xmax=1, ymax=1, zmax=1 represents a cell (OD) model, while 
+ * all other values of xmax, ymax, zmax represent tissue models. 
+ */ 
+state xmax=nx+2 ymax=1 zmax=1 vmax=[i]+1;
+
+// Schedule and display parameters
+def long dt 20;         // output period
+def real T;		// model time, time units
+
+/* Input file name */
+/* Allocation of layers to the state varables. */ 
+def str inrec pd_crn0.rec;
+def real pacelength `wc pd_crn0.rec | awk '{print $1}'`;
+
+def real xout nx*1/2;   // the measuring electrode position
+def real Vout;		// recorded voltage value
+def real front;		// flag indicating that a front has just passed
+def real Tfront;	// when it happened, in time units
+def real Tlast 0;	// ..., last time
+def real Period;	// interval between such happenings
+def int count 0;	// count how many times a front has passed
+def int countmax 1;	// when to stop
+
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;
+def real often;
+def real end;
+def real paceout;
+
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+  T     =t*ht;
+  begin =eq(t,0);
+  often =eq(mod(t,dt),0);
+};
+
+/*
+Read in the 0-D record and clamp the 1st cell in
+the 1D strand to those values at consecutive times.
+*/
+k_func name=phase when=always x0=1 x1=1 
+file=[inrec] pgm={phasep=(2*pi*t)/pacelength;u0=p0;};
+
+/* Computations */
+/* Compute the Laplacian. */ 
+diff v0=[v] v1=[i] hx=hx D=D;
+/* Computation of 1 time step update. 
+ * In spatial simulations, the Laplacian is stored at Iu=@vmax. 
+ */ 
+euler name=ode1 v0=0 v1=neqn-1 ht=ht ode=crn par={
+ht=ht;
+//gk1=0.1;  /* specify value of a modelling parameter */
+//gcaL=0.1; /* specify value of a modelling parameter */
+IV=@[i]};
+
+/* Graphics output *********************************************/
+
+/*
+Set up graphics display
+*/
+def int stdattr 7*16+5;
+def int winwidth 600;
+def int winheight 200;
+def int col0 10;      def int col1 col0+winwidth;
+def int row0 30;      def int row1 row0+winheight;
+screen WINX=-10 WINY=10 XMAX=col1+10 YMAX=row1+10;
+clock when=often  color=0*16+15 row0=1 col0=1;
+k_clock when=often color=0*16+15 row0=1 col0=10 format="T=%.1f" code=T; 
+/* Allocation of layers to the state varables. */ 
+def str plotwin col0=col0 col1=col1 row0=row0 row1=row1 color=15*16+15 lines=1 linewidth=3 absmin=-1 absmax=nx+1;
+/*
+Display the output graphics
+*/
+k_plot when=often [plotwin] clean=1
+  N=nx
+  ordmin=Vmin ordmax=Vmax pgm={
+  ord=u(abs,0,0,[v]);
+  col=LIGHTRED
+};
+k_plot when=often [plotwin] clean=0
+  N=nx
+  ordmin=oimin ordmax=oimax pgm={
+  ord=u(abs,0,0,[oi]);
+  col=LIGHTBLUE
+};
+update when=often;
+
+/************************************************************/
+
+/* Output the record from the xout point of the strand into pd_crn1.rec ***/
+
+// Measure the signal from the electrode
+sample x0=xout v0=[v] result=Vout;
+// Register when signal crosses the value umid upwards
+k_poincare nowhere=1 when=always sign=1 which=0 pgm={front=Vout-Vmid; Tfront=T};
+// Count how many times the excitation wave went past.
+k_func when=front nowhere=1 pgm={
+  Period=Tfront-Tlast;
+  Tlast=Tfront;
+  count=count+1;
+  paceout=eq(count,countmax);
+  end=gt(count,countmax)
+} debug=stdout;
+// the actual record.
+/* Record all or sampled variables in your simulation. */ 
+record when=paceout file=[0].rec append=0 x0=xout x1=xout v0=0 v1=neqn-1;
+
+
+// Output voltage V=v[0] is sampled using the sample device.
+//It is output into a file crn0.vtg using the k_print device.
+def real Vrec ;
+sample x0=10 y0=0 z0=0 v0=0 result=Vrec;
+k_print nowhere=1 when=often file=[0].vtg append=0 valuesep="\t" list={T; Vrec;};
+
+
+/************************************************************/
+
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+
+end;

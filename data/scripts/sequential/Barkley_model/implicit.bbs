@@ -1,0 +1,75 @@
+def str inrec bkl1.rec;
+def str outdir [0].dir;
+
+def int nx 60;
+def int ny 60;
+def int nz 20;
+def real hx 0.2;
+def real Lx nx*hx;
+def real Ly ny*hx;
+def real Lz nz*hx;
+
+def real apar   1.1;
+def real bpar   0.19;
+def real epspar 1.0/50.0;
+def real Du     1.00;
+def real Dv     0.10;
+
+def real difflimit  hx*hx/6.0;
+def real ht 10*difflimit;
+
+def real Tmax 10;
+
+def str u 0; def real umin 0.0; def real umax 1.0;def real umid 0.5;
+def str v 1; def real vmin -bpar; def real vmax 1.0-bpar;def real vmid 0.5*apar-bpar;
+def str aux 2;
+def str aux1 3;
+
+state xmax=nx+2 ymax=ny+2 zmax=nz+2 vmax=[aux1]+1;
+
+def real dt 10;	  // output period
+def real T;
+def real begin;
+def real often;
+def real end;
+
+k_func nowhere=1 name=schedule pgm={
+  T=t*ht;
+  begin =eq(t,0);
+  often =eq(mod(t,dt),0);
+  end=ge(T,Tmax);
+};
+
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]";
+
+// Initial conditions: twisted scroll
+def real x0 0.5*nx+0.5; def real y0 0.5*ny+0.5; def real lam 80;
+def real Nwind 0.1;
+k_func when=begin name="ic" file=[inrec] pgm={
+  phasep= atan2(x-x0,y-y0) - 2*pi*hypot(x-x0,y-y0)/lam + 2*pi*Nwind*z/nz;
+  u[u]=p[u]; u[v]=p[v]
+};
+
+// The computation
+adi3d v0=[u] v1=[aux] D=Du hx=hx ht=ht;
+adi3d v0=[v] v1=[aux] D=Dv hx=hx ht=ht;
+euler name=ode1 v0=[u] v1=[v] ht=ht ode=fhnbkl par={a=apar b=bpar eps=epspar};
+
+
+// Output to files
+def real uout; def real vout;
+sample when=always x0=1 y0=1 z0=1 v0=[u] result=uout;
+sample when=always x0=1 y0=1 z0=1 v0=[v] result=vout;
+k_print when=always nowhere=1 valuesep="\t" file=[outdir]/history.dat list={t;uout;vout;};
+
+ppmout when=often file="[outdir]/%06d.ppm" r=[u] r0=umin r1=umax g=[v] g0=vmin g1=vmax b=[v] b0=vmin b1=vmax;
+
+singz when=often col0=0 col1=0 row1=0 row2=0 file=[outdir]/singz.dat append=0 
+  v0=[u] c0=umid v1=[v] c1=vmid
+  everypoint=1 everysection=0 everyrecord=0
+  pointsep="\n" sectionsep="" recordsep="\n"
+;
+
+stop when=end;
+
+end;

@@ -1,0 +1,126 @@
+/* Beatbox example bbs script for Fitz-Hugh Nagumo "3D vortex with negative filament tension" simulations.
+ * to illustrate the work of some useful devices and tricks. 
+ * 
+ * Purpose of this script: Example bbs script for 3D FHN simulation.
+ *                         phase distribution initiation of a scroll with a helical filament
+ *                         to see how the filament expands due to its negative tension
+ *                         into a fibrillation like chaotic state  
+ *
+ * Inputs: fhn1.rec 
+ *
+ * Outputs: 1. ppm files (in fhn3_NegativeTension.dir directory)
+ *          
+ *
+ * This bbs script demonstrates the use of the following syntax and devices:
+ * 1. more extensive use of k-variables to save typing and ease modification;
+ * 2. use of k_func as a computational device for creating intial conditions ;
+ * 3. use of shell output device to call arbitrary OS command from BeatBox (here to create an output directory for the image files);
+ *
+ * Before running this script, make sure that the input file fhn1.rec, necessary for the phase distribution initiation, has been created by running fhn1.bbs.
+ *
+ * To run this bbs script, use the following command:
+ * Beatbox_SEQ fhn3_NegativeTension.bbs
+ */
+
+//***************************
+// Parameters
+
+
+// simulation time step 
+def real ht 0.005;
+
+// simulation space step
+def real hx 1.0/3.0;
+
+// diffusion coefficient
+def real D 1.0; 
+
+//FHN model kinetics parameters epsilon, beta, gamma
+def real eps 0.3; def real bet 0.77; // negative filament tension
+def real gam 0.50;
+
+// defining layer numbers for FHN model dynamic variables  
+def str u 0; // u variable will be in layer 0
+def str v 1; // v variable will be in layer 1
+def str i 2; // diffusion term will be in layer 2
+
+// graphic (ppmout) output limits 
+def real umin -2.0; def real umax 2.0; 
+def real vmin -1.0; def real vmax 1.5; 
+
+
+// The size of the model is xmax*ymax*zmax*vmax.
+// Define a box of size 100 (x) by 100 (y) by 50 (z). 
+// The "accessible" spatial index x is from 1 to xmax-2, 
+// where values x=0 and x=xmax-1 belong to the "halo" and are 'untouchable'. 
+// We say that "acessible" coordinates are x=1..nx, where nx=xmax-2, and similarly for y and z. 
+// vmax is the number of layers, including the dynamical variables in the cell model + any extra layers,
+// in the present script, layer [i], i=2, is allocated for diffusion term, see fhn.par  
+// The layers are enumerated from zero, so the last layer available is vmax-1.
+state xmax=100 ymax=100 zmax=50 vmax=3;
+
+// Define time control (schedule) parameters.
+def real begin;  // it is the very first step
+def real out;    // it is time to make outputs
+def real end;  // it is time to stop
+
+def int tout 1/ht; // output will be in so many steps, i.e. once per 1 unit of model time
+
+// Assign values to the schedule parameters using k_func device.
+k_func name=timing nowhere=1 pgm={
+	begin = eq(t,0);
+        out   = eq(mod(t,tout),0); // time to make outputs every tout steps
+	end   = ge(t,80000);
+};
+
+// Initial conditions: twisted scroll
+
+// Parameters of the initial vortex conditions: 
+// initial (x0, y0) coordinates for the spiral tip in the (x,y) cross section 
+def real x0 0.5*xmax+0.5; // x0 is approximately in the centre
+def real y0 0.5*ymax+0.5; // y0 is approximately in the centre
+
+def real lam 100;  // The pitch of the Archimedean spiral for the phase distribution method measured in grid points
+def real Nwind 0.1; // the number of winds/twists of the helix in z direction
+
+k_func when=begin 
+       name="ic" 
+       file=fhn1.rec 
+       pgm={
+        phasep= atan2(x-x0,y-y0) - 2*pi*hypot(x-x0,y-y0)/lam + 2*pi*Nwind*z/zmax;
+        u[u]=p[u]; u[v]=p[v]
+       };
+
+
+// The computation
+
+// The diff device calculates the diffusion term (D*Laplacian) of the field in layer [u]=0, that is u-field, 
+// and puts the result into layer [i]. 
+// The diff device also implicitly calsculates Neumann "no flux" boundary conditions.
+diff v0=[u] v1=[i] D=D hx=hx;
+
+
+// The cell kinetics update substep: the cell model 'ode' is 'fhncubpar';  
+// the reserved Iu variable for the extra term in the right-hand side for u is taken from the layer [i], 
+// that is where the diffusion term for u was stored. 
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar rest=10000 par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+
+// Create the directory for the image files
+// (no problem if it is already there)
+def str outdir [0].dir; // so it will be fhn3_NegativeTension.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+// advance=1 means this will be done BEFORE the first step
+
+// In absence of on-screen graphics, this will simply print messages to standard output
+clock when=out;
+
+/* PPMOUT gives 3D ppm file format output at a rate specified by when= parameter. 
+   ppmout device produces serially numbered ppm files in the  sub-directory  [outdir]    */ 
+ppmout  when=out file="[outdir]/%06d.ppm" mode="w" 
+	r=[u] r0=umin r1=umax 
+        g=[v] g0=vmin g1=vmax 
+        b=[i] b0=0 b1=255;
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;

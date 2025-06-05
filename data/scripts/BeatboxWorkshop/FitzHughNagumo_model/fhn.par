@@ -1,0 +1,23 @@
+// simulation time step 
+def real ht 0.005;
+
+// simulation space step
+def real hx 1.0/3.0;
+
+// diffusion coefficient
+def real D 1.0; 
+
+//FHN model kinetics parameters epsilon, beta, gamma
+def real eps 0.30; def real bet 0.71; // rigid rotation, positive filament tension
+//def real eps 0.20; def real bet 0.71;  // meander
+//def real eps 0.3; def real bet 0.77; // negative filament tension
+def real gam 0.50;
+
+// defining layer numbers for FHN model dynamic variables  
+def str u 0; // u variable will be in layer 0
+def str v 1; // v variable will be in layer 1
+def str i 2; // diffusion term will be in layer 2
+
+// real time graphic output limits (sequential mode only)
+def real umin -2.0; def real umax 2.0;def real umid 0.0;
+def real vmin -1.0; def real vmax 1.5;def real vmid 0.5;

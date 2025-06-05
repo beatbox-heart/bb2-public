@@ -1,0 +1,53 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{a4wide}
+\usepackage{graphicx}
+
+\begin{document}
+\title{\vspace*{-5ex}
+Cardiac physiology simulator benchmark for BeatBox}
+\author{V. N. Biktashev}
+\date{}
+\maketitle
+\thispagestyle{empty}
+
+
+Results of the benchmark proposed in ``Verification of cardiac tissue
+electrophysiology simulators using an N-version benchmark'' by
+S. A. Niederer et al. \textit{Phil. Trans. R. Soc. A} 2011
+\textbf{369}, 331-4351, 2011, as performed by BeatBox using
+benchmark.bbs in this directory. About the post-processing of the
+results, see Makefile.
+
+\bigskip
+
+For figure 2: \\[-1\baselineskip]
+
+\centerline{\includegraphics[width=0.4\textwidth]{graph.pdf}}
+
+\bigskip 
+
+For figure 3 (colours selected arbitrary so do not match paper):
+
+\begin{centering}
+  \includegraphics[width=0.4\textwidth]{upper.pdf} \\[1ex]
+  \includegraphics[width=0.4\textwidth]{lower.pdf} \\
+\end{centering}
+
+\bigskip 
+
+For the table in the Supplement (note that fig. 4 is only
+visualization of the same):
+
+\begin{centering}
+\begin{tabular}{l|lllllllll}
+  $\Delta x$, $\Delta t$ & $P_1$ & $P_2$ & $P_3$ & $P_4$ & 
+  $P_5$ & $P_6$ & $P_7$ & $P_8$ & $C$ \\\hline
+  \input{table.tex}
+\end{tabular}\\
+\end{centering}
+
+\bigskip 
+
+The results are similar with other methods using finite differences. 
+
+\end{document}

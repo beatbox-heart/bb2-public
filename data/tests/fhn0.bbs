@@ -1,0 +1,42 @@
+// Short and quick version of ../scripts/sequential/fhn0.bbs
+// for test purposes. 
+def str u 0; 
+def str v 1; 
+state xmax=1 ymax=1 zmax=1 vmax=[v]+1;
+def real ht  0.003;
+def real bet 0.71;
+def real eps 0.30;
+def real gam 0.50;
+def real begin;
+def real often;
+def real end;
+k_func name=timing nowhere=1 pgm={
+  begin = eq(t,0);
+  often = eq(mod(t,10),0);
+  end   = ge(t,100000);
+};
+def real U;
+def real V;
+def real Iu;
+def real Ust=1000;
+def real Vst=1000;
+def int pulsecount;
+def int whichpulse 4;
+def real chosenpulse;
+
+euler v0=[u] v1=[v] ht=ht ode=fhncub rest=10000 par={eps=eps bet=bet gam=gam};
+sample name=Ust when=begin v0=[u] result=Ust;
+sample name=Vst when=begin v0=[v] result=Vst;
+sample name=U v0=[u] result=U; 
+sample name=V v0=[v] result=V;
+k_func nowhere=1 pgm={
+  Iu= lt(U,Ust+0.05)*lt(V,Vst+0.05)*1.0;
+  pulsecount=pulsecount+gt(Iu,0);
+  chosenpulse=eq(pulsecount,whichpulse)*often;
+  end=end+gt(pulsecount,whichpulse);
+};
+k_func when=Iu pgm={u[u]=u[u] + Iu};
+record when=chosenpulse file=[0].out append=0 recordsep=" \n" v0=[u] v1=[v];
+record when=chosenpulse file=[0].rec append=0 recordsep=" \n" v0=[u] v1=[v];
+stop when=end;
+end;

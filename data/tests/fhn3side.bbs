@@ -1,0 +1,38 @@
+// Short and quick 3D fhn
+// for test purposes. 
+// This one has filament sideways to test singz in parallel.
+def str out [1];
+<fhn.par>
+def int nx 50; def int ny 25;def int nz 50;
+state xmax=nx+2 ymax=ny+2 zmax=nz+2 vmax=[i]+1;
+
+def real x0 0.5*(nx+1);
+def real z0 0.5*(nz+1);
+def real lam 100;
+def real twist 2*pi/nz;
+
+def real begin;
+def real end;
+
+k_func name=timing nowhere=1 pgm={
+  begin = eq(t,0);
+  end   = ge(t,100);
+};
+
+k_func when=begin  name=initial file=fhn1.rec pgm={
+  phasep=atan2(x-x0,z-z0) - 2*pi*hypot(x-x0,z-z0)/lam + twist*y; 
+  u0=p0; u1=p1 
+};
+diff v0=[u] v1=[i] D=D hx=hx;
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+
+singz when=end
+  v0=[u] c0=0
+  v1=[v] c1=0
+  precise_orientation=0
+  file=[out] append=0
+  pointsep="\n" sectionsep="" recordsep="" everypoint=1 everyrecord=0
+;
+
+stop when=end;
+end;

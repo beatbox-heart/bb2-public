@@ -1,0 +1,114 @@
+/* Beatbox example bbs script for Fitz-Hugh Nagumo 3D vortex simulations:
+ * vortex initiated by phase distribution method, 
+ * with the initial filament roughly along y axis,  
+ * in realistic rabbit ventricles geometry ffr.bbg, 
+ * with ANisotropic conduction.
+ * 
+ * Purpose of this script: Example bbs script for 3D FHN vortex simulation in a rabbit ventricles geometry.
+ *
+ * Inputs:  1. ffr.bbg (rabbit ventricles geometry)
+            2. fhn1_PositiveTension.rec      
+ *
+ * Outputs: png images of the 3D simulation (in the fhn_ffr_xz_scaling.dir directory);
+ *          
+ *
+ * This bbs script demonstrates the use of the following syntax and devices:
+ * 1. more extensive use of k-variables to save typing and ease modification;
+ * 2. use of k_func as a computational device for creating intial spiral conditions by phase distribution method, 
+ *     using data from file fhn1_PositiveTension.rec ;
+ * 3. use of shell output device to call arbitrary OS command from BeatBox (here to create an output directory for the image files);
+ * 4. use of imgout output device to output image files;
+ *
+ * Before running this script, make sure that the geometry file ffr.bbg and fhn1.rec file listed above are available in the work directory.
+ *
+ * To run this bbs script, use the following command:
+ * Beatbox_SEQ fhn_ffr_xz_scaling.bbs
+ *
+ */
+
+// Computation parameters
+def real ht  0.001;
+//
+def real Period 0.8; // is sufficient for scaling run.
+def real T;
+
+//
+def real hx  0.1;
+def real D   1.0;
+
+//FHN model kinetics parameters epsilon, beta, gamma
+def real bet 0.71;
+def real eps 0.30;
+def real gam 0.50;
+
+def str u 0; 
+def real umin -2.0; 
+def real umax 2.0;
+//
+def str v 1; 
+def real vmin -1.0; 
+def real vmax 1.5;
+
+def str i 2; 
+
+def int neqn [i];
+
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;
+def real often;
+def real end;
+
+state
+	geometry=ffr.bbg
+	vmax=[i]+1
+	normaliseVectors=1
+	anisotropy=1
+;
+
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+  T=t*ht;
+	begin = eq(t,0);
+	often = eq(mod(t,1000),0);
+        end=ge(T,(Period));
+};
+
+// Initial conditions: twisted scroll roughly along y axis
+def real x0 0.5*xmax+0.5; 
+def real z0 0.5*zmax+0.5; 
+def real lam 100;
+def real Nwind 0.1;
+k_func when=begin 
+       name="ic" 
+       file=fhn1_PositiveTension.rec 
+       pgm={
+        phasep= atan2(x-x0,z-z0) - 2*pi*hypot(x-x0,z-z0)/lam + 2*pi*Nwind*y/ymax;
+        u[u]=p[u]; u[v]=p[v]
+       };
+
+
+// The computation
+diff v0=[u] v1=[i] Dpar=D Dtrans=D/4 hx=hx;
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar rest=10000 par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+
+// Create the directory for the image files
+// (no problem if it is already there)
+def str outdir [0].dir; // so it will be fhn_ffr_iso.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+// advance=1 means this will be done BEFORE the first step
+
+ppmout when=often file="[outdir]/%04d.ppm" mode="w" 
+       r=[u] r0=umin r1=umax 
+       g=[v] g0=vmin g1=vmax 
+       b=[i] b0=0 b1=255;
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+
+end;

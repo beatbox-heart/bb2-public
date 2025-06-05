@@ -1,0 +1,9 @@
+def real ht  0.03;
+def real hx  0.50;
+def real D   1.0;
+def real bet 0.75;
+def real eps 0.30;
+def real gam=0.50;
+def str u 0; def real umin -2.0; def real umax 2.0;def real umid 0.0;
+def str v 1; def real vmin -1.0; def real vmax 1.5;def real vmid 0.5;
+def str i 2; 

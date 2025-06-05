@@ -1,0 +1,49 @@
+// Short and quick version of ../scripts/sequential/fhn1.bbs
+// for test purposes. 
+<fhn.par>
+def int nx 50; 
+state xmax=nx+2 ymax=1 zmax=1 vmax=[i]+1;
+
+def real pacelength `cat fhn0.rec | wc -l`;
+def real begin;
+def real often;
+def real paceout;
+def real end;
+
+def real xout1 nx*0.5;
+def real xout2 nx*0.75;
+def real U2;
+def real V2;
+def real T2;
+def int Np 3;
+def real Ust;def real Vst;
+
+k_func name=timing nowhere=1 pgm={
+  begin = eq(t,0);
+  often = eq(mod(t,10),0);
+  end   = ge(t,100000);
+};
+
+k_func name=bc x0=1 x1=1 file=fhn0.rec pgm={phasep=(2*pi*t)/pacelength;u0=p0;};
+diff v0=[u] v1=[i] hx=hx D=D;
+
+euler name=ode1 v0=[u] v1=[v] ht=ht ode=fhncub rest=10000
+par={eps=eps bet=bet gam=gam Iu=@2};
+
+sample name=U2 x0=xout2 v0=[u] result=U2; 
+sample name=V2 x0=xout2 v0=[v] result=V2;
+
+k_func name=rest when=begin nowhere=1 pgm={Ust=U2;Vst=V2};
+def real front2;
+def real tfront2;
+def int nfront2 0;
+k_poincare nowhere=1 sign=1 pgm={front2=U2-umid;tfront2=t};
+k_func nowhere=1 when=front2 pgm={nfront2=nfront2+1; T2=if(eq(nfront2,Np),ht*tfront2,T2);
+  paceout=eq(nfront2,Np);
+  end=end+gt(nfront2,Np);
+};
+k_print nowhere=1 when=paceout file=[0].rec append=0 valuesep="\t" list={U2;V2};
+k_print nowhere=1 when=paceout file=[0].out append=0 valuesep="\t" list={U2;V2};
+
+stop when=end;
+end;

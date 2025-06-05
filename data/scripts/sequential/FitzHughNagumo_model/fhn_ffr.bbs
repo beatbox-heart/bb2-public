@@ -1,0 +1,77 @@
+/* Beatbox example bbs scripts FHN using ffr.bbg
+ *        
+ */ 
+def real ht  0.001;
+def real hx  0.1;
+def real D   1.0;
+def real bet 0.71;
+def real eps 0.30;
+def real gam 0.50;
+
+def str u 0; def real umin -2.0; def real umax 2.0;def real umid 0.0;
+def str v 1; def real vmin -1.0; def real maxv 1.5;def real vmid 0.5;
+def str i 2; 
+def int neqn [i];
+def str g 3; /* geometry will be addressed by this number from ezview */
+
+state vmax=[i]+1
+  geometry=ffr.bbg
+  normaliseVectors=1
+  anisotropy=1
+;
+def int nx=xmax-2;def int ny=ymax-2;def int nz=zmax-2;
+
+def int dt 0.1/ht;
+def real T;
+def real begin;
+def real often;
+def real end;
+
+k_func name=timing nowhere=1 pgm={
+  T     = t*ht;
+  begin = eq(t,0);
+  often = eq(mod(t,dt),0);
+  end   = ge(t,500);
+};
+
+// Stimulus
+def real x0 0.5*nx;  def real y0 0.5*ny; def real z0 0.5*nz; def real lam 100.0;
+k_func when=begin name=initial file=fhn1.rec pgm={
+  phaseu=-atan2(z-z0,x-x0)-2*pi*hypot(z-z0,x-x0)/lam;
+};
+
+
+def str outdir [0].dir; // so it will be fhn_ffr.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+ppmout when=often file="[outdir]/%04d.ppm" mode="w" r=[u] r0=umin r1=umax g=[v] g0=vmin g1=maxv b=[i] b0=0 b1=255;
+
+
+def int winsize=500;
+ezview when=often 
+  width=winsize height=winsize winx=-1 winy=1
+  autostart=1
+  theta0=-160 phi0=70 distance0=5
+  verbose=1
+  show_surface=1 ulayer=[g] uc=0.5 color_mode=5
+  rlayer=[u] rmin=umin rmax=umax		/* parameters of the red component */
+  glayer=[u] gmin=-10 gmax=40			/* parameters of the green component */
+  blayer=[v] bmin=vmin bmax=maxv		/* parameters of the blue component */
+  alphamin=1 alphamax=1				/* fully opaque */
+  bg_r=0 bg_g=0 bg_b=0
+  bbox_r=0.5 bbox_g=0.5 bbox_b=0.5
+  write_images=0
+  images="pnmflip -tb | pnmtopng > [outdir]/%04.0f.png"
+  imagescode="t/dt"
+  show_marker=0 marker_size=0 marker_x=nx/2 marker_y=ny/2 marker_z=nz/2
+;
+
+stop when=end;
+
+// The computation
+diffstep v0=[u] v1=[i] Dpar=D Dtrans=D/4 hx=hx ht=ht;
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar rest=10000 par={epsu=eps epsv=eps bet=bet gam=gam};
+
+// Keep the picture on the screen for 1 second in the end
+if Graph pause seconds=1 when=end;
+
+end;

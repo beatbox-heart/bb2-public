@@ -1,0 +1,64 @@
+// Computation parameters
+<fhn.par>
+
+// In this script we need some extra layers: 
+def str p 3; // memory layer for computing time derivative 
+def str d 4; // to store the time derivative 
+def str g 5; // to store the spatial gradient
+
+state geometry=ffr_slice.bbg vmax=3;
+
+def real begin;
+def real end;
+def real out;
+
+def int tout 0.5/ht; // output will be in so many steps, i.e. once per 0.5 units of model time
+
+k_func name=timing nowhere=1 pgm={
+	begin = eq(t,0);
+	end   = ge(t,10000);
+	out   = eq(mod(t,50),0);
+};
+
+// Stimulus
+k_func when=begin x1=25 pgm={u[u] = 1.7;};
+k_func when=begin x0=26 pgm={u[u] = -1.7;};
+k_func when=begin y1=31 pgm={u[v] = 0.7;};
+k_func when=begin y0=32 pgm={u[v] = -0.7;};
+
+// The computation
+diff v0=[u] v1=[i] D=D hx=hx;
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar rest=10000 par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+
+// Create the directory for the image files
+// (no problem if it is already there)
+def str outdir [0].dir; // so it will be fhn_ffr_slice.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+// advance=1 means this will be done BEFORE the first step
+
+
+// Run-time graphics
+ezpaint when=out 
+  // On-the-fly conversion including flipping top/bottom flip
+  filter="pnmflip -tb | pnmtopng > [outdir]/ezp%07.0f.png"
+  rlayer=[u]  rmin=umin  rmax=umax // [u]-layer defines red component
+  glayer=[v]  gmin=vmin  gmax=maxv // [v]-layer defines green component
+  blayer=[i]  bmin=-1    bmax=1    // [i]-layer defines blue component
+  bg_r=1 bg_g=1 bg_b=1;            // void is white
+
+// Image files for u,v,i fields.
+// This is the simpler version which uses what is in the layers,
+// only by linear scaling [umin,umax]->[0,255] etc. 
+imgout when=out 
+  // On-the-fly conversion including flipping top/bottom flip
+  filter="pnmflip -tb | pnmtopng > [outdir]/uvi%07.0f.png"
+  r=[u]  r0=umin  r1=umax // [u]-layer defines red component
+  g=[v]  g0=vmin  g1=maxv // [v]-layer defines green component
+  b=[i]  b0=-1    b1=1;   // [i]-layer defibes blue component
+
+// Keep the picture on the screen for 1 second in the end
+if Graph pause seconds=1 when=end;
+
+stop when=end;
+
+end;

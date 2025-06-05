@@ -1,0 +1,41 @@
+// Testing convergence of rk4 timestepper for a problem with a known exact answer
+def int Nst [1];          // num of discretization intervals
+def str out [0]_[1].txt;  // name of output file
+
+def real r0=0.1;	  // u-coord of the initial point
+def real T=0.75*pi;	  // duration of the time interval
+
+// The exact answer for the final condition
+def real rend=1.0/sqrt(1.0-(1.0-1.0/(r0*r0))*exp(-2.0*T));
+def real uend=rend*cos(T);
+def real vend=rend*sin(T);
+
+def real ht=T/Nst;	  // time step
+
+def str u 0;
+def str v 1;
+state xmax=1 ymax=1 zmax=1 vmax=[v]+1; 
+
+def real begin;
+def real run;
+def real end;
+k_func nowhere=1 pgm={
+  begin=eq(t,0);
+  run=ge(t,1);
+  end=ge(t,Nst);
+};
+
+k_func when=begin ode=cgle pgm={u[u]=r0; u[v]=0};
+rk4 when=run v0=[u] v1=[v] ht=ht ode=cgle par={alp=0 Omg=-1 bet=0};
+
+def real err;
+k_func when=end nowhere=1 pgm={
+  err=hypot((u(0,0,0,[u])-uend),(u(0,0,0,[v])-vend))
+};
+k_print when=end nowhere=1 file=stdout         valuesep="\t" list={Nst;ht;err};
+k_print when=end nowhere=1 file=[out] append=0 valuesep="\t" list={Nst;ht;err};
+
+// pause when=end seconds=1;
+stop when=end;
+
+end;

@@ -1,0 +1,164 @@
+/* SK. 
+16/12/2012
+The FentonKarma (1998) cell model is already in the package.
+This bbs program simulates the default action potential for excitable part.
+The code is based on Fenton Karma, Chaos 1998 paper. The pdf is
+in the directory where this bbs program is.
+SAN
+2D program
+*/
+
+/*
+neqn: number of ODEs
+Ampl: amplitude of stimulus: relevant
+*/
+
+def int  neqn 4;
+def real Ampl 0.2;
+def int  nx 50;
+def int  stimx 5;
+
+def str i 4;
+/*
+The ht, hx, and D are choosen ad hoc - not based on any published paper.
+*/
+def real ht 0.01;
+def real hx 0.1;
+/*
+Adjust this D to get a CV of 0.5 and 0.6 mm/ms.
+0.028 gives cv of 0.6 mm/ms.
+0.020 gives cv of 0.5 mm/ms.
+CV in mouse atria is 0.5 to 0.6 mm/ms according to Leaf et al.
+*/
+def real D 0.028;
+
+def int countone 0;
+def int counttwo 0;
+
+// state xmax=nx+2 ymax=1 zmax=1 vmax=neqn+1;
+
+def real Period 10000.0; /* Period at which stimuli are applied */
+def real Duration 1.0;   /* duration of the stimuli             */
+
+def real Nstim 1;
+
+
+state
+   geometry=mouse2d.bbg
+   vmax=[i]+1
+;
+
+def long dt 1.0/ht;
+
+def str u 0; def real umin 0.0; def real umax 1.2; def real umid 0.5;
+def str v 1; def real vmin 0.0; def real vmax 1.2; def real vmid 0.5;
+
+def real begin;def real often; def real end; def real T;
+def real often2;
+
+k_func nowhere=1 pgm={
+  begin =eq(t,0);  
+  T=t*ht;
+  often =eq(mod(t,dt),0);
+  often2=often*gt(T,(Nstim-2)*Period);
+  end=ge(T,Nstim*Period);
+};
+
+
+diff v0=0 v1=[i] hx=hx D=D;
+
+/*
+Since the Fenton karma oscillator ap profile does not have a slow depolarisation, and also oscillates
+at high frequency than what the fk atrial AP can catch, we try to use the FN model.
+The bifurcation of FN can be easily done also, as opposed to FK which has Heaviside function.
+The bifurcation behaviour may tell me about suitable pacing frequencies.
+*/
+// euler_het v0=0 v1=1  ht=ht n=1 ode=fhncubpar  par={epsu=eps   epsv=eps   bet=0.5 gam=gam Iu=@[i]};
+
+/*
+this euler call is for the fk with pacemaking parameter input.
+*/
+/*
+5 
+2 = 0.05 
+3 = 115 
+4 = 45 
+5 = 16.5 
+6 16.5 
+7 = 12000 
+8 = 75 
+9 = 1.5 
+10 = 400 
+11 = 0.2 
+12 = 0.5 
+14 = 0.01 
+15 = 2.5 
+16 = 2.0 
+1.0 1.2 1.5 1.1 0.01 11.0 0.15 5.0 50.0 35.0
+*/
+euler_het v0=0 v1=neqn-1 n=1 ht=ht ode=fkmod model=0 par={ht=ht;
+tau_d=[2];
+tau_r=[3];
+tau_si=[4];
+tau_0=[5];
+tau_vp=[6];
+tau_vm1=[7];
+tau_vm2=[8];
+tau_wp=[9];
+tau_wm=[10];
+u_c=[11];
+u_v=[12];
+usi_c=[13];
+k=[14];
+gsi=[15];
+ifswitch=[16];
+ghk=[17];
+ghna=[18];
+Uh=[19];
+kh=[20];
+p1=[21];
+p2=[22];
+p3=[23];
+p4=[24];
+p5=[25];
+Iu=@[i];
+};
+
+// this is stiff. very stiff - not good.
+// euler x0=stimx+1 x1=xmax-1 v0=0 v1=neqn-1 ht=ht ode=fkmod model=0 par={ht=ht; u_c=0.01; usi_c=1.0; tau_si=100.0; k=0.001; tau_0=1.0; tau_r=2.0; Iu=@[i];};
+
+// euler v0=0 v1=neqn-1 ht=ht ode=fkmod model=0 par={ht=ht; u_c=0.01; usi_c=0.95; tau_si=100.0; k=0.001; tau_0=12.5; tau_r=33.0; Iu=@[i];};
+
+euler_het v0=0 v1=neqn-1 ht=ht n=2 ode=fkmod model=0 par={ht=ht; u_c=0.01; usi_c=0.95; tau_si=100.0; k=0.001; tau_0=5.0; tau_r=21.0; Iu=@[i];};
+
+/*
+These recordings are for CLn+1 vs CLn return map,
+and for dominant frequency analysis.
+*/
+def real voltage1;
+sample when=always x0=2*nx/8 y0=2*nx/8 v0=0 result=voltage1;
+def real voltage2;
+sample when=always x0=2*nx/8 y0=6*nx/8 v0=0 result=voltage2;
+def real voltage3;
+sample when=always x0=6*nx/8 y0=2*nx/8 v0=0 result=voltage3;
+def real voltage4;
+sample when=always x0=6*nx/8 y0=6*nx/8 v0=0 result=voltage4;
+
+k_print nowhere=1 when=always file=ap.data append=0 valuesep="\t" list={T; voltage1; voltage2; voltage3; voltage4;};
+
+/*
+ECG call here.
+*/
+
+ecg D=D hx=hx xl=xmax/2 yl=xmax/2 zl=20;
+
+ppmout when=often file="ppm/reg%04d.ppm" mode="w" r=[u] r0=umin r1=umax g=[v] g0=vmin g1=vmax b=[i] b0=-2.0 b1=2.0;
+/*
+VTK output.
+*/
+// you need to throw away the first file.
+vtkout2 when=often file="vtk/fk2%06d.bin.vtk" mode="w" r=[u] r0=umin r1=umax g=[v] g0=vmin g1=vmax b=[i] b0=0 b1=255;
+
+stop when=end;
+end;
+

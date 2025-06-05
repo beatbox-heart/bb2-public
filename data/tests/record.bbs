@@ -1,0 +1,17 @@
+// Testing record device
+state vmax=3 xmax=4+2 ymax=5+2 zmax=6+2;
+def real end;
+k_func nowhere=1 pgm={end=ge(t,1);};
+k_func pgm={
+  u0=z*10+y*100+x*1000+t*10000;
+  u1=u0+1;
+  u2=u0+2;
+};
+record when=always
+  v0=1 v1=2 x0=1 x1=3 y0=1 y1=4 z0=1 z1=3
+  timestamp=1 filehead="this is a test" file=[0].out append=0
+  recordsep="\n\n"
+  format="%10.2lf" formatwidth=10
+  ;
+stop when=end;
+end;

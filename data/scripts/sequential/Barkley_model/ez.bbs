@@ -1,0 +1,22 @@
+/* Box of 100x100 internal points, 3 layers */
+state xmax=102 ymax=102 vmax=3;
+/* Schedule control flags */
+def real begin;		// true only at the beginning
+def real out;		// true when graphic and text outputs are due
+def real end;		// true when all done
+/* The schedule: this k_func computes only global variables, at each t */
+k_func nowhere=1 pgm={begin=eq(t,0);out=eq(mod(t,10),0);end=ge(t,1000)};
+/* Init. cond.: this k_func computes only local field values, at t=0 only */
+k_func when=begin pgm={u0=gt(y,50); u1=0.4*lt(x,50)};
+/* Graphic output of u and v fields distribution */
+k_paintgl when=out width=300 height=300 nabs=100 nord=100
+  pgm={red=u(abs,ord,0,0); grn=u(abs,ord,0,1)/0.8; blu=0};
+/* Text output of a point record */
+record when=out x0=10 x1=10 y0=20 y1=20 file="history.dat";
+/* Terminate when all work done */
+stop when=end;
+/* Diffusion substep for layer 0, layer 2 reserved for Laplacian */
+diffstep v0=0 v1=2 ht=0.02 hx=0.4 D=1;
+/* Reaction substep for layers 0:1; Barkley's variation of FitzHugh-Nagumo kinetics */
+euler v0=0 v1=1 ht=0.02 ode=fhnbkl par={a=0.8 b=0.01 eps=0.02};
+end;

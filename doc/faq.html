@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" 
+          content="Quick start manual for the beatbox heart simulation code.">
+    <title>Beatbox Quick Start Guide</title>
+    
+    <link rel="stylesheet" type="text/css" href="docstyle.css"/>
+
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript" src="ToC.js"></script>
+
+  </head>
+  <body>
+
+
+<h1>Beatbox: Archive of User Queries and Solutions</h1>
+
+<hr/>
+<!-- A table of contents is generated here using JavaScript above -->
+<div id="toc">
+<h2>Table of Contents</h2>
+</div>
+<hr/>
+
+<!--
+     This is where the content that is used to generate the ToC should
+     be placed.
+-->
+<div id="contents">
+
+<h1 class="numbered">Mailing list</h1>
+
+<p>
+The Beatbox user mailing list is as follows:
+</p>
+<ul>
+<li>
+<a mailto="BEATBOX-USER@jiscmail.ac.uk">BEATBOX-USER@jiscmail.ac.uk</a>.
+</li>
+</ul>
+<p>
+You need to be subscribed in order to be able to post to this list.
+Subscription information and a mail archive for this list is available
+at:
+</p>
+<ul>
+<li>
+<a href="https://www.jiscmail.ac.uk/cgi-bin/webadmin?A1=ind1211&L=beatbox-users">
+https://www.jiscmail.ac.uk/cgi-bin/webadmin?A1=ind1211&L=beatbox-users</a>.
+</li>
+</ul>
+
+<h1 class="numbered">The queries</h1>
+
+<h2 class="numbered">New users</h1>
+
+<p>
+Q: Are there practical workshops being conducted where I can bring my
+specific project, and produce my bbs scripts and set up my scientific
+project.
+</p>
+<p>
+A: Yes, shortly in the near future.
+</p>
+
+<p>
+Q: Where can I find information on writing a bbs script?
+</p>
+<p>
+A:
+</p>
+
+<h2 class="numbered">Operating system</h1>
+<p>
+Q: What operating system are supported by Beatbox?
+</p>
+<p>
+A: Beatbox performs best on Red Hat, MAC OS, and Fedora. With suitable
+configuration, it can also be used in Ubuntu.
+</p>
+
+<h2 class="numbered">sample and k_print</h1>
+
+<p>
+Q: I have a 500 x 500 2D sheet with FHN kinetics. I know that I can use the ppm,
+but I want to sample output at 10,000 points in my simulation, and write it to
+file using k_print. Is there a maximum number of sample calls that I can make
+in a bbs script? 
+</p>
+<p>
+A: You can increase the number of devices by altering
+the <code>MAXDEV</code> parameter in <code>devices.h</code>.
+</p>
+
+<h2 class="numbered">Initial conditions</h1>
+
+<p>
+Q: How can I provide initial conditions for my cell model simulation in my
+bbs script.
+</p>
+<p>
+A: Use the <code>k_func</code> device to set your initial conditions
+at <code>time=begin</code>.
+</p>
+
+<h2 class="numbered">Clampling a variable to experimental recording</h1>
+<p>
+Q: How can I clamp my voltage to experimental data.
+</p>
+
+<p>
+A: 
+</p>
+
+<h2 class="numbered">Looping</h1>
+
+<p>
+Q: How can I loop over several values of pacing cycle length or a
+parameter value?
+</p>
+
+<p>
+A: The current method to do this is by means of shell scripting. Looping
+functionality will be provided in the bbs programming language in the
+future.
+</p>
+
+<h2 class="numbered">HPC systems and local MPI runs fail for no apparent reason, but with SEG fault 11</h1>
+
+<p>
+Q: I am trying to run a bbs script which for no apparent reson fails
+when run in parallel. The segmentation fault I get is: mpirun noticed
+that process rank 0 with PID XYZ on node yourcomputer.address.uk
+exited on signal 11 (Segmentation fault).
+</p>
+
+<p>
+A: Such errors typically occur when part of your code is trying to
+access unallocated memory. It may also occur on machines like Hector
+where the compute nodes do not have all the environment variables as
+the login nodes. In this case, the first thing that you can do is
+increase the shell stacksize by means of:
+</p>
+
+<pre>ulimit -s unlimited (for bash)</pre>
+<p>
+or
+</p>
+<pre>unlimit stacksize (for csh/tcsh)</pre>
+
+<p>
+For Mac OS, there is a hard limit on the shell stacksize. For most
+systems it is:
+</p>
+
+<pre>ulimit -s 65531</pre>
+
+<p>
+If this does not help, you should post your bbs script and output of
+the run (error and output files on Hector) to the user mailing list.
+</p>
+
+<hr/>
+<b>Copyright &copy; (2010-2013) Vadim Biktashev, Alexander
+Karpov,Irina Biktasheva, Ross McFarlane;<br/>
+Copyright &copy; 2012-2013 Sanjay Kharche<br/> 
+This file is part of Beatbox.<br/>
+</b>
+<address>Sanjay.Kharche@liverpool.ac.uk</address>
+<!-- Created: Wed Sep 26, 2012 09:00:00 GMT Daylight Time 2012 -->
+<!-- hhmts start -->Last modified: Feb 22 2013 <!-- hhmts end -->
+</body>
+</html>
+

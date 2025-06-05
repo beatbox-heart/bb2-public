@@ -1,0 +1,113 @@
+/* Beatbox example bbs script for Fitz-Hugh Nagumo 2D spiral wave simulations.
+ * 
+ * Purpose of this script: Example bbs script for 2D FHN spiral wave simulation in a slice of rabbit ventricles geometry.
+ *
+ * Inputs:  1. ffr_slice.bbg (rabbit ventricles slice geometry)
+            2. fhn1.rec      (file obtained by running fhn0.bbs)
+ *
+ * Outputs: 1. png images of the 2D simulation (in the fhn_spiral_ffr_slice.dir directory);
+ *          
+ *
+ * This bbs script demonstrates the use of the following syntax and devices:
+ * 1. more extensive use of k-variables to save typing and ease modification;
+ * 2. use of k_func as a computational device for creating intial spiral conditions by phase distribution method, using data from file fhn1.rec obtained by the previous simulation of fhn1.bbs;
+ * 3. use of shell output device to call arbitrary OS command from BeatBox (here to create an output directory for the image files);
+ * 4. use of imgout output device to output image files;
+ *
+ * Before running this script, make sure that the geometry file ffr_slice.bbg and fhn1.rec file listed above are available in the work directory.
+ *
+ * To run this bbs script, use the following command:
+ * Beatbox_SEQ fhn_spiral_ffr_slice.bbs
+ *
+ */
+
+//***************************
+// Parameters
+
+//FHN model kinetics parameters epsilon, beta, gamma
+def real eps 0.30; def real bet 0.71; // rigid rotation, positive filament tension
+//def real eps 0.20; def real bet 0.71;  // meander
+//def real eps 0.3; def real bet 0.77; // negative filament tension
+def real gam 0.50;
+
+// defining layer order numbers for FHN model dynamic variables  
+def str u 0; // u variable will be in layer 0
+def str v 1; // v variable will be in layer 1
+def str i 2; // diffusion term will be in layer 2
+
+// graphics output limits 
+def real umin -2.0; 
+def real umax 2.0;
+def real vmin -1.0; 
+def real vmax 1.5;
+
+// simulation time step 
+def real ht 0.005;
+
+// simulation space step
+def real hx 0.50;
+
+// diffusion coefficient
+def real D 1.0;
+
+state geometry=ffr_slice.bbg vmax=3;
+
+// Parameters of the initial conditions
+def real x0 25; // x0=25 is the centre of the spiral
+def real y0 31; // and so for y
+def real lam 100; // The pitch of the Archimedean spiral measured in grid points
+
+
+// Device time (when) control variables
+def real begin;  // it is the very first step
+def real out; // it is time to make outputs
+def real end;  // it is time to stop
+
+def int tout 0.5/ht; // output will be in so many steps, that is once per 0.5 units of model time
+
+k_func name=timing nowhere=1 pgm={
+	begin = eq(t,0);            // beginning of simulation
+	out   = eq(mod(t,tout),0);    // time to make outputs every tout steps
+        end   = ge(t,30000);        // end of simulation	
+};
+
+// Initial conditions by phase distribution method: 
+// turning 1D record at fhn1.rec into the initial 2D Arch. spiral
+k_func when=begin  name=initial file=fhn1.rec pgm={
+  phasep=atan2(x-x0,y-y0) - 2*pi*hypot(x-x0,y-y0)/lam; // phasep(x,y)=const is Arch. spiral
+  u0=p0; u1=p1                                         // results of phase field calcs are assigned to appropriate layers. 
+  // Here phaseu= magic variable could have been used instead making the 
+  // last two assignments unnecessary. 
+};
+
+// The diff device calculates the diffusion term of the field in layer [u]=0, that is u-field, 
+// and puts the result into layer [i]. 
+// The diff device also implicitly calsculates Neumann "no flux" boundary conditions.
+// The diff device needs hx to compute the spatial derivatives, and diffusion coefficient D to multiply the result by.
+diff v0=[u] v1=[i] D=D hx=hx;
+
+
+// The 'reaction', cell kinetics update substep: the cell model 'ode' is 'fhncubpar';  
+// the reserved Iu variable for the 'extra' term in the right-hand side for u is taken from the layer [i], 
+// that is where the D*Laplacian for u was stored. 
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar rest=10000 par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+
+// Create the directory for the image files
+// (no problem if it is already there)
+def str outdir [0].dir;        // so it will be fhn_spiral_ffr_slice.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+                               // advance=1 means this will be done BEFORE the first step
+
+// Image files for u,v,i fields.
+// This is the simpler version which uses what is in the layers,
+// only by linear scaling [umin,umax]->[0,255] etc. 
+imgout when=out 
+  // On-the-fly conversion including flipping top/bottom flip
+  filter="pnmflip -tb | pnmtopng > [outdir]/uvi%07.0f.png"
+  r=[u]  r0=umin  r1=umax // [u]-layer defines red component
+  g=[v]  g0=vmin  g1=vmax // [v]-layer defines green component
+  b=[i]  b0=-1    b1=1;   // [i]-layer defibes blue component
+
+stop when=end;
+
+end;

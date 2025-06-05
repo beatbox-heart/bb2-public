@@ -1,0 +1,132 @@
+/* Beatbox example bbs script.
+ * This bbs script demonstrates the use of the byteout device.
+ * 
+ * Inputs: fhn.par
+ *
+ * Outputs: 1. ppm files (in ppm/ directory)
+	    2. a byteout file called fhnbyteout.dat        
+ *
+ * To run this bbs script, use the following command:
+ * Beatbox_SEQ fhn3.bbs
+	 */ 
+
+/*
+ * fhn.par is a file with the FHN parameter definitions.
+ */
+//<fhn.par>
+
+// simulation time step 
+def real ht 0.005;
+
+// simulation space step
+def real hx 1.0/3.0;
+
+// diffusion coefficient
+def real D 1.0; 
+
+//FHN model kinetics parameters epsilon, beta, gamma
+def real eps 0.3; def real bet 0.77; // negative filament tension
+def real gam 0.50;
+
+// defining layer numbers for FHN model dynamic variables  
+def str u 0; // u variable will be in layer 0
+def str v 1; // v variable will be in layer 1
+def str i 2; // diffusion term will be in layer 2
+
+// real time graphic output limits (sequential mode only)
+def real umin -2.0; def real umax 2.0;def real umid 0.0;
+def real vmin -1.0; def real vmax 1.5;def real vmid 0.5;
+
+/* Allocation of layers to the state varables. */ 
+def str p 3;
+/* Allocation of layers to the state varables. */ 
+def str d 4;
+
+// The size of the model is xmax*ymax*zmax*vmax.
+// Define a box of size 100 (x) by 100 (y) by 50 (z). 
+// vmax is always 1 more than total number of ODE state variables.
+/* The size of the model is xmax*ymax*zmax*vmax 
+ * where vmax is the number of dynamical variables in the cell model of ODEs. 
+ * xmax=1, ymax=1, zmax=1 represents a cell (OD) model, while 
+ * all other values of xmax, ymax, zmax represent tissue models. 
+ */ 
+state xmax=100 ymax=100 zmax=50 vmax=3;
+
+// Schedule parameters.
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;
+def real end;
+def real out;    // it is time to make outputs
+
+//def int tout 0.25/ht; // output will be in so many steps, i.e. once per 0.25 units of model time
+def int tout 1/ht; // output will be in so many steps, i.e. once per 0.5 units of model time
+
+// Define the schedule parameters using k_func device.
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+	begin = eq(t,0);
+        out   = eq(mod(t,tout),0); // time to make outputs every tout steps
+	end   = ge(t,80000);
+};
+
+////////////////////////////////////////////////
+// Cross field stimulus using k_func devices to initiate scroll wave along 
+// z-axis.
+/* Apply stimulus to tissue specified by x0,x1,y0,y1,z0,z1. If 
+ * any of these are not specified, then the max or min values are presumed 
+ */ 
+//k_func when=begin x1=25 pgm={u[u] = 1.7;};
+//k_func when=begin x0=26 pgm={u[u] = -1.7;};
+//k_func when=begin y1=25 pgm={u[v] = 0.7;};
+//k_func when=begin y0=26 pgm={u[v] = -0.7;};
+////////////////////////////////////////////////
+
+// Initial conditions: twisted scroll
+def real x0 0.5*xmax+0.5; 
+def real y0 0.5*ymax+0.5; 
+def real lam 100;
+def real Nwind 0.1;
+k_func when=begin 
+       name="ic" 
+       file=fhn1_NegativeTension.rec 
+       pgm={
+        phasep= atan2(x-x0,y-y0) - 2*pi*hypot(x-x0,y-y0)/lam + 2*pi*Nwind*z/zmax;
+        u[u]=p[u]; u[v]=p[v]
+       };
+
+
+// The computation
+// deff device to compute the deffusion throughtout the 3D box and 
+// implicitly applies no flux boundary conditions.
+/* Compute the Laplacian. */ 
+diff v0=[u] v1=[i] D=D hx=hx;
+
+// ODE device that solves the ODE (fhncubpar) at all points in the 3D box.
+/* Computation of 1 time step update. 
+ * In spatial simulations, the Laplacian is stored at Iu=@vmax. 
+ */ 
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar rest=10000 par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+
+// Create the directory for the image files
+// (no problem if it is already there)
+def str outdir [0].dir; // so it will be fhn3.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+// advance=1 means this will be done BEFORE the first step
+
+/* PPMOUT gives 2D/3D ppm file format output at a rate specified by when= parameter. 
+   ppmout device produces serially numbered ppm files in the  sub-directory  [outdir]    */ 
+ppmout  when=out file="[outdir]/%06d.ppm" mode="w" r=[u] r0=umin r1=umax g=[v] g0=vmin g1=vmax b=[i] b0=0 b1=255;
+
+/* use of byteout device. */
+// byteout file="fhnbyteout.dat" append=1 compress=-2 v0=0 v1=1 u0=-80 u1=20 row=1 col=2;	
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;

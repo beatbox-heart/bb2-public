@@ -1,0 +1,55 @@
+// Make a record of 0D pulse
+/*
+Beatbox program to demonstrate the Luo-Rudy 1994 AP.
+The inputs are lrd.par already included in the code
+of this script, and the output is lrd0_ap.vtg.
+To run,
+Beatbox_SEQ lrd0_ap.bbs
+*/
+
+<lrd.par>
+
+def int neqn [iext];
+
+rem def real ht 0.1; 	/* MC's default time step was 0.005 (msec) */
+def real umin -120; 
+def real umax 80.;
+def real Cm 165.0;
+
+state xmax=1 ymax=1 zmax=1 vmax=neqn+1;
+
+// Schedule and display parameters
+def long dt 2.0/ht;     // output period
+def long DT 500.0/ht;	// ctlpoint period
+
+def real pulsecount;
+def real chosenpulse;
+def real T;
+
+def real begin;def real often;def real seldom;def real end;
+k_func nowhere=1 pgm={
+  T=t*ht;
+  begin =eq(t,0);
+  often =eq(mod(t,dt),0);
+  seldom=eq(mod(t,DT),0);
+  end=ge(t,DT);
+  chosenpulse=eq(pulsecount,4);
+};
+
+k_func when=always pgm={
+  u24=le(t*ht,2.0)*3000./Cm;
+};
+
+// The computation
+euler v0=0 v1=neqn-1 ht=ht ode=lrd par={ht=ht; IV=@24};
+
+// Output
+def real voltage;
+sample x0=0 y0=0 z0=0 v0=0 result=voltage;
+k_print nowhere=1 when=often file=lrd0_ap.vtg append=0 valuesep="\t" list={T; voltage;};
+
+stop when=end;
+update when=often;
+
+end;
+

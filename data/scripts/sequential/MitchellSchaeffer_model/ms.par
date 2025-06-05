@@ -1,0 +1,26 @@
+// Standard MS model parameters for all related scripts
+
+// Notional units
+def real ms=1.0; // millisecond for time
+def real mm=1.0; // millimeter for space
+
+// MS model kinetics parameters
+def real tau_in=0.16;
+def real tau_out=2.6;
+def real tau_open=20;
+def real tau_close=43;
+def real v_gate=0.014;
+
+// Allocation of layers to the state varables
+def str V 0; 
+def str h 1; 
+def str i 2; 
+
+// Computational parameters
+def real ht=0.01*ms; // The simulation time step
+def real hx=0.33*mm; // .. space step 
+def real D=0.0735*mm^2/ms;  // voltage diffusivity
+
+// Expected limits of the variables, for visualization
+def real Vmin -0.01; def real Vmax 1.01; def real Vmid 0.5; /* 0.5*(1-sqrt(1.0-4*tau_in/tau_out)); */ /* v_gate; */
+def real hmin -0.01; def real hmax 1.01; def real hmid 4*tau_in/tau_out; /* 4.5*tau_in/tau_out; */

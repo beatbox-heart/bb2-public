@@ -1,0 +1,8 @@
+// Testing matout device
+state vmax=2 xmax=3+2 ymax=4+2 zmax=5+2;
+def real end;
+k_func nowhere=1 pgm={end=ge(t,5)};
+k_func pgm={u0=x+10*y+100*z+1000*t;u1=-u0};
+matout v0=0 v1=1 file=[0].out head="[0] test" array_name=[0] array_type=int16 u0=-32768 u1=32767;
+stop when=end;
+end;

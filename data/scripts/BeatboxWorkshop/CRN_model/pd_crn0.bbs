@@ -1,0 +1,180 @@
+/* 
+ * Purpose of this script: Example bbs script for 0-dimensional CRN single cell Action Potential simulation.
+ *
+ * Inputs: none.
+ *
+ * Outputs: 1. onscreen graphics if used with graphics
+ *          2. file pd_crn0.rec
+ *          3. file pd_crn0.vtg
+ *
+ * This bbs script demonstrates the use of the following devices:
+ *   1. "k_func": control and value assignment device; including a feedback control device: stimulating shock timing is defined as a function of the current cell state;
+ *   2. "sample": a device to convert a grid value into a global k-variable => used for onscreen output here;
+ *   3. "screen" and "k_draw": devices for run-time graphics output: draw (v,oi) phase trajectory of the system as the solution progresses;
+ *   4. "record": output device to write down contents of the grid (in this case, just the single cell) to a file (in this case, pd_crn0.rec).
+ *   5. "k_print": output device to write down a formatted list of variables to a file (in this case, an instant voltage timecourse (T, V) are written into pd_crn0.vtg). 
+ *   6. "clock": output device that shows integer simulation time counter.
+ *
+ * To run this simulation with graphics, use the following command:
+ * Beatbox_SEQ pd_crn0.bbs
+ *  and to run without graphics, use the following command:
+ * Beatbox_SEQ pd_crn0.bbs -nograph
+ */
+
+// CRN Model parameters
+def real ms 1.0;        /* CRN model has time unit of 1 ms */
+def real Cm 100; 	/* cell membrn capacitance, pF */
+
+// The simulation time step.
+// ht is the constant time step used by the Euler device. 
+def real ht  0.005; 	/* MC's default time step was 0.005 (msec) */
+
+// Dynamic variables and layer allocation:
+// define the names for some state varables layers 
+def str v 0;   // layer 0 reserved for the trans-membrane voltage in the CRN model will be called v
+def str oi 14; // layer 14 reserved for the I_to inactivation gating variable will be called oi
+
+// Expected limits of the variables v and oi, for on-screen visualization in k_draw
+def real Vmin -90.0; 
+def real Vmax 50.0; 
+def real oimin  0.0; 
+def real oimax 1.0; 
+
+def int neqn 24; // the total number of dynamic variables in the CRN cell model 
+
+// Allocation of layer named i and numbered neqn=24 for the stimulation current, see the usage below.  
+def str i neqn;
+
+// The size of the model is xmax*ymax*zmax*vmax.
+// vmax is the number of layers, including 
+// the dynamical variables in the cell model plus any extra layers:
+// in this particular case, layer [i] for stimulation current, i=neqn=24
+// The dynamical variables layers are enumerated from zero, so the last layer available
+// is [vmax-1].
+state xmax=1 ymax=1 zmax=1 vmax=[i];
+
+// Time control (schedule) parameters.
+def long dt 2.0*ms/ht;  // output period
+def long DT 10.0*ms/ht; // output 'colouring' period: see in k_draw
+def real T;		// simulation time in model time units
+
+def real Tst 0;		// time of the last stimulus
+def real Period;	// interval between those
+def int count 0;	// count stimuli
+def int countmax 10;	// how many is enough
+
+/* Declare global timing variables. 
+ * often, once, paceout are for output rates (see the k_func device), 
+ * end is used to set up the stopping criterion for the "stop" device, 
+ */ 
+def real once;
+def real often;
+def real paceout;
+def real end;
+
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+  T     =t*ht;
+  once  =eq(t,1);
+  often =eq(mod(t,dt),0);
+};
+
+//*********************************
+// The feedback stimulation protocol
+
+// The dynamic variables as global k_variabls - initial values high not to trigger feedback
+def real V=inf;
+def real Oi;
+def real I=0;
+
+// The resting state
+def real Vst=-inf;
+k_func when=once nowhere=1 pgm={Vst=V};
+
+// End of AP fixed at this value above the resting state
+def real dV 4.0;
+// Voltage threshold
+def real Stim 30.0;
+
+// Feed-back stimulation: push when close to the resting state
+k_func name=restTest nowhere=1 pgm={
+  I=lt(V,Vst+dV);                  // if V<Vst+dV then I=1
+};
+k_func nowhere=1 when=I pgm={      // do if I=1
+  Period=T-Tst;
+  Tst=T;
+  count=count+1;
+  paceout=eq(count,countmax);      // paceout=1 iff count=countmax
+  end=gt(count,countmax);          // end=1 iff count>countmax
+} debug=stdout;
+
+
+// apply stimulation current iff I=1, that is the AP close to resting state
+k_func name=fb when=I pgm={u[v]=u[v]+I*Stim};
+
+// The 'reaction' substep to update the cell kinetics at every time step 
+// the cell model 'ode' is 'crn';  
+// The euler device needs ht to compute the time derivatives,
+// if necessary, the model constants, e.g. some maximum coductances might also be explicitely changed/assigned values here
+euler name=ode1 v0=0 v1=neqn-1 ht=ht ode=crn  par={
+ht=ht;
+//gk1=0.18;
+//gcaL=0.06185;
+};
+
+
+sample when=always v0=[v] result=V;     // sample the voltage and assign the value to global variable V 
+                                        // to be used for on screen display
+sample when=always v0=[oi] result=Oi;   // sample the oi variable and assign the value to global variable Oi
+                                        // to be used for on screen display
+
+/**Graphics output*******************************************************/
+
+// Set up a 'window' size for graphics output
+def int stdattr 7*16+5;
+def int winsize 400;
+def int col0 10;      
+def int col1 col0+winsize;
+def int col2 col1+10; 
+def int col3 col2+winsize;
+def int row0 30;      
+def int row1 row0+winsize;
+// define the size for the on screen output window1 
+def str win1 col0=col0 col1=col1 row0=row0 row1=row1 color=15*16+15;
+// define the size for the on screen output window2 
+def str win2 col0=col2 col1=col3 row0=row0 row1=row1 color=0*16+15;
+
+// The graphics output window will be with XMAX*YMAX resolution with 
+// 10-pixel rims, located 10 pixels from the right and 10 pixels 
+// from the top of the screen. 
+screen WINX=-10 WINY=10 XMAX=col3+10 YMAX=row1+10;
+
+clock when=often  color=0*16+15 row0=1 col0=1;
+k_clock when=often color=0*16+15 row0=1 col0=10 format="T=%.1f" code=T; 
+
+// Draw the instant phase trajectory in window1
+k_draw when=always [win1] color=BLUE*16
+  absmin=oimin absmax=oimax ordmin=Vmin ordmax=Vmax lines=0.5
+  pgm= {col=LIGHTGRAY+mod(t*1.0/DT,7);abs=Oi;ord=V};
+// Draw the instant AP in window2
+k_draw when=always [win2] color=BLUE*16 lines=0.1
+  absmin=0 absmax=400.0 ordmin=Vmin ordmax=Vmax 
+  pgm= {col=LIGHTGRAY+mod(count,7);abs=T-Tst;ord=V};
+update when=always;
+
+/*********************************************************************/
+
+// Output (record) all CRN dynamical variables, that is from v0=0 up to v1=23, into the file pd_crn0.rec 
+// for the chosen pulse "paceout". Use this record to pace the 1D strand
+record when=paceout file=[0].rec append=0 v0=0 v1=neqn-1;
+
+// Output transmembrane voltage V=v[0] sampled using the sample device .
+// It is output into a file pd_crn0.vtg using the k_print device.
+k_print nowhere=1 when=often file=[0].vtg append=0 valuesep="\t" list={T; V;};
+
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;

@@ -1,0 +1,84 @@
+/* Beatbox example bbs scripts FHN using rabbit2012.bbg
+ *        
+ */ 
+// Computation parameters
+def real ht  0.001;
+def real hx  0.1;
+def real D   1.0;
+//FHN model kinetics parameters epsilon, beta, gamma
+def real bet 0.71;
+def real eps 0.30;
+def real gam 0.50;
+
+def str u 0; def real umin -2.0; def real umax 2.0;def real umid 0.0;
+def str v 1; def real vmin -1.0; def real vmax 1.5;def real vmid 0.5;
+
+def str i 2; 
+def str p 3;
+def str d 4;
+
+def int neqn [i];
+
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;
+def real often;
+def real end;
+
+state
+	geometry=ffr.bbg
+	vmax=[i]+1
+	normaliseVectors=1
+	anisotropy=1
+;
+
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+	begin = eq(t,0);
+	often = eq(mod(t,1000),0);
+	end   = ge(t,40000);
+};
+
+/////////////////////////////////////////////////////
+// xz Cross-field Stimulus
+//k_func when=begin x1=48 pgm={u[u] = 1.7;};
+//k_func when=begin x0=49 pgm={u[u] = -1.7;};
+//k_func when=begin z1=98 pgm={u[v] = 0.7;};
+//k_func when=begin z0=99 pgm={u[v] = -0.7;};
+///////////////////////////////////////////////////////
+
+// Initial conditions: twisted scroll 
+def real y0 0.5*ymax+0.5; 
+def real z0 0.5*zmax+0.5; 
+def real lam 100;
+def real Nwind 0.1;
+k_func when=begin 
+       name="ic" 
+       file=fhn1_PositiveTension.rec 
+       pgm={
+        phasep= atan2(y-y0,z-z0) - 2*pi*hypot(y-y0,z-z0)/lam + 2*pi*Nwind*x/xmax;
+        u[u]=p[u]; u[v]=p[v]
+       };
+
+
+// The computation
+diff v0=[u] v1=[i] Dpar=D Dtrans=D/4 hx=hx;
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar rest=10000 par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+
+// Create the directory for the image files
+// (no problem if it is already there)
+def str outdir [0].dir; // so it will be fhn_ffr_iso.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+// advance=1 means this will be done BEFORE the first step
+
+ppmout when=often file="[outdir]/%04d.ppm" mode="w" r=[u] r0=umin r1=umax g=[v] g0=vmin g1=vmax b=[i] b0=0 b1=255;
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+
+end;

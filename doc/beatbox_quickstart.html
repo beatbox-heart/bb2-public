@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" 
+          content="Quick start manual for the beatbox heart simulation code.">
+    <title>Beatbox Quick Start Guide</title>
+    
+    <link rel="stylesheet" type="text/css" href="docstyle.css"/>
+
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript" src="ToC.js"></script>
+
+  </head>
+  <body>
+
+
+<h1>Beatbox Quick Start Guide</h1>
+
+<hr/>
+<!-- A table of contents is generated here using JavaScript above -->
+<div id="toc">
+<h2>Table of Contents</h2>
+</div>
+<hr/>
+
+<!--
+     This is where the content that is used to generate the ToC should
+     be placed.
+-->
+<div id="contents">
+
+<h1 class="numbered">Beatbox, briefly</h1>
+
+Beatbox is a unified cardiac simulation environment. It provides:
+<ul>
+<li>
+A script interpreter to eliminate manipulation of low level code,
+and avoid lengthy recompilations each time a new simulation is
+constructed;
+</li>
+<li>
+Serial and parallel (MPI) simulations;
+</li>
+<li>
+Robust ODE solvers (Euler, RK4);
+</li>
+<li>
+Robust finite differences PDE solvers for isotropic and anisotropic
+tissue models on regular and irregular boundary domains;
+</li>
+<li>
+Major CellML cardiac models in the repository;
+</li>
+<li>
+Multiscale tissue modelling: 0D individual cell simulation, 1D fiber,
+2D sheet and 3D slab of tissue, up to anatomically realistic whole
+heart simulations using the provided tissue model repository.
+</li>
+<li>
+Run time measurements including tip tracing, filament tracing, ECG,
+samples of any variables;
+</li>
+<!---
+<li>
+Parallel file I/O functionality;
+</li>
+<li>
+Extensive debugging capabilities;
+</li>
+--->
+<li>
+Extensibility: You can easily plug in your own solvers as well as cell
+kinetics models and tissue models (e.g. MRI finite difference meshes)
+into Beatbox's highly structured code.
+</li>
+</ul>
+
+<h1 class="numbered">Who should read this guide</h1>
+
+<p>
+This quick-start guide is for users who wish to start using Beatbox in
+their cardiac simulation project. This quick-start provides an easy to
+read and follow document using which the user can start using Beatbox
+immediately.
+</p>
+<p>
+A full manual is
+available <a style="color:blue"><a href="beatbox.html"><b>HERE</b></a>.
+</p>
+<p>
+A full manual for making BBG files is
+available <a style="color:blue"><a href="bbg_howto.html"><b>HERE</b></a>.
+</p>
+
+
+<h1 class="numbered">Pointers to useful tutorials</h1>
+
+If you are new to Unix like environments, electrophysiology, cardiology, or
+anything to do with cardiac (or electrophysiology) simulations, then read the
+following tutorials.<p>
+<ul>
+<li> For a tutorial on Linux, you can see the following:
+<a href="http://www.ee.surrey.ac.uk/Teaching/Unix/">Linux Tutorial</a>
+</ul>
+
+<h1 class="numbered">Prerequisites</h1>
+
+<p>
+Beatbox is a Unix-based piece of software. Thus, it will also work on
+Mac (tested on Leopard and Snow Leopard OS X) and standard Linux:
+tested on Fedora and Red Hat Linux, though any other Linux
+distribution should work. The preferred working shell for Beatbox is
+the <code>bash</code> shell. This choice of shell will assist in
+easily executing the examples described below.  For larger
+non-interactive simulations, you may wish to choose <code>tcsh</code>
+or <code>bash</code>.
+</p>
+
+<p>
+Beatbox requires <code>gcc</code> (sequential) and <code>mpicc</code>
+(MPI parallel) C compilers. Beatbox also requires standard math and
+X11 libraries.
+</p>
+
+<p>
+To obtain the Beatbox source code off the project repository, you need
+a client program for Subversion (SVN).  You can also obtain a copy of
+the distribution source code from the authors.
+</p>
+
+<h1 class="numbered">Obtaining Beatbox Source Code and Examples</h1>
+
+<p> These are a standard installation procedures assuming your
+computer satisfies requirements stated previously.  These instruction
+assume that you are using <code>bash</code> or a similar command-line
+shell.</p>
+
+<h2 class="numbered"> Releases </h2>
+
+<p>
+To obtain a BeatBox release, download the most recent tarball from
+the repository, which at the moment of writing this is at
+<a href="http://empslocal.ex.ac.uk/people/staff/vnb262/software/BeatBox/">
+<code>http://empslocal.ex.ac.uk/people/staff/vnb262/software/BeatBox/</code>
+</a>, and unpack it. Chose the place at your convenience. It could be
+your home directory or any other directory in your space. 
+Say, if you downloaded the file
+<code>beatbox-1.1-417.tar.gz</code> into your
+<code>$HOME</code> directory, then you can do
+
+<pre>
+cd $HOME
+gunzip -c beatbox-1.1-417.tar.gz | tar xvf -
+cd beatbox-1.1-417
+</pre>
+
+and you will be in what we shall call the "beatbox package directory".
+</p>
+
+<h2 class="numbered"> Development versions </h2>
+
+<p>
+Developers and more experienced users may prefer to get the most recent
+versions of the package under development. For that, 
+a Subversion (SVN) client should be working on your
+computer. Methods of obtaining SVN are detailed on their web page:
+</p>
+<ul>
+<li><a href="http://www.sliksvn.com/en/download/">
+http://www.sliksvn.com/en/download/</a></li>
+</ul>
+<p>
+Your flavour of Linux may also support updating the SVN package using
+<code>yum</code>, <code>apt-get</code>, or similar.
+</p>
+
+<p>
+Assuming you have
+SVN client on,  you can create the <code>beatbox</code> directory and
+download the package into it using the following commands: 
+<pre>
+cd $HOME
+mkdir beatbox
+cd beatbox
+svn co --username=anonymous --password=beatbox https://beatbox-trac.epcc.ed.ac.uk/svn/trunk .
+cd beatbox
+</pre>
+and you will be in the BeatBox package directory. 
+</p>
+
+<p>
+Note the '.' at the end of the <code>svn</code> command. If you are already familiar
+with SVN you may note that this will given you a read-only copy of the
+directory; if you would like to contribute to the package, you are
+welcome to <a href="#Support_and_feedback">
+contact the authors (see below).</a>
+</p>
+
+<h1 class="numbered">Compiling and Installing Beatbox</h1>
+
+<p>
+
+<strong>For the impatient:</strong> the basic commands for compiling on local machines
+(including standard MPI clusters) as well as on HECToR (the UK
+National Supercomputing facility) have been collected into two bash
+shell scripts.  To check if your download contains these install
+scripts, and that their permissions are execute permissions, use the
+following command in the BeatBox package directory:
+
+</p>
+<pre>
+ls -l bbx_compile*sh
+</pre>
+<p>
+which should produce something like the following:
+</p>
+<pre>
+-rwxrwxr-x. 1 user group 195 Aug  3 17:01 bbx_compile_hector.sh
+-rwxrwxr-x. 1 user group  77 Aug 10 17:15 bbx_compile_local.sh
+</pre>
+
+Simply running these shell scripts from the BeatBox package directory
+will compile and install Beatbox, correspondingly on Hector:
+
+<pre>
+./bbx_compile_hector.sh
+</pre>
+
+or on a typical ("local") computer:
+
+<pre>
+./bbx_compile_local.sh
+</pre>
+
+Note that these
+scripts will install the executables into <code>$HOME/bin</code>;
+naturally, for this to work, that directory have to exist.  </p>
+
+<p>
+<strong> Details and variations:</strong>
+</p>
+
+<ul>
+  <li> Look at the commands in the two bash scripts. The Hector script
+  is different in loading the appropriate module, specifying
+  explicitly location of the libraries and chosing a different default
+  C compiler. Otherwise the two shells do the same taks: configure,
+  compile and install. They do not have to be all run every time. Say
+  if you only modify one of the source code files, you probably do not
+  need to run the configure, just compile and install.
+  </li>
+  <li> If you would rather the executables were
+installed elsewhere, you will need to edit the path location in the
+install scripts using the <code>--prefix</code> flag which points the
+installation to the directory you specify. Say if you do
+  <pre>
+  ./configure --prefix=$HOME/somewhere
+  </pre>
+  then the executables will be installed into $HOME/somewhere/bin/
+  directory.
+  </li>
+  <li> If you modify the code and wish the executables to be suitable
+  for debugging, modify the configure command in the following way:
+  <pre>
+  ./configure CFLAGS="-g -O0" --prefix=$HOME/somewhere 
+  </pre>
+
+
+<h1 class="numbered">Checking the Beatbox Installation</h1>
+
+<p>
+The compile and installation procedure outlined in the previous section will
+produce two executables <code>Beatbox_SEQ</code>
+and <code>Beatbox</code> in the directory <code>$HOME/bin</code>
+  (or another directory if you opted for that). 
+This can be checked using the command:
+</p>
+
+<pre>
+ls -l $HOME/bin
+</pre>
+
+<p>
+which should give something similar to the following:
+</p>
+
+<pre>
+total 1836
+-rwxr-xr-x. 1 usrname yourgroup  835665 Aug 10 17:23 Beatbox
+-rwxr-xr-x. 1 usrname yourgroup 1036636 Aug 10 17:23 Beatbox_SEQ
+</pre>
+
+<p>
+<code>Beatbox_SEQ</code> is the sequential executable,
+and <code>Beatbox</code> is the parallel executable. To make the
+binaries accessible from anywhere on your machine, the
+<code>$HOME/bin</code> directory should be added to your path.
+  Alternatively, you may copy the executables to a directory already
+  in your path, or you can call them using their full path name. 
+</p>
+
+<h1 class="numbered">Running Tests</h1>
+
+<p>
+Sequential and parallel test scripts are provided to test Beatbox. The
+sequential test scripts are basically for execution on a single
+processor on your local computer. The provided examples of parallel
+test scripts are for execution on HECToR.
+</p>
+
+<p>
+A typical Beatbox simulation is constructed using the <code>bbs</code>
+high level scripting language specific to Beatbox. The bulk of
+the <code>bbs</code> script represents what should be computed during
+one time step. Other parts of the <code>bbs</code> script dictate the
+duration of simulated activity, stimulation protocols, output, and run
+time measurements.  Thus, a <code>bbs</code> script serves as an input
+for the Beatbox executables <code>Beatbox_SEQ</code>
+and <code>Beatbox</code>, see examples below.
+</p>
+
+<p>
+On a local machine, usually in the sequential mode,
+the <code>bbs</code> scripts can be run directly from the command
+line.
+</p>
+
+<p>
+To help run the <code>bbs</code> scripts with variable input
+arguments, or for multiple runs, or in a batch mode on a cluster,
+examples of bash shell scripts are provided.
+</p>
+
+<h2 class="numbered">Sequential Tests</h2>
+
+<p>
+Examples of sequential scripts are provided in the
+directory <code>$HOME/beatbox/data/scripts/sequential</code>.
+</p>
+<!---
+<p>
+The sequential scripts are provided in the directory:
+</p>
+
+<pre>
+ls -l $HOME/beatbox/data/scripts/sequential/*.sh
+</pre>
+
+<p>
+which should give something similar to:
+</p>
+
+<pre>
+-rwxrwxr-x. 1 usrname usrname 366 Aug 10 19:28 $HOME/beatbox/data/scripts/sequential/runcrn0.sh
+-rwxrwxr-x. 1 usrname usrname 277 Aug 10 19:27 $HOME/beatbox/data/scripts/sequential/runcrn1.sh
+-rwxrwxr-x. 1 usrname usrname 545 Aug 10 19:14 $HOME/beatbox/data/scripts/sequential/RunTest.sh
+</pre>
+
+<p>
+Note the execute permissions for the shell scripts. We now run a few
+ready serial/sequential simulations to start understanding how Beatbox
+works. For this purpose, we use cell, 1D and 2D models based on the
+CRN human atrial cell model and discuss the inputs, the simulation
+script, what it does, the outputs, and how to visualise/what to do
+with the outputs.  We first discuss cell to 2D bbs programs using FHN
+kinetics. To give a better understanding of biophysically detailed
+simulations, cell to 2D bbs programs using CRN kinetics are also
+discussed.
+</p>
+--->
+
+<h3 class="numbered">Understanding Beatbox paradigm and bbs programs with a few examples using Fitz-Hugh-Nagumo cell model</h3>
+
+<p>
+Here we consider examples of Beatbox <code>bbs</code> scripts for 0D
+individual cell simulation, 1D fiber, and 2D sheet of cells simulation
+with Fitz-Hugh-Nagumo (FHN) cell kinetics model.  For every simulation
+script, we discuss the inputs, the simulation script, what it does,
+the outputs, and how the outputs could be visualised.  To run these
+simulations, go to the Beatbox directory which contains the sequential
+scripts:
+</p>
+
+<pre>
+cd $HOME/beatbox/data/scripts/sequential/FitzHughNagumo_model
+</pre>
+
+<h4 class="numbered">FHN 0D</h4>
+
+<p>
+The Fitz-Hugh Nagumo cell model Action Potential (AP) is simulated
+using the bbs program <code>fhn0.bbs</code>.
+If the <code>$HOME/bin</code> directory containing
+the <code>Beatbox_SEQ</code> executable is in your path,
+a <code>bbs</code> script can be run directly from the command line
+using the command:
+</p>
+
+<pre>
+Beatbox_SEQ fhn0.bbs
+</pre>
+
+or you will need to specify the full path to
+the <code>Beatbox_SEQ</code> executable otherwise:
+
+<pre>
+$HOME/bin/Beatbox_SEQ fhn0.bbs
+</pre>
+
+<p>
+In this example, the sequential Beatbox
+binary, <code>Beatbox_SEQ</code> is called with the input of
+the <code>bbs</code> script <code>fhn0.bbs</code>. Here we give just a
+brief outline of the 0D FHN simulation script, please see the detailed
+comments in the file <code>fhn0.bbs</code>.
+</p>
+<ul>
+<li>
+The <code>fhn0.bbs</code> script starts with the use
+of <code>state</code> device to define the size <i>xmax*ymax*zmax</i>
+of the medium and the number of dynamic variables <i>vmax</i>,
+followed by a series of variable and parameter declarations to prepare
+Beatbox simulation.
+</li>
+<li>
+Then, <code>k_func</code> device defines timing variables for feedback
+stimulation to generate an Action Potential.
+</li>
+<li> 
+The <code>euler</code> device is used to update the ODE model at
+each time step.
+</li>
+<li>
+At a defined instant, the FHN model two dynamic
+variables <i>u</i> and <i>v</i> are saved by the <code>record</code>
+device into the file called <code>fhn0.rec</code>, which can be
+visualised using gnuplot.
+</li>
+</ul>
+<p>
+The log of the program run is automatically saved into the
+file <code>fhn0.log</code> which replicates what you will have
+seen the output produced when you run the sequential code.
+</p>
+<p>
+The output file <code>fhn0.rec</code> will be used to generate initial
+conditions for the 1D fiber simulation by the <code>fhn1.bbs</code>
+script, which is discussed next.
+</p>
+
+<h4 class="numbered">FHN 1D</h4>
+
+<p>
+The FHN 1D model simulates a propagation of an AP through a 1D fiber
+of connected cells using the <code>bbs</code> script
+<code>fhn1.bbs</code>.
+</p>
+
+<p>
+The script <code>fhn1.bbs</code> makes use of including the parameter
+file <code>fhn.par</code>, and uses the 0D output
+file <code>fhn0.rec</code> to generate initial conditions for the 1D
+simulation via the phase distribution method.
+</p>
+
+<p>
+Then, the FHN 1D script <code>fhn1.bbs</code> can be run as an
+input file for the sequential binary <code>Beatbox_SEQ</code> from the
+command line
+</p>
+<pre>
+$HOME/bin/Beatbox_SEQ fhn1.bbs
+</pre>
+<p>
+The log of the program run will be automatically saved into the file
+<code>fhn1.log</code> with the output that will have been produced
+by the execution of the program.
+Here we give just a brief outline of the simulation script, please see
+the detailed comments in the file <code>fhn1.bbs</code>.
+<ul>
+<li>
+The <code>fhn1.bbs</code> script starts with the inclusion of the
+model parameter file <code>fhn.par</code>, please see the file for
+details,
+</li>
+<li>
+then calls the <code>state</code> device to define the size
+<i>xmax*ymax*zmax</i> of the medium and the number of dynamic
+variables <i>vmax</i> that are going to be used.
+</li>
+<li>
+The simulation protocol is set up using timing parameters for
+<code>beginning</code>, <code>ending</code>, and </code>pacing</code>.
+<p class="quest">Are these equivalent to the simulation start time, end time 
+and the output interval? Not sure what pacing is in this context.
+</p>
+</li>
+<li>
+The output from the 0D <code>fhn0.bbs</code> simulation, that is
+the <code>fhn0.rec</code> file is used to generate the initial
+conditions for the 1D simulation via the phase distribution method.
+</li>
+<li>
+The <code>diff</code> device is used to compute the Laplacian and
+update the Neumann boundary conditions.
+</li>
+<li>
+The <code>euler</code> device is used to update the ODE model at each
+time step.
+</li>
+<li>
+Then, the program counts the AP fronts passing a defined point in
+the 1D strand, and after the 5th passing front records the results
+into <code>fhn1.rec</code>, which can be visualised using gnuplot.
+</li>
+</ul>
+The output file <code>fhn1.rec</code> will be used to generate initial
+conditions for the 2D sheet of connected cells simulation by the
+<code>fhn2.bbs</code> script, which is discussed next.
+</p>
+
+<h4 class="numbered">FHN 2D</h4>
+
+<p>
+The FHN 2D model is simulated using the bbs
+script <code>fhn2.bbs</code>. It can be run at command line using the
+command:
+</p>
+
+<pre>
+$HOME/bin/Beatbox_SEQ fhn2.bbs
+</pre>
+<p>
+In this example, the sequential Beatbox
+binary, <code>Beatbox_SEQ</code> is called with the bbs
+script <code>fhn2.bbs</code>.
+</p>
+
+<p>
+The <code>fhn2.bbs</code> program consists of a series of variable and
+parameter declarations, and the use of the <code>state</code> device
+to prepare Beatbox for the simulation. Several input parameters are
+conveniently included in a file called <code>fhn.par</code>, which is
+included in the bbs program using <code>&lt;fhn.par&gt;</code>. 
+</p>
+
+<p>
+As before the schedule of the simulation is set up using parameters
+used for <code>beginning</code>, <code>ending</code>,
+and <code>pacing</code> (among other actions) of the simulation. The
+function of the diffusion device <code>diff</code> and the ODE
+solver <code>euler</code> is explained in the comments.
+<p>
+
+<p>
+Re-entry is initiated using a series of <code>k_func</code> devices to
+set the appropriate values of variables to facilitate inducing of
+re-entry in the 2D medium. The protocol for initiating re-entry is by
+means of cross-field stimulation. The actual computation for the
+diffusion is carried out using the <code>diff</code> device, while the
+ODE is solved using the <code>euler</code> device. Consecutive frames
+from the 2D simulation are stored in a series of ppm files in
+the <code>ppm/</code> sub-directory. The ppm files consist of 3 layers
+as a rule, and are given red, green, and blue values. The 2D ppm files
+can be converted to jpegs, tiffs, pngs using
+standard <code>netpbm</code> programs (see the Visualisation section
+of the main <a href="beatbox.html">documentation</a> for details on
+how to do this).
+</p>
+Here we give just a brief outline of the simulation script, please see
+the detailed comments in the file <code>fhn2.bbs</code>.
+<ul>
+<li>
+The <code>fhn2.bbs</code> script starts with the inclusion of the
+model parameter file <code>fhn.par</code>, please see the file for
+details.
+</li>
+<li>
+It then calls the <code>state</code> device to define the size
+<i>xmax*ymax*zmax</i> of the medium and the number of dynamic
+variables <i>vmax</i> that are going to be used.
+<li>
+The timing parameters <code>begin</code>  and <code>end</code> are defined
+using <code>k_func</code> device
+to be used to for beginning and ending of simulation.
+<li> Another instance of the <code>k_func</code> device is used to define
+the cross-field stimulation protocol to induce re-entry.
+<li>
+The <code>diff</code> device is used to compute the Laplacian and
+update the Neumann boundary conditions.
+<li>
+The <code>euler</code> device is used to update the ODE model at each
+time step.
+<li> Then, the program outputs a series of <code>PPM</code> files consisting
+of periodic snapshots of the simulation.
+</ul>
+
+The ppm output can be visualised using <code>netpbm</code> or any other suitable
+visualisation tool.
+
+<h4 class="numbered">FHN 3D</h4>
+
+<p>
+The FHN 3D box model is simulated using the bbs
+script <code>fhn3.bbs</code>. It can be run at command line using the
+command:
+</p>
+
+<pre>
+$HOME/bin/Beatbox_SEQ fhn3.bbs
+</pre>
+<p>
+This should work even on small computers. Though note that you will
+need to ensure that the <code>fhn.par</code> located
+in <code>$HOME/beatbox/data/parameters</code> is in the same directory
+for this to run. If you did not create a <code>ppm</code> subdirectory
+for the last example be sure to create it for this example as well
+otherwise it will not run.
+</p>
+
+<p>
+In this example, the sequential Beatbox
+binary, <code>Beatbox_SEQ</code> is called with input of the bbs
+script <code>fhn3.bbs</code>. The <code>fhn3.bbs</code> script
+consists of a series of variable and parameter declarations, and the
+use of <code>state</code> device to prepare Beatbox for the
+simulation. Several input parameters are conveniently included in a
+file called <code>fhn.par</code>. So you need to
+have <code>fhn.par</code> in your working directory. The schedule of
+the simulation is set up using parameters used for beginning, ending,
+and pacing (among other actions) of the simulation. The format,
+function, output of <code>fhn3.bbs</code> is exactly the same as in
+the 2D case. After setting up the schedule parameters using
+the <code>k_func</code> device, another set of <code>k_func</code> are
+used to provide the cross-field stimulus. The <code>diff</code> device
+is then used to compute the diffusion of voltage throughout the 3D
+model.  The <code>euler</code> device then computes the ODE
+(<code>fhncubpar</code> in this case) at all points of the finite
+difference grid. The <code>ppmout</code> device outputs ppm files at
+each time step. These ppm files are produced in a sub-directory
+called <code>ppm/</code> which is presumed to exist in the working
+directory.  The ppm output of this <code>fhn3.bbs</code> can be
+visualised using <code>EZView</code>, a Beatbox related piece of
+software (see below).
+</p>
+
+Here we give just a brief outline of the simulation script, please see
+the detailed comments in the file <code>fhn3.bbs</code>.
+<ul>
+<li> The <code>fhn3.bbs</code> script starts with the inclusion of the
+model parameter file <code>fhn.par</code>, please see the file for
+details.
+<li> It then calls the <code>state</code> device to define the size
+<i>xmax*ymax*zmax</i> of the medium and the number of dynamic
+variables <i>vmax</i> that are going to be used.
+<li> The timing parameters <code>begin</code>  and <code>end</code> are defined
+using <code>k_func</code> device
+to be used to for beginning and ending of simulation.
+<li> Another instance of the <code>k_func</code> device is used to define
+the cross-field stimulation protocol to induce re-entry.
+<li>
+The <code>diff</code> device is used to compute the Laplacian and
+update the Neumann boundary conditions.
+<li>
+The <code>euler</code> device is used to update the ODE model at each
+time step.
+<li> Then, the program outputs a series of <code>PPM</code> files consisting
+of periodic snapshots of the simulation.
+</ul>
+
+The ppm output can be visualised using <code>netpbm</code> or any other suitable
+visualisation tool.
+
+
+<h3 class="numbered">Understanding Beatbox paradigm and bbs scripts with biophysically detailed CRN model</h3>
+
+<p>
+In the previous section, we saw how to run bbs scripts using the
+command line. The bbs scripts themselves were simple in that they did
+not take any inputs. Often in cardiac simulation projects, the same
+program must be executed with a series of parameter values. In this
+section, we will see how to accomplish this using bash scripting. You
+may wish to use Perl or Python instead if you are already familiar
+with those scripting languages.
+</p>  
+
+<p>
+We use cell, 1D and 2D models based on the CRN human atrial cell model
+and discuss the inputs, the simulation script, what it does, the
+outputs, and how to visualise/what to do with the outputs.  To run
+these simulations, we can go to the following directory in the Beatbox
+installation:
+</p>
+
+<pre>
+cd $HOME/beatbox/data/scripts/sequential/CRN_model
+</pre>
+
+<h4 class="numbered">CRN 0D</h4>
+
+<p>
+First, we run the CRN cell model to produce a train of action
+potentials. To do this, a bash script command is provided:
+</p>
+<pre>
+./runcrn0.sh
+</pre>
+<p>
+The above bash shell script (as with all bash shell scripts) is a text
+file consisting of various commands used to run our program. The above
+bash script contains the command:
+</p>
+<pre>
+$HOME/bin/Beatbox_SEQ crn0.bbs
+</pre>
+<p>
+This is the most basic of commands that will be used for running a
+Beatbox simulation.  However, as of now, lets discuss the function and
+output of <code>crn0.bbs</code>. The bbs script stimulates the cell
+model using 10 current pulses.  It consists of calling the
+binary <code>$HOME/bin/Beatbox_SEQ</code> and passing to it the bbs
+simulation script, in this case
+<code>crn0.bbs</code>. This bbs script declares the <code>state</code>
+of the simulation, which consists of 1 cell. The periodic
+stimulation, by means of a user defined current, is defined using
+the <code>k_func</code> device. Each time step is solved using
+the <code>euler</code> ODE solver device. The ASCII output for time
+and voltage is generated using the <code>sample</code> device, and put
+into an output file called <code>crn0.vtg</code>. The output from
+this bbs script (called <code>crn0.vtg</code>, but you can rename it
+to anything you want by editing the <code>crn0.bbs</code> file) is a 2
+column record of the time and voltage. This output can be plotted
+using <a href="http://www.gnuplot.info/">gnuplot</a>,
+or <a href="http://www.sigmaplot.com/products/sigmaplot/sigmaplot-details.php">SigmaPlot</a>.
+As you will see below, and in the full manual, arguments can be given
+to the bbs script.
+</p>
+
+Here we give just a
+brief outline of the 0D CRN simulation script, please see the detailed
+comments in the file <code>crn0.bbs</code>.
+<ul>
+<li>
+The <code>crn0.bbs</code> script starts with declaring and assigning values to
+several simulation variables like <code>neqn</code> (number of equations in the cell
+model), time step <code>ht</code> and others.
+<li> It then calls the <code>state</code> device to define the size
+<i>xmax*ymax*zmax</i> of the medium and the number of dynamic
+variables <i>vmax</i> that are going to be used.
+<li> Then, <code>k_func</code> device defines timing variables <code>begin</code>
+(beginning of simulation), output (often and seldom), <code>end</code> (end of simulation),
+and the time <code>T</code> in physical units.
+<li> Then, another instance of the <code>k_func</code> device defines the priodic pacing.
+<li>  The <code>euler</code> device is used to update the ODE model at
+each time step.
+<li> The voltage is them sampled using the <code>sample</code> device and written to a file 
+by the <code>k_print</code> device into the file called <code>crn0.vtg</code>, which can be
+visualised using gnuplot.
+</ul>
+
+<h4 class="numbered">CRN 0D APD restitution</h4>
+
+<p>
+Often, action potential or Ca2+ transient restitution is required in
+simulation studies. Action potential restitution consists of
+stimulating a cell model with several conditioning stimuli at a give
+basic cycle length, and then a final premature stimulus.  The
+diastolic interval and action potential duration of the final
+excitation is recorded and AP features measured.  To illustrate how
+action potential restitution can be computed, a bash shell script that
+loops over the premature stimulus interval is provided. To run the
+Beatbox restitution script, use the following bash script:
+</p>
+
+<pre>
+./restitutioncrn.sh
+</pre>
+
+<p>
+We now discuss the above shell script, as well as the Beatbox bbs
+scripts for restitution that it uses
+called <code>crn0_rest.bbs</code>. The above shell script,
+unlike <code>runcrn0.sh</code>, introduces several aspects of how
+Beatbox works. Firstly, several simulation variables, like the number
+of conditioning stimuli (<code>Nstim</code>), and various file names
+can be defined in the shell script in preparation of passing it to the
+bbs program. Importantly, cell model parameters like <code>gk1</code>
+and <code>gcaL</code> can also be defined here. Once all the
+parameters are defined, they can be easily passed to the bbs script
+as indicated in the <code>restitutioncrn.sh</code> shell script:
+</p>
+
+<pre>
+$HOME/bin/Beatbox_SEQ crn0_rest.bbs $Nstim $Period $fileName $fileName2 $repolarisation $gk1 $gcal
+</pre>
+
+<p>
+Now that the contents of the shell script are clear, let us discuss
+the actual Beatbox bbs script, <code>crn0_rest.bbs</code>.
+</p>
+
+<p>
+Firstly, it has been constructed to take several parameters as
+input. The inputs to this specific bbs script are the number of
+conditioning stimuli, the pacing period, the file name for voltage
+trace, the file name for APD data, the amount of repolarisation at
+which restitution is to be computed, and model parameters
+(<code>gk1</code> and <code>gcaL</code>).  Passing of the
+electrophysiological parameters is to show how diseased related to
+electrophysiological can be simulated using Beatbox. The
+program <code>crn0_rest.bbs</code> takes all these parameters and sets
+up the simulation. 
+</p>
+
+<p>
+The stimulation protocol for the restitution is set up by means of a
+<code>k_func</code> device where several pacing parameters are
+defined. Further, the stimulus current amplitude and time profile are
+defined using another call to <code>k_func</code> device. It then
+solves the CRN model using the <code>euler</code> device. In
+the <code>.vtg</code> files, output from voltage, and intra-cellular
+ionic concentration profiles is provided using a combination
+of <code>sample</code> and <code>k_print</code> devices. Then using a
+combination of <code>k_func</code>, <code>k_print</code>,
+and <code>k_poincare</code> devices, the APD at the user defined
+repolarisation is measured as well as output to file.  It is then
+appended to the specified output data file. The output of the above
+simulation can be visualised using gnuplot (or any other plotting
+software). Contents of the vtg files (providing time traces of
+voltage) are visualised using gnuplot as:
+</p>
+
+<pre>
+plot 'crn_basal0.vtg' u 1:2 w l
+</pre>
+
+<p>
+and those of the restitution as (<code>.apd</code> file):
+</p>
+
+<pre>
+plot 'crn_basal.apd' u 1:2 w lp
+</pre>
+
+Here we give just a brief outline of the 0D CRN restitution simulation script, please see the detailed
+comments in the file <code>crn0_rest.bbs</code>.
+<ul>
+<li> The <code>crn0_rest.bbs</code> script starts by assigning the input values to the script
+to variables to be used in the simulation. For e.g. <code>Nstim</code> is assigned the second input
+at command line.
+<li> The <code>crn0_rest.bbs</code> script then declares and assigns values to
+several simulation variables like <code>neqn</code> (number of equations in the cell
+model), time step <code>ht</code> and others.
+<li> It then calls the <code>state</code> device to define the size
+<i>xmax*ymax*zmax</i> of the medium and the number of dynamic
+variables <i>vmax</i> that are going to be used.
+<li> Then, <code>k_func</code> device defines timing variables <code>begin</code>
+(beginning of simulation), output (often and seldom), <code>end</code> (end of simulation),
+time <code>T</code> in physical units, as well as stimulation flags <code>stim</code> and
+<code>penult</code>.
+<li> Then, another instance of the <code>k_func</code> device defines the priodic pacing.
+<li>  The <code>euler</code> device is then used to update the ODE model at
+each time step.
+<li> The voltage, Ca transient, and other variables are then sampled using the <code>sample</code> device and written to a file 
+by the <code>k_print</code> device into a user defined file which can be
+visualised using gnuplot.
+<li> Then the <code>k_poincare</code> device is used to measure the APD. The APD measurements are
+written to file using <code>k_print</code> device which can be visualised using gnuplot.
+</ul>
+
+<h4 class="numbered">CRN 1D CV restitution</h4>
+
+<p>
+Now we look at how to construct a 1D strand and initiate propagations
+through the strand. Since we already know a few things about shell
+scripting (see above), we will learn how to conduct conduction
+velocity restitution in a 1D human atrial strand. Conduction velocity
+restitution involves pacing the 1D strand with conditioning pulses (1
+or more) and then applying a premature pulse. The conduction velocity
+of this premature propagating excitation is then measured. To see how
+this is done using Beatbox, use the bash
+script <code>runcrn1.sh</code> and the bbs
+script <code>crn1.bbs</code>.  To simply run the simulation, use the
+bash script command:
+</p>
+
+<pre>
+./runcrn1.sh
+</pre>
+
+<p>
+The contents of the above script are straightforward. You can set the
+smallest and largest <code>S2</code> (premature pulse), as well as the
+output filename and values of a couple of model parameters if
+simulating electrophysiologically diseased CV restitution. In this
+shell script, the simulation actually runs with the command
+</p>
+
+<pre>
+$HOME/bin/Beatbox_SEQ crn1.bbs $S2 $fileName 0.09 0.1235
+</pre>
+
+<p>
+where the Beatbox_SEQ binary is given the <code>crn1.bbs</code> bbs
+script, the value of S2, the output filename, and values of a couple
+of model parameters, in this case <code>gK1</code> and
+<code>gCaL</code>. The <code>crn1.bbs</code> bbs program takes these
+input parameters and starts by setting up the 1D model using
+the <code>state</code> device.  Several variables and parameters
+required for the simulation are defined using the <code>k_func</code>
+device.  The actual computation for the diffusion is carried out using
+the <code>diff</code> device, while the ODE is solved using
+the <code>euler</code> device. A combination
+of <code>sample</code>, <code>k_poincare</code>,
+and <code>k_func</code> devices is used to measure the CV in the 1D
+strand. The measured CV is written to a file with name <code>crn1.cv</code>. 
+</p>
+
+<p>
+This output can be examined easily as it is an ASCII text
+file. Another output file, with file name specified by the user and
+also in ASCII, is used to record the voltage distribution along the
+strand. If this output file is called say <code>crn1d500.vtg</code>,
+then it can be examined using gnuplot using the following commands:
+</p>
+
+<pre>
+set pm3d map
+splot 'crn1d500.vtg' matrix
+</pre>
+<p>
+
+Here we give just a brief outline of the simulation script, please see
+the detailed comments in the file <code>crn1.bbs</code>.
+<ul>
+<li> The <code>crn1.bbs</code> script starts with assigning input parameters
+to simulation parameters.
+<li> It then calls the <code>state</code> device to define the size
+<i>xmax*ymax*zmax</i> of the medium and the number of dynamic
+variables <i>vmax</i> that are going to be used.
+<li> The simulation protocol is set up using timing parameters for
+<code>beginning</code>, <code>ending</code>, and </code>pacing</code>.
+<li> The output from the 0D <code>fhn0.bbs</code> simulation, that is
+the <code>fhn0.rec</code> file is used to generate the initial
+conditions for the 1D simulation via the phase distribution method.
+<li> The <code>diff</code> device is used to compute the Laplacian and
+update the Neumann boundary conditions.
+<li> The <code>euler</code> device is used to update the ODE model at each
+time step.
+<li> Then, the program computes conduction velocity of consecutive propagations
+using the <code>sample</code>, <code>k_poincare</code> and <code>k_func</code> 
+devices.
+<li> The CV measurements are put into a <code>.cv</code> file using the
+record device.
+<li> The record device outputs the voltage distribution in the strand to a
+text file, which can be used to make voltage-time plots of the 1D propagation
+using gnuplot (as shown above).
+</ul>
+
+<h3 class="numbered">Phase distribution method for inducing 2D re-entry</h3>
+
+<p>
+An important part of cardiac simulations is to study the evolution of
+re-entrant waves. Beatbox has a unique method for inducing spiral and
+scroll waves precisely at a desired location in 2D and 3D
+models. Although this method may seem cumbersome at first sight, it
+saves an enormous amount of time and effort once the basics are set
+up.  In comparison to the S1-S2 method which requires experimenting
+in case case (e.g.  control, AF, HF, ...) to initiate spiral in the
+middle of the sheet, the phase distribution method can be used
+universally once the following cell and 1D records are established.
+The phase distribution method, allows the inducing of re-entry at a
+prescribed location. The details of the method can be found in the
+senior authors publications. The way in which Beatbox can be used to
+implement this method in sequential mode is as follows. The parallel
+variant is discussed in the next section.
+</p>
+
+<dl>
+<dt style="font-weight: bold;">
+Step 1: Cell model stimulated at a fast rate
+</dt>
+<dd>
+<p>
+First, the cell model is stimulated at a sufficiently rapid pacing
+rate, and all dynamical variables during the last few excitations
+recorded. In the scripts provided, the cell model is encoded in
+<code>pd_crn0.bbs</code> and the bash script for running this bbs script is
+<code>pd_runcrn0.sh</code>.  It is run as:
+</p>
+
+<pre>
+./pd_crn0.sh
+</pre>
+
+<p>
+Running the above script will show some graphics output on screen at
+run time. Graphics output in sequential mode is another feature of
+Beatbox which allows examination of output visually at run time.  The
+above shell script itself is quite simple and calls the Beatbox
+sequential program as:
+</p>
+
+<pre>
+$HOME/bin/Beatbox_SEQ pd_crn0.bbs
+</pre>
+
+<p>
+We now look at the bbs script <code>pd_crn0.bbs</code>.
+</p>
+
+<p>
+In this bbs script, relevant parameters and variables are first
+declared and initialised.  The model is constructed using
+the <code>state</code> device. The phase distribution method requires
+fast pacing of the cell model, which is done by raising the voltage to
+a high value each time it reaches close to its resting potential.
+Such feedback stimulation ensures that all cell model variables are in
+the oscillating state. The graphics window depicts the phase space
+plot of voltage and gating variable <code>oi</code> in the CRN model
+on the left, and the successive AP profiles on the right. The
+graphical output is done using a combination
+of <code>screen</code>, <code>clock</code>,
+<code>k_clock</code>, <code>k_draw</code> and <code>update</code>
+devices.  The model is integrated using the <code>euler</code>
+device. The output of this simulation is a record of all the model
+variables for several pulses. It will appear as a data file
+named <code>pd_crn0.rec</code>.
+</p>
+</dd>
+
+<dt style="font-weight: bold;">
+Step 2: 1D model stimulated using the 0-D record
+</dt>
+
+<dd>
+<p>
+This <code>pd_crn0.rec</code> file forms input to the 1D strand model
+simulation, which is run as:
+</p>
+<pre>
+./pd_crn1.sh
+</pre>
+<p>
+The 1D bbs script <code>pd_crn1.bbs</code> starts by setting up all
+the relevant parameters and variables in the simulation, and also the
+sets up the 1D model in Beatbox using the <code>state</code>
+device. As in the 0-D simulation above, this bbs program is also set
+up to show graphical output at run time. It shows the propagating
+voltage distribution and the variable <code>oi</code> in the CRN model
+as functions of space. The graphical output is generated using a
+combination of <code>screen</code>, <code>clock</code>,
+<code>k_clock</code>, <code>k_plot</code> and <code>update</code>
+devices. The 1D record from the middle cell of the strand is generated
+using <code>sample</code>, <code>k_poincare</code>
+and <code>k_func</code> devices.  It is written to file using the
+<code>record</code> device. The output of this 1D simulation is a
+record file called <code>pd_crn1.rec</code>.
+</p>
+</dd>
+
+<dt style="font-weight: bold;">
+Step 3: Phase distribution in the 2D sheet
+</dt>
+
+<dd>
+<p>
+The record of all dynamical variables from the middle of the strand
+during the final propagating excitation is used to distribute the
+phase of 1 excitation in an Archemedian spiral in a 2D setting, thus
+instantly initiating re-entry.  After the 1D simulation executes
+successfully, the 2D simulation is executed using the script:
+</p>
+
+<pre>
+./pd_crn2.sh
+</pre>
+
+<p>
+This script creates output sub-directories as well as calls the bbs
+program <code>pd_crn2.bbs</code> using the sequential Beatbox binary,
+<code>Beatbox_SEQ</code>.  The contents of <code>pd_crn2.bbs</code>
+illustrates several features of the package. In common with all other
+bbs scripts, <code>pd_crn2.bbs</code> starts by setting up the
+simulation using variables, parameters, and the <code>state</code>
+device. In particular, phase distribution method based initial
+conditions are imposed using the 1D record data to initiate a spiral
+wave at a desired location. The diffusion part of the problem is
+solved using the <code>diff</code> device, while the ODE part is
+solved using the <code>euler</code> device. Consecutive frames from the 2D
+simulation are stored in a series of ppm files in
+the <code>ppm/</code> sub-directory. 
+</p>
+
+<p>
+The spiral wave tip at each time step is recorded in the file
+<code>spiral_tips.dat</code> using the <code>singz</code> device. The
+contents of this file can be visualised using gnuplot. Representative
+AP profiles from various locations in the 2D sheet are provided in the
+output file <code>pd_crn2.samples</code>, and the contents can again
+be seen using gnuplot.  Frames from the simulation are recorded in
+sequentially numbered PPM files. The ppm files generated by the above
+2D simulation are in a subdirectory called <code>ppm</code>. To
+visualise the contents, of say <code>crn2d_0001.ppm</code>, we can use 
+<code>netpbm</code> as follows:
+</p>
+
+<pre>
+ppmtojpeg crn2_0001.ppm crn2_0001.jpg
+</pre>
+
+<p>
+The above command can also be put into a loop using shell scripting,
+or any other suitable method.
+</p>
+</dd>
+</dl>
+
+<h3 class="numbered">Misc</h3>
+
+<p>
+Each of these runs should exit legally without any error messages. If
+there are error messages, check:
+</p>
+
+<ol type="a">
+<li>
+your compilation of the executable worked ok;
+</li>
+<li>
+that the <code>$HOME/bin</code> path is in your environment path (you 
+can use <code>.bashrc</code> for this if you are using the bash shell);
+</li>
+<li>
+that you are indeed in
+the <code>$HOME/beatbox/data/scripts/sequential/</code> directory.
+</li>
+</ol>
+To run several of the provided sequential scripts to improve
+confidence in Beatbox using various scripts, use the following bash
+script:
+</p>
+<pre>
+./RunTest.sh
+</pre>
+
+<h2 class="numbered">Parallel Test Scripts</h2>
+
+<p class="quest">HECToR is really a subclass of the parallel platforms
+that you could run on - why make it so specific to HECToR?</p>
+
+<p>
+To run tests on HECToR, you will need:
+</p>
+
+<ol type="a">
+<li>
+the Beatbox parallel binary called <code>Beatbox</code>;
+</li>
+<li>
+a submission script specifically for HECToR;
+</li>
+<li>
+You have access to HECToR.
+</li>
+</ol>
+
+<p class="quest">The scripts are not generic enough - for instance
+they assume that whoever is running them will have access to the
+account id e203. I think it would be much better to tell people
+how to run the code as opposed to hiding it all in scripts.</p>
+
+<p>
+All the scripts are provided in the directory:
+</p>
+
+<pre>
+$HOME/beatbox/data/scripts/parallel_Hector
+</pre>
+
+<p>
+Further, the submission of the test jobs is facilitated by means of 3
+bash scripts that should be run interactively. To simulate a large 3D
+box using CRN kinetics, just run the bash script:
+</p>
+
+<pre>
+./bigbox_crn.sh
+</pre>
+
+<p>
+This bash script will:
+</p>
+
+<ol type="a">
+<li>
+copy the binary from standard location
+(<code>$HOME/bin/Beatbox</code>) to your work space in directories
+called <code>bigboxcrn_run2</code> and <code>bigboxcrn_run2</code>;
+</li>
+<li>
+copy the bbs script <code>bigbox_crn.bbs</code> to the two newly
+created directories;
+</li>
+<li>
+produce 2 HECToR job submission scripts;
+</li>
+<li>
+edit the script line <code>#PBS -A e203</code> and specify your
+own valid account against which the execution time will be charged;
+</li>
+<li>
+submit the parallel jobs to HECToR queues.
+</li>
+</ol>
+
+<p>
+The status of your jobs can be checked using:
+</p>
+
+<pre>
+qstat -u my_user_name
+</pre>
+
+<p>
+Bash scripts for FHN and LRD kinetics are also provided
+(<code>bigbox_fhn.sh</code> and <code>bigbox_lrd.sh</code>
+respectively).
+</p>
+
+The run the 2D phase distribution method based re-entry simulation
+on Hector, you will need the 1D record as generated in the previous section (pd_crn1.rec).
+In the test examples, the bbs script, the rec file, and the submission assistant script
+are all given in your directory:
+<pre>
+$HOME/beatbox/data/scripts/parallel_Hector/phasedbn_parallel/
+</pre>
+Using the submission assistant script given, submit the job to Hector queues as:
+<pre>
+./submit_pdcrn2.sh
+</pre>
+
+<h1 class="numbered">Visualising 3D ppm output</h1>
+
+<p>
+Visualisation of the 3D output is by means of the visualisation
+package <code>EZView</code>.  <code>EZView</code> can be obtained from:
+</p>
+
+<ul>
+<li><a href="http://www.maths.liv.ac.uk/~vadim/software/ezview/">
+http://www.maths.liv.ac.uk/~vadim/software/ezview/</a></li>
+</ul>
+
+<p>
+The script for <code>EZView</code> is given in the Beatbox distribution:
+</p>
+
+<pre>
+$HOME/beatbox/data/scripts/viz3d/ppmz.task12
+</pre>
+
+<h1 class="numbered" id="contact">Support and feedback</h1>
+
+<p>
+After working through this quick start guide, you may want to read the
+full manual.  A full manual is
+available <a style="color:blue"><a href="beatbox.html"><b>HERE</b></a>.
+You can get in touch with the authors for support and provide your feedback:
+</p>
+
+<ul>
+<li><a href="mailto:ivb@liv.ac.uk">Dr Irina Biktasheva</a></li>
+<li><a href="mailto:V.N.Biktashev@exeter.ac.uk">Professor Vadim Biktashev</a></li>
+<li><a href="mailto:Sanjay.Kharche@liv.ac.uk">Dr Sanjay Kharche</a></li>
+</ul>
+
+<p>
+You can also use this feedback form.
+</p>
+
+<form action="URL to form script" method="POST">
+
+<table bgcolor="#cccccc">
+<tr>
+<th bgcolor="#cccccc">Your name: </th>
+<td>
+<input type="text" name="realname">
+</td>
+</tr>
+<tr>
+<th>Your email: </th>
+<td>
+<input type="text" name="email">
+</td>
+</tr>
+<tr>
+<th colspan="2" align="left">
+Your comments: 
+</th>
+</tr>
+<tr>
+<td colspan="2">
+<textarea name="comments" rows="15" cols="50">
+</textarea>
+</td>
+</tr>
+<tr>
+<td colspan="2">
+<input type="submit" value="Submit">
+</td>
+</tr>
+</table>
+</form>
+</div><!-- End contents section -->
+
+<hr/>
+<b>Copyright &copy; (2010-2012) Vadim Biktashev, Alexander
+Karpov,Irina Biktasheva, Ross McFarlane;<br/>
+Copyright &copy; 2012Sanjay Kharche<br/> 
+This file is part of Beatbox.<br/>
+</b>
+<address>Sanjay.Kharche@liverpool.ac.uk</address>
+<!-- Created: Wed Sep 26, 2012 09:00:00 GMT Daylight Time 2012 -->
+<!-- hhmts start -->Last modified: Thu Mar 28 12:26:52 GMT 2013 <!-- hhmts end -->
+</body>
+</html>
+

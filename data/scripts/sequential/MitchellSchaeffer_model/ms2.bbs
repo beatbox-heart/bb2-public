@@ -1,0 +1,92 @@
+/* 
+ * Purpose of this script: Example bbs script for 2-D Mitchel-Schaeffer spiral wave
+ * simulation.
+ *
+ * Inputs: 
+ *   ms.par (common parameters for a cascade of scripts) 
+ *   ms1.rec (obtained by running ms1.bbs)
+ *
+ * Outputs: 
+ * onscreen graphics if used with graphics
+ * ... (some files in ms2.dir/..
+ *
+ */
+
+// Common parameters
+<ms.par>
+// In this script we need some extra layers: 
+def str p 3; // memory layer for computing time derivative 
+def str d 4; // to store the time derivative 
+
+// Name of output directory
+def str out [0].dir;
+
+// Computational grid
+def real L 40*mm;
+def int nx L/hx;
+def int ny L/hx;
+state xmax=nx+2 ymax=ny+2 zmax=1 vmax=[d]+1;
+
+// Parameters of the initial conditions
+def real x0 0.5*(nx+1); // x runs from 1 to nx so 0.5*(nx+1) is the centre
+def real y0 0.5*(ny+1); // and so for y
+def real lam 100; // The pitch of the Archimedean spiral measured in grid points
+
+// Schedule
+def real T;	  // current model time in "milliseconds"
+def real Tmax 100*ms; // total max run time
+def real begin;  // it is the very first step
+def real out;    // it is time to make outputs
+def real dtime;  // time to make outputs or a step preceding that
+def real stime;  // time to find tip
+def real end;    // it is time to stop
+def int dt 2.0*ms/ht; // Graphics output period
+
+k_func nowhere=1 when=always pgm={
+  T=t*ht;
+  begin =eq(t,0);  
+  out   =eq(mod(t,dt),0); // time to make outputs every dt steps
+  dtime =out + eq(mod(t,dt),dt-1); // do d_dt at and immediately before the out steps
+  stime =out*gt(t,dt);   // tip was found: at out steps except the first
+  end=ge(T,Tmax);
+};
+
+//=================
+// The computation
+
+// Initial conditions by phase distribution method
+k_func when=begin  name=initial file=ms1.rec pgm={
+  phasep=atan2(x-x0,y-y0) - 2*pi*hypot(x-x0,y-y0)/lam;
+  u0=p0; u1=p1
+};
+
+// Diffusion
+diff hx=hx D=D v0=[V] v1=[i];
+// Cell kinetics
+euler name=model v0=[V] v1=[h] ht=ht ode=ms par={
+  J_stim=@[i]; tau_in=tau_in; tau_out=tau_out; 
+  v_gate=v_gate;tau_open=tau_open; tau_close=tau_close
+};
+// Voltage time derivative
+d_dt when=dtime v0=[V] v1=[p] vd=[d] ht=ht;
+
+//************************************************
+// Output directory
+shell nowhere=1 when=never advance=1 cmd="mkdir [out]";
+
+def real xtip; def real ytip;
+singz when=out v0=[V] c0=Vmid v1=[d] c1=0 file=[out]/tip.dat xmean=xtip ymean=ytip;
+def int grain=2;
+ezpaint when=stime width=nx*grain height=ny*grain
+  abs0=1 abs1=nx ord0=1 ord1=ny
+  title="T=%.0f" titlecode="t*ht"
+  rlayer=[V] rmin=Vmin rmax=Vmax
+  blayer=[h] bmin=hmax bmax=hmin
+  glayer=[d] gmin=-1 gmax=10
+  ntipmax=100 xtip=xtip ytip=ytip
+  filter="pnmflip -tb | pnmtopng > [out]/%07.0f.png" filtercode="t/dt"
+;
+
+pause when=end seconds=1;
+stop when=end;
+end;

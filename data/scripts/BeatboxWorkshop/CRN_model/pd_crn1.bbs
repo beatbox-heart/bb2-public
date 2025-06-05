@@ -1,0 +1,202 @@
+/* 
+ * Purpose of this script: Example bbs script for 1D CRN AP propagation simulation.
+ *
+ * Inputs: pd_crn0.rec (obtained by running pd_crn0.bbs)
+ *
+ * Outputs: 1. onscreen graphics if used with graphics, 
+ *          2. file pd_crn1.rec with a point record of the 5-th Action Potential
+ *
+ * This bbs script demonstrates the use of the following syntax and devices:
+ * 1. angle brackets <...> to include content of another file;
+ * 2. backticks `...` to capture output of a child process 
+ *    (here just counting the number of lines in the given file);
+ * 3. "k_poincare": device to detect arrivals of wavefronts at selected points, 
+ *     which is then used both to control execution and to calculate the propagation speed;
+ * 4. "k_plot": a run-time graphics device to plot spatial profiles of the dynamic fields at 
+ *     selected moments of time;
+ * 5. "pause": a device for suspending execution and keeping the last picture on the screen 
+ *     until the user presses enter in the terminal window. 
+ *
+ * Before running this script, make sure that a correct pd_crn0.rec has been created by running pd_crn0.bbs.
+ *
+ * To run this bbs script with graphics, use the following command:
+ * Beatbox_SEQ pd_crn1.bbs
+ *  and to run without graphics, use the following command:
+ * Beatbox_SEQ pd_crn1.bbs -nograph
+ */
+
+// CRN Model parameters
+def real ms 1.0;        /* CRN model has time unit of 1 ms */
+def real Cm 100; 	/* cell membrn capacitance, pF */
+
+// The simulation time step.
+// ht is the constant time step used by the Euler device. 
+def real ht  0.005; 	/* MC's default time step was 0.005 (msec) */
+
+// simulation space step
+def real hx 0.05;
+
+// diffusion coefficient
+def real D 0.03125;
+
+// Dynamic variables and layer allocation:
+// define the names for some state varables layers 
+def str v 0;   // layer 0 reserved for the trans-membrane voltage in the CRN model will be called v
+def str oi 14; // layer 14 reserved for the I_to inactivation gating variable will be called oi
+
+// Expected limits of the variables v and oi, for on-screen visualization in k_draw
+def real Vmin -90.0; 
+def real Vmax 50.0; 
+def real Vmid -40.0;
+def real oimin -0.1; 
+def real oimax 1.1; 
+
+def int neqn 24; // the total number of dynamic variables in the CRN cell model 
+
+// Allocation of layer named i and numbered neqn=24 to store Laplacian, see the usage below.  
+def str i neqn;
+
+def real L  37.5;	/* Length of strand */
+def int nx L/hx;        // number of FD nodes in strand
+
+// The computational grid
+// The size of the model is xmax*ymax*zmax*vmax, 
+// where vmax=25 is the number of the reserved dynamical variables: 
+// 24 dynamical variables (layers) for the CRN model + 1 dynamical variable (layer i=24) allocated 
+// for the intercellular current (the Laplacian). 
+state xmax=nx+2 ymax=1 zmax=1 vmax=[i]+1; // that means vmax=24+1=25
+
+// Time control parameters
+def long dt 20;         // output period
+def real T;		// model time, time units
+
+/* Input file name */
+def str inrec pd_crn0.rec;
+
+// Get the pacelength = number of lines in file pd_crn0.rec.
+// This is needed to make the period of waves here the same
+// as the period of the AP recorded by pd_crn0.bbs. 
+def real pacelength `wc pd_crn0.rec | awk '{print $1}'`;
+
+def real xout nx*1/2;   // the sampling electrode position
+def real Vout;		// recorded voltage value
+def real front;		// flag indicating that a front has just passed
+def real Tfront;	// time when it happened, in time units
+def real Tlast 0;	// ..., last time
+def real Period;	// interval between such happenings
+def int count 0;	// count how many times a front has passed
+def int countmax 1;	// when to stop
+
+// Define the device time control variables. 
+def real begin;   // will be nonzero at the first step of simultion,
+def real often;   // ... at the steps when the output is done, at regular intervals,
+def real paceout;  // ... when it is time to output the pulse record
+def real end;     // ... when it is time to stop
+ 
+// Use k_func to assign values to the "time control" variables
+k_func name=timing nowhere=1 pgm={
+  T     =t*ht;
+  begin =eq(t,0);
+  often =eq(mod(t,dt),0);
+};
+
+//************************************************
+// Calculations
+
+
+// The "oscillating" boundary conditions on the left boundary, 
+// that is at the single point space interval "from x0=1 to x1=1".
+// The form of oscillations is from file [inrec]=pd_crn0.rec produced by pd_crn0.bbs
+// and the period of oscillations is pacelength steps, so will be the same
+// if the output step in pd_crn0.bbs is the same as time step here
+k_func name=phase when=always x0=1 x1=1 file=[inrec] pgm={phasep=(2*pi*t)/pacelength;u0=p0;};
+
+// The diffusion substep: second derivative of [v] times D goes (is stored) to the layer [i]
+diff v0=[v] v1=[i] hx=hx D=D;
+
+// The 'reaction' substep to update the cell kinetics at every time step 
+// the cell model 'ode' is 'crn';  
+// The euler device needs ht to compute the time derivatives,
+// the reserved variable IV gives the extra term in the right-hand side for voltage, 
+// taken from layer [i]: IV=@[i], which is where Laplacian has been stored. 
+euler name=ode1 v0=0 v1=neqn-1 ht=ht ode=crn 
+      par={ ht=ht;
+//gk1=0.1;  /* specify value of a modelling parameter */
+//gcaL=0.1; /* specify value of a modelling parameter */
+            IV=@[i]
+          };
+
+/******** Graphics output *********************************************/
+
+// Set up a 'window' size for graphics output
+def int stdattr 7*16+5;
+def int winwidth 1300;
+def int winheight 200;
+def int col0 10;      
+def int col1 col0+winwidth;
+def int row0 30;      
+def int row1 row0+winheight;
+
+// define the size for the on screen output window 
+// The graphics output window will be with XMAX*YMAX resolution with 
+// 10-pixel rims, located 10 pixels from the right and 10 pixels 
+// from the top of the screen. 
+screen WINX=-10 WINY=10 XMAX=col1+10 YMAX=row1+10;
+
+clock when=often  color=0*16+15 row0=1 col0=1;
+k_clock when=often color=0*16+15 row0=1 col0=10 format="T=%.1f" code=T; 
+
+def str plotwin col0=col0 col1=col1 row0=row0 row1=row1 color=15*16+15 lines=1 linewidth=3 absmin=-1 absmax=nx+1;
+
+// The run-time plots of the voltage [v] and gaiting variable [oi]
+k_plot when=often [plotwin] clean=1
+  N=nx
+  ordmin=Vmin ordmax=Vmax pgm={
+  ord=u(abs,0,0,[v]);
+  col=LIGHTRED
+};
+k_plot when=often [plotwin] clean=0
+  N=nx
+  ordmin=oimin ordmax=oimax pgm={
+  ord=u(abs,0,0,[oi]);
+  col=LIGHTBLUE
+};
+update when=often;
+
+/************************************************************/
+
+/* Output the record from the xout point of the strand into pd_crn1.rec ***/
+
+// Sample voltage from the "electrode" at xout and assign the value to global variable Vout
+sample x0=xout v0=[v] result=Vout;
+// Register the instant when Vout crosses the value Vmid upwards, and assign the instant T to global variable Tfront 
+k_poincare nowhere=1 when=always sign=1 which=0 pgm={front=Vout-Vmid; Tfront=T};
+// Count how many times the excitation wave went past.
+k_func when=front nowhere=1 pgm={
+  Period=Tfront-Tlast;
+  Tlast=Tfront;
+  count=count+1;
+  paceout=eq(count,countmax);
+  end=gt(count,countmax)
+} debug=stdout;
+
+// Output (record) all CRN dynamical variables, that is from v0=0 up to v1=neqn-1=23, into the file pd_crn1.rec 
+// for the chosen pulse "paceout". Use this record to pace the 2D phase distribution initiation.
+record when=paceout file=[0].rec append=0 x0=xout x1=xout v0=0 v1=neqn-1;
+
+
+// Sample transmembrane voltage at point x0=10 and assign the value to global variable Vrec
+def real Vrec ;
+sample x0=10 y0=0 z0=0 v0=0 result=Vrec;
+
+// print the sampled voltage Vrec time course into the file pd_crn1.vtg using the k_print device.
+k_print nowhere=1 when=often file=[0].vtg append=0 valuesep="\t" list={T; Vrec;};
+
+
+/************************************************************/
+
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+
+end;

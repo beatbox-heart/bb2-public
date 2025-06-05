@@ -1,0 +1,74 @@
+/* Beatbox example bbs scripts for FHN, CRN, LRD cell to 3D simulations. 
+ * This is distributed with the SVN repository. Use these bbs scripts to make your 
+ * own as most of the devices are shown here. 
+ * 
+ * To run the bbs script sequentially at the command line (in a terminal), use: 
+ *  Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ * 
+ * This program simulates FHN CRN LRD 0D (cell) 1D 2D 3D box 3D geometry. The geometry is the ffr.bbg geometry. 
+ *        
+ */ 
+
+/* Allocation of layers to the state varables. */ 
+def str iext 24;
+
+def int neqn [iext];
+
+/* HX is the uniform space step in all directions. Units are that used in your simulation. */ 
+def real hx 0.33;
+/* ht is the constant time step used by the Euler device. */ 
+def real ht  0.005;
+def real Cm 100.0;
+def real Period 20.0; // is sufficient for scaling run.
+def real T;
+
+// set up some output and stimulus parameters
+
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;
+def real end;
+
+/* D is the diffusion constant. Units are that used in your simulation. */ 
+def real D 0.0735;
+
+/* Allocation of layers to the state varables. */ 
+def str V 0; def real Vmin -120; def real Vmax  80;def real Vmid -50;
+
+/* The size of the model is xmax*ymax*zmax*vmax 
+ * where vmax is the number of dynamical variables in the cell model of ODEs. 
+ * xmax=1, ymax=1, zmax=1 represents a cell (OD) model, while 
+ * all other values of xmax, ymax, zmax represent tissue models. 
+ */ 
+state xmax=302 ymax=302 zmax=302 vmax=[iext]+1;
+
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing when=always nowhere=1 pgm={
+  T=t*ht;
+  begin    =eq(t,0);
+  end   =ge(T,(Period));
+};
+
+
+// The computation
+/* Compute the Laplacian. */ 
+diff v0=[V] v1=[iext] D=D hx=hx;
+
+/* Computation of 1 time step update. 
+ * In spatial simulations, the Laplacian is stored at Iu=@vmax. 
+ */ 
+euler v0=[V] v1=neqn-1 ht=ht ode=crn rest=0 par={
+ht=ht;
+IV=@[iext];
+};
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;
+

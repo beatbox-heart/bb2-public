@@ -1,0 +1,147 @@
+// This script illustrates some visualization options with ezpaint and ezview.
+// Produces graphical output only, no writing to any files.
+// 
+// It uses bkl1.rec and rabbit3.bbg which should be included in distribution.
+// rabbit3.bbg is a "Flavio Fenton's Rabbit" geometry downsampled 3x in each of three space dimensions;
+// used purely for illustrative purposes.
+//
+// Sequential mode only. 
+
+// Barkley model parameters
+def real apar 0.75;
+def real bpar 0.01;
+def real cpar 1.0/50.;
+def real delta 1.0e-3;
+
+// Discretization steps
+def real hx  0.6;
+def real ht  1.0e-3;
+
+// "Average" diffusion coefficient
+def real D   1.0;
+
+// Layer assignments
+def str u 0;
+def str v 1;
+def str i 2;
+def str g 3; /* geometry will be addressed by this number from ezview */
+
+// real time graphic output limits (sequential mode only)
+def real umin 0.0; def real umax 1.0;def real umid 0.5;
+def real vmin 0.0; def real vmax 0.8;def real vmid apar*umid-bpar;
+
+state vmax=[i]+1 geometry=rabbit3.bbg anisotropy=1;
+def int nx xmax-2;
+def int ny ymax-2;
+def int nz zmax-2;
+
+
+// Schedule parameters
+def long dt 0.2/ht;	// # of steps between outputs
+def real Tend 50.0;	// duration of simulation
+def real T;		// model time
+def real begin;		// it is time to set initial conditions
+def real out;		// it is time to make outputs
+def real end;		// it is time to stop
+
+// Schedule
+k_func name=timing when=always nowhere=1 pgm={
+  T     =t*ht;
+  begin =eq(t,0);
+  out   =eq(mod(t,dt),0);
+  end   =ge(T,Tend);
+};
+
+// Initial conditions: phase distribution, scroll with filament along z axis
+def real x0 0.5*xmax; def real y0 0.5*ymax; def real lam 100.0;
+k_func when=begin
+  name=initial file=bkl1.rec pgm={
+  phaseu=atan2(x-x0,y-y0)-2*pi*hypot(x-x0,y-y0)/lam;
+};
+
+//==========================================
+// The graphical outputs 
+def int winsize=400;				/* (max) size of graph windows, in pixels */
+
+// 3D view of the tissue surface.
+// Color code: red for excitation (u field), blue for inhibition (v field) 
+// and ~constant green background. 
+ezview when=out name=surf
+  title="xyz T=%.2f" titlecode="T"		/* part of window title */
+  width=winsize height=winsize winx=-1 winy=1 	/* place the windwo at top right corner of the screen */
+  theta0=60 phi0=-115 psi0=-90 distance0=5	/* position of the "camera" */
+  bg_r=1 bg_g=1 bg_b=1				/* white background */
+  bbox_r=0.5 bbox_g=0.5 bbox_b=0.5		/* 50% gray for bounding box */
+  show_surface=1 ulayer=[g] uc=0.5		/* surface of the tissue */
+  color_mode=5					/* rgb colorcoding */
+  rlayer=[u] rmin=umin rmax=umax		/* parameters of the red component */
+  glayer=[u] gmin=-10 gmax=40			/* parameters of the green component */
+  blayer=[v] bmin=vmin bmax=vmax		/* parameters of the blue component */
+  alphamin=1 alphamax=1				/* fully opaque */
+  show_filament=0 show_fibres=0			/* do now show anything else */
+;
+// 3D view of the insides of the tissue, showing fibres and singular filament. 
+// Colour code for fibres is the same as for the surface in the previous device. 
+ezview when=out name=fibr
+  title="xyz T=%.2f" titlecode="T"		/* as above */
+  width=winsize height=winsize winx=-1 winy=1+winsize+10 /* place window below the previous one */
+  theta0=60 phi0=-115 psi0=-90 distance0=5	/* as above */
+  bg_r=0 bg_g=0 bg_b=0				/* black background */
+  bbox_r=0.5 bbox_g=0.5 bbox_b=0.5		/* as above */
+  show_surface=0				/* no surface this time */
+  show_filament=1				/* do show singular filament */
+  layer1=[u] const1=umid layer2=[v] const2=vmid	/* defined as u=umid, v=vmid  */
+  show_fibres=1					/* do show the fibres */
+  fib_dx=6					/* fibre stems every 6 steps in each dimension */
+  fib_step=1					/* fibres are made of straight pieces 1*hx long */
+  fib_len=20					/* .. 20 pieces in either direction from the stem */
+  fib_rlayer=[u] fib_rmin=umin fib_rmax=umax	/* colorcoding */
+  fib_glayer=[u] fib_gmin=-10  fib_gmax=40	/* in the same way */
+  fib_blayer=[v] fib_bmin=vmin fib_bmax=vmax	/* as surface in the previous device */
+;
+
+// 2D view in (x,y) plane, "X-rayed" along the "z" axis
+ezpaint name=ezpaintxy  when=out 
+  title="(xy) T=%.2f" titlecode="T"		/* this time it is the full window title */
+  winx=0 winy=0 				/* place window in top left corner */
+  width=winsize height=(winsize*ny)/nx		/* window shaped proportionately to (x,y) dimensions */
+  aspect=xy					/* see through along z axis */
+  rlayer=[u] rmin=umin rmax=umax		/* red component in the same way as in ezview */
+  blayer=[v] bmin=vmin bmax=vmax		/* .. and the blue component */
+  glayer=-1					/* but no green component this time */
+  bg_r=1 bg_g=1 bg_b=1				/* white background */
+;
+// Same, along "x" axis
+ezpaint name=ezpaintzy  when=out 
+  title="(zy) T=%.2f" titlecode="T"
+  winx=winsize+2 winy=0 			/* to the right of (xy) window */
+  width=(winsize*nz)/nx height=(winsize*ny)/nx  /* keep the same scale as in the previous device */
+  aspect=zy
+  rlayer=[u] rmin=umin rmax=umax
+  glayer=-1
+  blayer=[v] bmin=vmin bmax=vmax
+  bg_r=1 bg_g=1 bg_b=1
+;
+// Same, along "y" axis
+ezpaint name=ezpaintxz  when=out
+  title="(xz) T=%.2f" titlecode="T"
+  winx=0 winy=(winsize*ny)/nx+2 		/* below the (xy) window */
+  width=winsize height=(winsize*nz)/nx
+  aspect=xz
+  rlayer=[u] rmin=umin rmax=umax
+  glayer=-1
+  blayer=[v] bmin=vmin bmax=vmax
+  bg_r=1 bg_g=1 bg_b=1
+;
+//==========================================
+
+stop when=end;
+
+// The computation: operator-splitting for diffusion and reaction
+
+/* This will compute diffusion and make the corresponding half-step */
+diffstep v0=[u] v1=[i] Dpar=D*2 Dtrans=D/2 hx=hx ht=ht;
+/* In this call, D=0 signals that all computations related to diffusion will be skipped */
+ezstep v0=[u] v1=[v] a=apar b=bpar eps=cpar D=0 ht=ht delta=delta explicit=0 split=1 manypoint=1;
+
+end;

@@ -1,0 +1,160 @@
+/* Beatbox example bbs scripts for FHN, CRN, LRD cell to 3D simulations. 
+ * This is distributed with the SVN repository. Use these bbs scripts to make your 
+ * own as most of the devices are shown here. 
+ * 
+ * To run the bbs script sequentially at the command line (in a terminal), use: 
+ *  Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ * 
+ * This program simulates FHN CRN LRD 0D (cell) 1D 2D 3D box 3D geometry. The geometry is the ffr.bbg geometry. 
+ *        
+ */ 
+
+
+// Model parameters
+def real ms 1.0;        /* CRN model has time unit of 1 ms */
+def real Cm 100; 	/* cell membrn capacitance, pF */
+def real umin -120;     /* minimum voltage */
+def real umax 80.;	/* maximum voltage */
+
+// Discretization
+/* ht is the constant time step used by the Euler device. */ 
+def real ht  0.005; 	/* MC's default time step was 0.005 (msec) */
+
+// Dynamic variables and layer allocation
+/* Allocation of layers to the state varables. */ 
+def str v 0;   
+def real Vmin -90.0; def real Vmax 50.0; def real Vmid -40.0;
+/* Allocation of layers to the state varables. */ 
+def str oi 14; 
+def real oimin  0.0; def real oimax 1.0; def real oimid  0.5;
+def int neqn 24;
+/* Allocation of layer i for the stimulation current. */ 
+def str i neqn;
+
+// State device constructs the model in Beatbox
+/* The size of the model is xmax*ymax*zmax*vmax 
+ * where vmax is the number of dynamical variables in the cell model of ODEs. 
+ * xmax=1, ymax=1, zmax=1 represents a cell (OD) model, while 
+ * all other values of xmax, ymax, zmax represent tissue models. 
+ */ 
+state xmax=1 ymax=1 zmax=1 vmax=[i];
+
+// Schedule and display parameters
+def long dt 2.0*ms/ht;  // output period
+def long DT 10.0*ms/ht; // colouring period
+def real T;		// model time, time units
+
+def real Tst 0;		// time of the last stimulus
+def real Period;	// interval between those
+def int count 0;	// count stimuli
+def int countmax 10;	// how many is enough
+
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;
+def real once;
+def real often;
+def real paceout;
+def real end;
+
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+  T     =t*ht;
+  once  =eq(t,1);
+  often =eq(mod(t,dt),0);
+};
+
+//*********************************
+// The feedback stimulation protocol
+
+// The dynamic variables as global k_variabls - initial values high not to trigger feedback
+def real V=inf;
+def real Oi;
+def real I=0;
+
+// The resting state
+def real Vst=-inf;
+k_func when=once nowhere=1 pgm={Vst=V};
+
+// End of AP fixed at this value above the resting state
+def real dV 4.0;
+// Voltage threshold
+def real Stim 30.0;
+
+// Feed-back stimulation: push when close to the resting state
+k_func name=restTest nowhere=1 pgm={
+  I=lt(V,Vst+dV);
+};
+k_func nowhere=1 when=I pgm={
+  Period=T-Tst;
+  Tst=T;
+  count=count+1;
+  paceout=eq(count,countmax);
+  end=gt(count,countmax);
+} debug=stdout;
+
+
+// The computation
+k_func name=fb when=I pgm={u[v]=u[v]+I*Stim};
+/* Computation of 1 time step update. 
+ * In spatial simulations, the Laplacian is stored at Iu=@vmax. 
+ */ 
+euler name=ode1 v0=0 v1=neqn-1 ht=ht ode=crn  par={
+ht=ht;
+//gk1=0.18;
+//gcaL=0.06185;
+};
+
+
+/**Graphics output*******************************************************/
+
+sample when=always v0=[v] result=V; // sample the voltage for display
+sample when=always v0=[oi] result=Oi; // sample the oi variable (inactivation gate of IKs) for display
+
+/*
+Set up the graphics size
+*/
+def int stdattr 7*16+5;
+def int winsize 400;
+def int col0 10;      def int col1 col0+winsize;
+def int col2 col1+10; def int col3 col2+winsize;
+def int row0 30;      def int row1 row0+winsize;
+/* Allocation of layers to the state varables. */ 
+def str win1 col0=col0 col1=col1 row0=row0 row1=row1 color=15*16+15;
+/* Allocation of layers to the state varables. */ 
+def str win2 col0=col2 col1=col3 row0=row0 row1=row1 color=0*16+15;
+/*
+display the graphics
+*/
+screen WINX=-10 WINY=10 XMAX=col3+10 YMAX=row1+10;
+clock when=often  color=0*16+15 row0=1 col0=1;
+k_clock when=often color=0*16+15 row0=1 col0=10 format="T=%.1f" code=T; 
+k_draw when=always [win1] color=BLUE*16
+  absmin=oimin absmax=oimax ordmin=Vmin ordmax=Vmax lines=0.5
+  pgm= {col=LIGHTGRAY+mod(t*1.0/DT,7);abs=Oi;ord=V};
+k_draw when=always [win2] color=BLUE*16 lines=0.1
+  absmin=0 absmax=400.0 ordmin=Vmin ordmax=Vmax 
+  pgm= {col=LIGHTGRAY+mod(count,7);abs=T-Tst;ord=V};
+update when=always;
+
+/*********************************************************************/
+
+/* Output all variables for several puluses. Use this record to pace the 1D strand */
+/* Record all or sampled variables in your simulation. */ 
+record when=paceout file=[0].rec append=0 v0=0 v1=neqn-1;
+
+// Output voltage V=v[0] is sampled using the sample device.
+//It is output into a file crn0.vtg using the k_print device.
+sample v0=0 result=V;
+k_print nowhere=1 when=often file=[0].vtg append=0 valuesep="\t" list={T; V;};
+
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;

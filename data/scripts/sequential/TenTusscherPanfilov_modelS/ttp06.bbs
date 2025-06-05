@@ -1,0 +1,43 @@
+/*
+SK.
+Beatbox script for the ttp06 model.
+*/
+
+def int neqn 19;
+
+def real ht 0.001; 	/* ORD default is a fixed time step was 0.005 (msec) */
+def real Cm 0.185; 	        /* cell membrane capcitance, microF */
+def real umin -120; 
+def real umax 80.;
+
+state xmax=1 ymax=1 zmax=1 vmax=neqn+1;
+
+// Schedule and display parameters
+def long dt 2.0/ht;     // output period
+def long DT 400;	// end point.
+def real end_T 500.0;
+
+def real begin;def real often;def real seldom;def real end;def real T;
+k_func nowhere=1 pgm={
+  T=t*ht;
+  begin =eq(t,0);
+  often =eq(mod(t,dt),0);
+  seldom=eq(mod(t,DT),0);
+  end=ge(T,end_T);
+};
+
+k_func when=always pgm={
+u19=le(t*ht,1.0)*52.0;
+};
+
+// The computation
+euler v0=0 v1=neqn-1 ht=ht ode=ttp06 par={ht=ht; IV=@19;};
+
+// Output
+def real voltage;
+sample x0=0 y0=0 z0=0 v0=0 result=voltage;
+
+k_print nowhere=1 when=often file=[0].vtg append=0 valuesep="\t" list={T; voltage;};
+
+stop when=end;
+end;

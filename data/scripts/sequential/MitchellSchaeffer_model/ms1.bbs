@@ -1,0 +1,159 @@
+/* 
+ * Purpose of this script: Example bbs script for 1-D Mitchel-Schaeffer AP propagation 
+ * simulation.
+ *
+ * Inputs: 
+ *   ms.par (common parameters for a cascade of scripts) 
+ *   ms0.rec (obtained by running ms0.bbs)
+ *
+ * Outputs: 
+ *   onscreen graphics if used with graphic
+ *   record file called ms1.rec
+ *
+ */
+
+//  Standard parameter choice for all related scripts
+<ms.par> 
+
+def int nx 200; 
+state xmax=nx+2 ymax=1 zmax=1 vmax=[i]+1;
+
+// How many points in the intput record file 
+def real pacelength `cat ms0.rec | wc -l`;
+
+// Variables controlling timing of devices
+def real begin; // will be nonzero at the first step of simultion, 
+def real often; // ... at the steps when the output is done, at regular intervals,
+def real paceout; // ... when it is time to output the pulse record
+def real end;   // ... when it is time to stop
+
+
+// Define the output points on the 1D fibre where the state variables 
+// will be recorded.
+def real xout1 nx*0.5;
+def real xout2 nx*0.75;
+// And these will be the recorded values of the state variables
+def real h1;
+def real V2; def real h2;
+// Times of arrival at points xout1 and xout2
+def real T1; def real T2;
+// The number pulses to pass
+def int Np 5;
+
+// The resting state values
+def real Vst;def real hst;
+
+def int dt=5.0*ms/ht; // how many steps between graphic outpus
+
+// Use k_func to assign values to the device control variables
+k_func name=timing nowhere=1 pgm={
+  begin=eq(t,0);
+  often=eq(mod(t,dt),0);
+  end=ge(t*ht,10.0e3*ms);
+};
+
+//************************************************
+// Calculations
+
+
+// The boundary conditions on the left boundary.
+// The form of oscillations is from file ms0.rec produced by ms0.bbs
+// and the period of oscillations is pacelength steps, so will be the same
+// if the output step in ms0.bbs is the same as time step here
+k_func name=bc x0=1 x1=1 file=ms0.rec pgm={phasep=(2*pi*t)/pacelength;u0=p0;};
+
+// The diffusion substep: second derivative of [u] times D goes to [i]
+diff v0=[V] v1=[i] hx=hx D=D;
+
+// The reaction substep: [i] gives the extra term in the right-hand side for u. 
+// The rest=10000 parameter allows calculation of resting state. 
+euler name=ode1 v0=[V] v1=[h] ht=ht ode=ms par={
+  tau_in=tau_in
+  tau_out=tau_out
+  v_gate=v_gate
+  tau_open=tau_open
+  tau_close=tau_close
+  J_stim=@[i]
+};
+
+// Measure the output signals
+sample name=V2 x0=xout2 v0=[V] result=V2; 
+sample name=h2 x0=xout2 v0=[h] result=h2;
+
+// The very first of these measurements will be the resting state
+k_func name=rest when=begin nowhere=1 pgm={Vst=V2;hst=h2};
+
+//************************************************
+// The graphics output window will be with 600x600 resolution with 10-pixel rims,
+// located 10 pixels from the right and 10 pixels from the top of the screen. 
+screen WINX=-10 WINY=10 XMAX=620 YMAX=340;
+// The coordinates of the output zone
+def int row0 30; def int row1 329;
+def int col0 10; def int col1 609;
+
+// If the X11 graphics is switched off, then 
+// these clock devices would still print time labels to the stdout,
+// so the "if" clause at the front disables that. 
+if Graph clock   when=often color=WHITE row0=1 col0=1; // this shows the integer step counter 
+if Graph k_clock when=often color=WHITE row0=1 col0=21 code=t*ht format="T=%4.1f ms"; // this shows real model time
+// the row, col coords of these are in characters, not pixels
+
+// The run-time plots of the solution
+k_plot name=uplot when=often 
+  col0=col0 col1=col1 row0=row0 row1=row1 // defines the part of the graph window for this output
+  color=WHITE*16+WHITE			  // colour of the "window" border	
+  lines=1 				  // connect the dots
+  clean=1                                 // clean window before drawing this graph
+  ordmin=Vmin ordmax=Vmax		  // limits for the ordinate of the plot
+  N=nx					  // the abscissa will be integer running from 1 to nx
+  pgm={ord=u(abs,0,0,[V]);col=LIGHTRED};  // ordinate is value of u variable at the point, plot in light red
+k_plot name=vplot when=often 
+  col0=col0 col1=col1 row0=row0 row1=row1 // in the same window
+  color=WHITE*16+WHITE			  // 
+  lines=1 				  // 
+  clean=0                                 // but do not clean it beforehand
+  ordmin=hmin ordmax=hmax		  // limits for the ordinate
+  N=nx					  // 
+  pgm={ord=u(abs,0,0,[h]);col=LIGHTBLUE}; // which is now v variable, and plotted in light blue
+update when=often;  // this signals that the graphics output buffer is flushed to the screen
+
+//************************************************
+// Measurements and file outputs
+
+// Declare variables for registering fronts and measuring speed
+def real front1;   // will be nonzero only when front at point 1 is registered
+def real tfront1;  // interpolated value t at the front 1 event. 
+def int nfront1 0;  // counter of the fronts at point 1
+def real front2;   // will be nonzero only when front at point 2 is registered
+def real tfront2;  // interpolated value t at the front 2 event. 
+def int nfront2 0;  // counter of the fronts at point 2
+
+// These devices will register arrival of the fronts at points xout1 and xout2.
+// These two different devices have different interface but on this occation
+// do the same job. 
+poincare x0=xout1 cross=Vmid sign=1 result=front1 timestep=tfront1;
+k_poincare nowhere=1 sign=1 pgm={front2=V2-Vmid;tfront2=t};
+
+// Count the fronts separately, calc arrival times and select Nth front in each sequence
+k_func nowhere=1 when=front1 pgm={nfront1=nfront1+1; T1=if(eq(nfront1,Np),ht*tfront1,T1)};
+k_func nowhere=1 when=front2 pgm={nfront2=nfront2+1; T2=if(eq(nfront2,Np),ht*tfront2,T2);
+  paceout=eq(nfront2,Np); /* if it is the last pulse we output it */    
+  end=end+gt(nfront2,Np); /* and if more then it is time to stop; '+' works as "or" */
+};
+
+// Calculate and report the propagation speed to standard output
+k_print nowhere=1 when=end file=stdout headformat="c=" headcode=0 list={(xout2-xout1)*hx/(T2-T1)};
+
+// Output the record of dynamical variables u and v at the "samplepoint" 
+// while "paceout" is nonzero into the file fhn1.rec.
+k_print nowhere=1 when=paceout file=[0].rec append=0 valuesep="\t" list={V2;h2};
+
+// Dump all state variables from all nodes into the binary file fhn1.dmp for future use.
+dump append=0 when=end v0=0 v1=2 file=[0].dmp;
+
+// Keep the picture on the screen until the user presses Enter
+if Graph pause seconds=3 when=end;
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;

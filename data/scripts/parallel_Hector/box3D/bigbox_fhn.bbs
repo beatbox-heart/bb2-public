@@ -1,0 +1,123 @@
+/* Beatbox example bbs scripts for FHN, CRN, LRD cell to 3D simulations. 
+ * This is distributed with the SVN repository. Use these bbs scripts to make your 
+ * own as most of the devices are shown here. 
+ * 
+ * To run the bbs script sequentially at the command line (in a terminal), use: 
+ *  Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ * 
+ * This program simulates FHN CRN LRD 0D (cell) 1D 2D 3D box 3D geometry. The geometry is the ffr.bbg geometry. 
+ *        
+ */ 
+
+// simulation time step ht=0.005
+def real ht  0.005;
+//
+def real Period 4.0; // is sufficient for scaling run.
+def real T;
+
+// simulation space step hx=0.3333333
+// possible alternatives to use are 0.2 and 0.50 
+def real hx  0.3333333; //0.2;  //0.50;
+//
+// diffusion coefficient D=1.0
+def real D   1.0; 
+//
+//FHN model kinetics parameter betta=0.71
+// possible alternatives to use are 0.68 and 0.75 
+def real bet 0.71; //0.68; //0.75;
+//
+//FHN model kinetics parameter epsilon=0.30
+def real eps 0.30;
+//
+//FHN model kinetics parameter gamma=0.50
+def real gam 0.50;
+//
+// defining layer numbers for FHN model dynamic variables  
+// u => layer 0  
+def str u 0;
+//
+// v => layer 1 
+def str v 1;
+//
+// i => layer 2 
+def str i 2; 
+//
+// real time graphic output limits (sequential mode only)
+def real umin -2.0; def real umax 2.0;def real umid 0.0;
+def real vmin -1.0; def real vmax 1.5;def real vmid 0.5;
+
+/* The size of the model is xmax*ymax*zmax*vmax 
+ * where vmax is the number of dynamical variables in the cell model of ODEs. 
+ * xmax=1, ymax=1, zmax=1 represents a cell (OD) model, while 
+ * all other values of xmax, ymax, zmax represent tissue models. 
+ */ 
+state xmax=302 ymax=302 zmax=302 vmax=3;
+
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;
+def real end;
+def real often;
+
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+  T=t*ht;
+begin=eq(t,0);
+often=eq(mod(t,1000),0);
+//end=ge(t,10000);
+  end=ge(T,(Period));
+};
+
+// Stimulus
+/* Apply stimulus to tissue specified by x0,x1,y0,y1,z0,z1. If 
+ * any of these are not specified, then the max or min values are presumed 
+ */ 
+k_func when=begin x1=200 pgm={u[u]=1.7;};
+/* Apply stimulus to tissue specified by x0,x1,y0,y1,z0,z1. If 
+ * any of these are not specified, then the max or min values are presumed 
+ */ 
+k_func when=begin x0=201 pgm={u[u]=-1.7;};
+/* Apply stimulus to tissue specified by x0,x1,y0,y1,z0,z1. If 
+ * any of these are not specified, then the max or min values are presumed 
+ */ 
+k_func when=begin y1=200 pgm={u[v]=0.7;};
+/* Apply stimulus to tissue specified by x0,x1,y0,y1,z0,z1. If 
+ * any of these are not specified, then the max or min values are presumed 
+ */ 
+k_func when=begin y0=201 pgm={u[v]=-0.7;};
+
+// The computation
+/* Compute the Laplacian. */ 
+diff v0=[u] v1=[i] D=D hx=hx;
+/* Computation of 1 time step update. 
+ * In spatial simulations, the Laplacian is stored at Iu=@vmax. 
+ */ 
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar rest=10000 par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+
+// Create the directory for the image files
+// (no problem if it is already there)
+def str outdir [0].dir; // so it will be bigbox_fhn.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+// advance=1 means this will be done BEFORE the first step
+
+// these devices are not switched on for figure 3.17 (a)
+ppmout
+    when=often
+    file="[outdir]/%04d.ppm" mode="w" 
+    r=[u] r0=umin r1=umax 
+    g=[u] g0=umin g1=umax 
+    b=[v] b0=vmin b1=vmax
+;
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;
+
+
+

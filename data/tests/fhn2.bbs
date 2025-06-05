@@ -1,0 +1,33 @@
+// Short and quick version of ../scripts/sequential/fhn2.bbs
+// for test purposes. 
+<fhn.par>
+def int nx 60; def int ny 60;
+state xmax=nx+2 ymax=ny+2 zmax=1 vmax=[i]+1;
+
+def real x0 0.5*(nx+1);
+def real y0 0.5*(ny+1);
+def real lam 100;
+
+def real begin;
+def real out;
+def real end;
+def int tout 0.5/ht;
+k_func name=timing nowhere=1 pgm={
+  begin = eq(t,0);
+  out   = eq(mod(t,tout),0);
+  end   = ge(t,1000);
+};
+k_func when=begin  name=initial file=fhn1.rec pgm={
+  phasep=atan2(x-x0,y-y0) - 2*pi*hypot(x-x0,y-y0)/lam; 
+  u0=p0; u1=p1 
+};
+diff v0=[u] v1=[i] D=D hx=hx;
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+singz when=out
+  v0=[u] c0=0
+  v1=[v] c1=0
+  precise_orientation=1
+  file=[0].out append=0
+;
+stop when=end;
+end;

@@ -1,0 +1,73 @@
+// Computation parameters
+<fhn.par>
+
+// In this script we need some extra layers: 
+def str p 3; // memory layer for computing time derivative 
+def str d 4; // to store the time derivative 
+def str g 5; // to store the spatial gradient
+
+state geometry=ffr_slice.bbg 
+	vmax=3
+	normaliseVectors=1
+	anisotropy=1
+;
+
+
+// Parameters of the initial conditions
+def real x0 25; // x0=25 is the centre of the spiral
+def real y0 31; // and so for y
+def real lam 100; // The pitch of the Archimedean spiral measured in grid points
+
+
+def real begin;
+def real end;
+def real out;
+
+def int tout 0.5/ht; // output will be in so many steps, i.e. once per 0.5 units of model time
+
+k_func name=timing nowhere=1 pgm={
+	begin = eq(t,0);
+	end   = ge(t,7000);
+	out   = eq(mod(t,50),0);
+};
+
+// Initial conditions by phase distribution method
+k_func when=begin  name=initial file=fhn1.rec pgm={
+  phasep=atan2(x-x0,y-y0) - 2*pi*hypot(x-x0,y-y0)/lam; // phasep(x,y)=const is Arch. spiral
+  u0=p0; u1=p1 // results of phase field calcs are assigned to appropriate layers. 
+  // Here phaseu= magic variable could have been used instead making the 
+  // last two assignments unnecessary. 
+};
+
+// The computation
+diff v0=[u] v1=[i] Dpar=D Dtrans=D/4 hx=hx;
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar rest=10000 par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+
+// Create the directory for the image files
+// (no problem if it is already there)
+def str outdir [0].dir; // so it will be fhn_ffr_slice.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+// advance=1 means this will be done BEFORE the first step
+
+// Run-time graphics
+ezpaint when=out 
+  // On-the-fly conversion including flipping top/bottom flip
+  filter="pnmflip -tb | pnmtopng > [outdir]/ezp%07.0f.png"
+  rlayer=[u]  rmin=umin  rmax=umax // [u]-layer defines red component
+  glayer=[v]  gmin=vmin  gmax=maxv // [v]-layer defines green component
+  blayer=[i]  bmin=-1    bmax=1    // [i]-layer defines blue component
+  bg_r=1 bg_g=1 bg_b=1;            // void is white
+
+// Image files for u,v,i fields.
+// This is the simpler version which uses what is in the layers,
+// only by linear scaling [umin,umax]->[0,255] etc. 
+imgout when=out 
+  // On-the-fly conversion including flipping top/bottom flip
+  filter="pnmflip -tb | pnmtopng > [outdir]/img%07.0f.png"
+  r=[u]  r0=umin  r1=umax // [u]-layer defines red component
+  g=[v]  g0=vmin  g1=maxv // [v]-layer defines green component
+  b=[i]  b0=-1    b1=1;   // [i]-layer defibes blue component
+
+stop when=end;
+
+end;

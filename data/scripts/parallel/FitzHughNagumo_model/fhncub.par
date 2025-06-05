@@ -1,0 +1,15 @@
+// simulation time step 
+def real ht 0.005;
+
+// simulation space step
+def real hx 1.0/3.0;
+
+// diffusion coefficient
+def real D 1.0; 
+
+//FHN model kinetics parameters epsilon, beta, gamma
+def real eps 0.30; def real bet 0.71; // rigid rotation, positive filament tension
+//def real eps 0.20; def real bet 0.71;  // meander
+//def real eps 0.3; def real bet 0.77; // negative filament tension
+def real gam 0.50;
+

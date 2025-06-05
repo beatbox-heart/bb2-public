@@ -1,0 +1,58 @@
+// Make a record of 0D pulse for the OHara-Rudy cell model.
+// put in crossings after sorted in the CRN.
+
+def real Premature [1];
+def str fileName [2];
+
+def int neqn 41;
+
+def real ht 0.001; 	/* ORD default is a fixed time step was 0.005 (msec) */
+def real Cm 1.0; 	        /* Normalised cell membrane capcitance, pF */
+
+def str V 0; def real Vmin -120; def real Vmax  80;def real Vmid -50;
+
+def str i 39;
+
+state xmax=1 ymax=1 zmax=1 vmax=neqn+1;
+
+// Schedule and display parameters
+def long dt 2.0/ht;     // output period
+
+def int Nstim 10;
+def real Period 1000.0;
+def real Ampl 80.0;
+def real Duration 0.5;
+
+// def long DT (Period*Nstim+Premature+2000.0)/ht; // duration of the simulation.
+// def long DT 58400; // (Period*Nstim+Premature+2000.0)/ht; // duration of the simulation.
+def long DT 300000; // (Period*Nstim+Premature+2000.0)/ht; // duration of the simulation.
+
+def real begin;def real often;def real seldom;def real end;def real T;
+
+k_func nowhere=1 pgm={
+  begin =eq(t,0);
+  often =eq(mod(t,dt),5);
+  seldom=eq(mod(t,DT),0);
+  end=ge(t,DT);
+  T=t*ht;
+};
+
+
+k_func when=always pgm={
+  u[i]=(le(mod(T,Period),Duration)*le(T,Period*Nstim-ht)+ge(T,Period*(Nstim-1)+Premature)*le(T,Period*(Nstim-1)+Premature+Duration))*Ampl/Cm;
+};
+
+// The computation
+rk4 v0=0 v1=neqn-1 ht=ht ode=ord par={ht=ht; IV=@[i]};
+
+// Output
+def real voltage;
+sample x0=0 y0=0 z0=0 v0=38 result=voltage;
+def real cai;
+sample x0=0 y0=0 z0=0 v0=30 result=cai;
+
+k_print nowhere=1 when=often file=[2] append=0 valuesep="\t" list={T; voltage; cai};
+
+stop when=end;
+end;
+

@@ -1,0 +1,95 @@
+// LRd Parameters for extended 'Cell Test' model.
+
+def real ms 1.0;
+def real mV 1.0;
+def real D   0.03125; /* mm^2/ms ? */
+def real hx  0.1; /* mm */
+def real ht  0.005;
+
+def str V 0;
+def str nai 1;
+def str ki 2;
+def str cai 3;
+def str cansr 4;
+def str cajsr 5;
+def str caiontotold 6;
+def str dcaiontot 7;
+def str dvdt 8;
+def str dcai 9;
+def str csqn 10;
+def str tjsrol 11;
+def str h 12;
+def str j 13;
+def str d 14;
+def str f 15;
+def str x 16;
+def str m 17;
+def str test 18;
+def str tdvdtmax 19;
+def str delta_cai2 20;
+def str tcicr 21;
+def str grelcicr_max 22;
+def str xi 23;
+
+// External current. Include manually if CELLTEST is not defined.
+def str iext 24;
+
+/*****************************************************************************/
+// Parameter Ranges
+
+// V
+def real Vmin -100; 
+def real Vmax 50.0;
+def real Vmid -40.;
+
+// xi
+def real ximin 0.55;
+def real ximid 0.8;
+def real ximax 1.0;
+
+/*****************************************************************************/
+// If CELLTEST is not defined, the following lines should be commented out, and the
+// above iext definition should be included, making iext the last numbered variable.
+//
+// The variable declarations below are grouped by the figures in which they first appear
+// in C.-H. Luo and Y.ÊRudy. A dynamic model of the cardiac ventricular action potential. 
+// I. simulations of ionic currents and concentration changes. 
+// Circulation Research, 74(6):1071Ð1096, Jun 1994.
+
+// 
+// // Fig 13
+// def str ina 24; 
+// def str ica 25; 
+// def str ik 26; 
+// def str iv 27;
+// def str inaca 28; 
+// 
+// // Fig 14
+// def str trpn 29; 
+// def str cmdn 30; 
+// 
+// // Fig 15
+// def str irelcicr 31;
+// def str ireljsrol 32;
+// def str iup 32; 
+// def str ileak 34;
+// def str itr 35; 
+// 
+// // Fig 16
+// def str fca 36;
+// 
+// // Fig 17
+// def str icat 37; 
+// def str icak 38;
+// def str icana 39; 
+// 
+// // Fig 18
+// def str ik1 40;
+// def str ikp 41;
+// def str inak 42;
+// def str ipca 43;
+// def str inab 44;
+// def str icab 45;
+// 
+// // External Current
+// def str iext 46;

@@ -1,0 +1,6 @@
+// Negative test: block not closed
+state xmax=1 ymax=1 zmax=1 vmax=2;
+def complex gamma 1+2*i;
+euler ode=fhncub par={eps=0.1 bet=0.7 gam=0.5};
+stop;
+end;

@@ -1,0 +1,140 @@
+/* 
+ * Purpose of this script: Example bbs script for 0-dimensional Mitchell-Schaeffer model. 
+ *
+ * Inputs: 
+ *   ms.par (common parameters for a cascade of scripts) 
+ *
+ * Outputs: 
+ *   onscreen graphics if used with graphic
+ *   record file called ms0.rec
+ *
+ */
+
+//  Standard parameter choice for all related scripts
+<ms.par> 
+
+state xmax=1 ymax=1 zmax=1 vmax=[i]+1;
+
+// Declare the device control variables
+def real begin; // Will be non-zero at the first step of simultion.
+def real often; // Will be non-zero at the steps when the text output is done.
+def real seldom; // Will be non-zero at the steps when the graph output is done.
+def real end;   // Will be non-zero when it is time to stop. 
+
+def int dt=1; // how many steps between final outputs
+def int DT=5.0/ht; // how many steps between graphic outpus
+// Use k_func to assign values to the device control variables
+k_func name=timing nowhere=1 pgm={
+  begin=eq(t,0);
+  often=eq(mod(t,dt),0);
+  seldom=eq(mod(t,DT),0);
+  end=ge(t*ht,10.0e3*ms);
+};
+
+// Declare the point sample variables.
+def real V;
+def real h;
+def real Iu;  // This is also used as control variable for the stimulation 
+             // k_func device.
+
+// Declare the resting state variables. 
+// Their initial values are large to ensure the initial shock.
+def real Vst=Vmax;
+def real hst=hmin;
+
+// Declare the feedback control variables
+def real pulsecount;   // count how many pulses have been registered
+def real chosenpulse;  // 1 during the selected pulse, 0 otherwise
+
+
+//************************************************
+// Calculations
+
+// Computation of 1 time step update with euler device for FHN dynamical 
+// variables. The rest=10000 parameter means that the resting state for 
+// given eps, bet, gam will be calculated and assigned, by taking 10000 
+// Euler steps for this model from some arbitrarily chosen initial 
+// conditions. 
+euler name=ode1 v0=[V] v1=[h] ht=ht ode=ms par={
+  tau_in=tau_in
+  tau_out=tau_out
+  v_gate=v_gate
+  tau_open=tau_open
+  tau_close=tau_close
+  J_stim=0
+};
+
+// Get the resting state values as global variables.
+// At t=0, these will be the values calculated by the 
+// euler device as set by rest=10000 parameter.
+sample name=Vst when=begin v0=[V] result=Vst; // No x0=... etc  are needed
+sample name=hst when=begin v0=[h] result=hst; // as there is only one point 
+                                              // in the grid.
+
+// Get the values of U and V as global variables, at all t. 
+sample name=Vvalue v0=[V] result=V; 
+sample name=hvalue v0=[h] result=h;
+
+// Feed-back stimulation: stim on when the cell is close to the resting state;
+k_func name=feedback nowhere=1 pgm={ //V=V; h=h; Vmin=Vmin; Vmax=Vmax; hmin=hmin; hmax=hmax;
+  Iu= lt(V,Vst+0.05)*gt(h,hst-0.05)*1.0; // 1.0 if both V and h are close to 
+                                         // resting state.
+  pulsecount=pulsecount+gt(Iu,0);        // Increment the counter if shock.
+  chosenpulse=eq(pulsecount,4)*often;    // Make fhn0.rec outputs often during chosen pulse.
+  end=end+gt(pulsecount,4);              // Update the end condition: nothing 
+                                         // to do after the chosen pulse.
+  /* in the expression above, '+' serves as logical 'or' */
+};// debug=stdout;
+
+// Shock to elicit the action potential.
+k_func name=stim when=Iu pgm={u[V]=u[V] + Iu} debug=stdout; // Debug parameter 
+                                                  // says print results of 
+                                                  // calculations to stdout.
+
+
+//************************************************
+// The graphics output window will be with 600x600 resolution with 
+// 10-pixel rims, located 10 pixels from the right and 10 pixels 
+// from the top of the screen. 
+screen WINX=-10 WINY=10 XMAX=420 YMAX=440;
+
+// The coordinates of the output zone
+def int row0 30; def int row1 429;
+def int col0 10; def int col1 409;
+
+// If the X11 graphics is switched off, then 
+// these clock devices would still print time labels to the stdout,
+// so the "if" clause at the front disables that. 
+
+// This shows the integer step counter.
+if Graph clock   when=seldom color=WHITE row0=1 col0=1; 
+
+// This shows real model time, the row, col coords of these are in 
+// characters, not pixels
+if Graph k_clock when=seldom color=WHITE row0=1 col0=21 code=t*ht format="T=%4.1f ms"; 
+
+
+// Draw the phase trajectory
+k_draw when=seldom
+  col0=col0 col1=col1 row0=row0 row1=row1 // Defines the part of the graph 
+                                          // window for this output.
+  color=WHITE*16+WHITE		// Colour of the "window" border.
+  absmin=Vmin absmax=Vmax	// Limits for the abscissa	
+  ordmin=hmin ordmax=hmax	//   and for the ordinate of the plot.
+  lines=0.9			// Join the dots unless jump for 1/2 of the 
+                                // window or more.	
+  pgm={				// Program that defines the drawing algorithm.
+  col=WHITE*mod(t,16*DT)/16*DT;	// Colour will be cycling through VGA palette 
+  abs=V;			// Abscissa is the U variable.
+  ord=h;			// Ordinate is the V variable.
+  };
+update when=seldom;  // This signals that the graphics output buffer is 
+                    // flushed to the screen.
+
+// Output (record) all FHN dynamical variables into the file fhn0.rec 
+// at the time step "chosenpulse".
+record when=chosenpulse file=[0].rec append=0 recordsep="\n" v0=[V] v1=[h];
+
+
+stop when=end; // Stopping criterion. This is mandatory.
+end;

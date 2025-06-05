@@ -1,0 +1,89 @@
+/* Beatbox example bbs scripts for CRN cell simulations. 
+ * This is distributed with the SVN repository. Use these bbs scripts to make your 
+ * own as most of the devices are shown here. 
+ * 
+ * To run the bbs script sequentially at the command line (in a terminal), use: 
+ *  Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ * 
+ * This program simulates CRN 0D (cell).
+ *        
+ */ 
+
+// a few modelling parameters with numerical values
+def int neqn 24;	/* Number of ODEs in the cell model */
+def real ms 1.0;        /* CRN model has time unit of 1 ms */
+/* ht is the constant time step used by the Euler device. */ 
+def real ht  0.1; 	/* MC's default time step was 0.005 (msec) */
+def real Cm 100; 	/* cell membrn capctnce, pF */
+
+/*
+Define a string for the total number of state variables in the ODE model.
+*/
+/* Allocation of layers to the state varables. */ 
+def str i 24;
+
+/*
+Declare the state of the system in Beatbox.
+*/
+// size of the model xmax*ymax*zmax*vmax
+/* The size of the model is xmax*ymax*zmax*vmax 
+ * where vmax is the number of dynamical variables in the cell model of ODEs. 
+ * xmax=1, ymax=1, zmax=1 represents a cell (OD) model, while 
+ * all other values of xmax, ymax, zmax represent tissue models. 
+ */ 
+state xmax=1 ymax=1 zmax=1 vmax=neqn+1;
+
+/* Schedule parameters */
+def long dt 2.0/ht;       /* output period */
+def int Nstim 10;	  /* Number of conditioning stimuli */
+def real Period 1.0e3*ms; /* Period at which stimuli are applied */
+def real Ampl 1200.;	  /* current amplitude of the stimuli */
+def real Duration 2.0*ms; /* duration of the stimuli */
+
+def long DT (Period*Nstim+Period+1000.0)/ht; /* Total duration of the simulation */
+
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;def real often;def real seldom;def real end; /* Timing global parameters. */
+def real T;		 /* Variable for time with model time units */
+
+// define the schedule parameters using the k_func device.
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+  begin =eq(t,0);  
+  often =eq(mod(t,dt),0);
+  seldom=eq(mod(t,DT),0);
+  end=ge(t,DT);
+  T=t*ht;
+};
+
+// define the periodic stimulation current using the k_func device
+k_func when=always pgm={
+  u[i]=(le(mod(T,Period),Duration)*le(T,Period*Nstim-ht)+ge(T,Period*(Nstim-1)+Period)*le(T,Period*(Nstim-1)+Period+Duration))*Ampl/Cm;
+};
+
+/* Computation of 1 time step update. 
+ * In spatial simulations, the Laplacian is stored at Iu=@vmax. 
+ */ 
+euler v0=0 v1=neqn-1 ht=ht ode=crn par={ht=ht; IV=@[i]};
+
+/* Output
+An output variable "voltage" is declared.
+It is sampled using the sample device.
+It is output into a file called crn0.vtg using the k_print device.
+*/
+def real voltage;
+sample x0=0 y0=0 z0=0 v0=0 result=voltage;
+k_print nowhere=1 when=often file=crn0.vtg append=0 valuesep="\t" list={T; voltage;};
+
+// stopping criterion
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;
+

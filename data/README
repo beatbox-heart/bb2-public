@@ -1,0 +1,10 @@
+Directories contain:
+
+geometry - geometry files used by beatbox.
+
+parameters - parameter files for beatbox (allows beatbox scripts to
+             load files that can then be reused).
+
+scripts - a number of example scripts.
+
+tests - quick technical tests of the integrity of the package

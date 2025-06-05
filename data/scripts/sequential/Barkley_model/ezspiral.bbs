@@ -1,0 +1,58 @@
+// Imitation of the test task of EZSPIRAL version 3.2
+def real a=0.75;
+def real b=0.06;
+def real one_o_eps=50.;
+def real Lx=40.0;
+def real Dv=0.;
+def int nx=201;
+def int ny=201;
+def real tsfrac=0.8;
+def real delta=1.e-3;
+
+def int tend=5000;
+def int tout=20;
+def int xh=10;
+def int yh=20;
+
+def real hx=Lx/(nx-1);
+def real stablimit=3.*hx*hx/8.;
+def real ht=tsfrac*stablimit;
+
+state xmax=nx+2 ymax=ny+2 vmax=4;
+
+/* Schedule control flags */
+def real begin;		// true only at the beginning
+def real out;		// true when graphic and text outputs are due
+def real end;		// true when all done
+def real T;             // model time
+
+/* The schedule: this k_func computes only global variables, at each t */
+k_func nowhere=1 pgm={T=t*ht; begin=eq(t,0);out=eq(mod(t,tout),0);end=ge(t,tend)};
+
+/* Init. cond.: this k_func computes only local field values, at t=0 only */
+k_func when=begin pgm={u0=gt(y,10+ny/2); u1=a/2*lt(x,nx/2)};
+
+/* Graphic output of u and v fields distribution, with tip trace */
+def str out [0].dir;
+shell nowhere=1 when=never advance=1 cmd="mkdir [out]";
+def real xtip; def real ytip;
+singz when=out v0=0 c0=0.5 v1=1 c1=0.5*a-b file=[out]/tip.dat xmean=xtip ymean=ytip;
+ezpaint when=out x0=1 x1=nx y0=1 y1=ny width=2*nx height=2*ny
+  title="T=%.0f" titlecode="T"
+  rlayer=0 rmin=0 rmax=1
+  glayer=-1 			/* means there is no green component in colorcoding */
+  blayer=1 bmin=0 bmax=0.8
+  ntipmax=1000 xtip=xtip ytip=ytip
+  /* uncomment the next line to save pictures to files */
+  /* filter="pnmflip -tb | pnmtopng > [out]/%07.0f.png" filtercode="t/tout" */
+;
+
+/* Text output of a point record */
+def real U; def real V;
+sample x0=xh y0=yh v0=0 result=U;
+sample x0=xh y0=yh v0=1 result=V;
+k_print nowhere=1 file=[out]/history.dat append=0 list={T;U;V} valuesep=" ";
+
+stop when=end; 
+ezstep v0=0 v1=3 a=a b=b eps=1.0/one_o_eps delta=delta D=1 Dv=Dv hx=hx ht=ht manypoint=1 explicit=1;
+end;

@@ -1,0 +1,161 @@
+/* Beatbox example bbs script for Fitz-Hugh Nagumo 2D spiral wave simulations.
+ * This is a variation of fhn2.bbs that illustrates the extra capability
+ * of singz device: storing the statistics of singular points to k-variables. 
+ *
+ * Inputs: 
+ *   fhn.par with common parameters; 
+ *   fhn1.rec (file obtained by running fhn1.bbs).
+ *
+ * Outputs: 
+ *   onscreen graphics if used;
+ *   spiral tip data in ASCII file singz.tip. 
+ *
+ * To run this bbs script with graphics, use the following command:
+ *
+ * Beatbox_SEQ singz.bbs
+ *
+ * and to run without graphics, use the following command:
+ *
+ * Beatbox_SEQ singz.bbs -nograph
+ *
+ */
+
+//***************************
+// Parameters
+
+
+// Include the file fhn.par with input parameters.
+// In this way it is easy to ensure that the parameters are
+// the same as e.g. in fhn1.bbs
+<fhn.par>    
+
+// The size of the model is xmax*ymax*zmax*vmax.
+// The spatial index x from 1 to xmax-2, 
+// where values x=0 and x=xmax-1 belong to halo
+// and are 'untouchable'. 
+// We say that x=1..nx, where nx=xmax-2, 
+// and similarly for y. 
+// Now vmax is the number of layers, including 
+// dynamical variables in the cell model. 
+// They are enumerated from zero, so the last layer available
+// is vmax-1.
+def int nx 100; def int ny 100;
+state xmax=nx+2 ymax=ny+2 zmax=1 vmax=[i]+1;
+
+// Parameters of the initial conditions
+def real x0 0.5*(nx+1); // x runs from 1 to nx so 0.5*(nx+1) is the centre
+def real y0 0.5*(ny+1); // and so for y
+def real lam 100; // The pitch of the Archimedean spiral measured in grid points
+
+// Device control variables
+def real begin;  // it is the very first step
+def real out;    // it is time to make outputs
+def real dtime;  // time to make outputs or a step preceding that
+def real end;    // it is time to stop
+
+def int tout 0.5/ht; // output will be in so many steps, i.e. once per 0.5 units of model time
+
+//***************************
+// Computations
+
+k_func name=timing nowhere=1 pgm={ /* Define when to begin and end */
+  begin = eq(t,0); // beginning of simulation
+  out   = eq(mod(t,tout),0); // time to make outputs every tout steps
+  dtime = out + eq(mod(t,tout),tout-1); // when to call d_dt device
+  // NB '+' above works as logical 'or'
+  end   = ge(t,10000); // end of simulation
+};
+
+// Initial conditions by phase distribution method
+k_func when=begin  name=initial file=fhn1.rec pgm={
+  phasep=atan2(x-x0,y-y0) - 2*pi*hypot(x-x0,y-y0)/lam; // phasep(x,y)=const is Arch. spiral
+  u0=p0; u1=p1 // results of phase field calcs are assigned to appropriate layers. 
+  // Here phaseu= magic variable could have been used instead making the 
+  // last two assignments unnecessary. 
+};
+
+// This device calculates the diffusion term of the field
+// in layer [u]=0, i.e. u-field, and puts the result 
+// into layer [i]. It needs hx to compute the spatial 
+// derivatives, and coefficient D to multiply the result by. 
+diff v0=[u] v1=[i] D=D hx=hx;
+
+// The reaction substep: [i] gives the extra term in the right-hand side for u. 
+// We do not need the resting state here so drop the 'rest' parameter.
+euler v0=[u] v1=[v] ht=ht ode=fhncubpar par={epsu=eps epsv=eps bet=bet gam=gam Iu=@[i]};
+
+//***************************
+// Output
+
+// The graphics output window will have two 300x300 panels 
+def int width 300; def int height 300;
+// with 10 pixel rims and 20 pixels for timers
+def int rim 10; def int timhgt 20;
+// Hence the in-window coordinates of the first panel are
+def int row0 rim+timhgt; def int row1 row0+height-1;
+def int col0 rim;        def int col1 col0+width-1;
+// The second panel takes the same rows but different columns
+def int col2 col1+2*rim; def int col3 col2+width-1;
+
+// The graphics window will be located 10 pixels from the right 
+// and 10 pixels from the top of the screen. 
+screen WINX=-10 WINY=10 XMAX=col3+rim YMAX=row1+rim;
+
+// If the X11 graphics is switched off, then 
+// these clock devices would still print time labels to the stdout,
+// so the "if" clause at the front disables that. 
+if Graph clock   when=out color=WHITE row0=1 col0=1; // this shows the integer step counter 
+if Graph k_clock when=out color=WHITE row0=1 col0=21 code=t*ht format="T=%4.1f a.u."; // this shows real model time
+// the row, col coords of these are in characters, not pixels
+
+// Run-time graphics to paint the field using VGA colour palette
+k_paint when=out nabs=nx nord=ny          // how many abscissa and ordinate values
+  col0=col0 col1=col1 row0=row0 row1=row1 // output it into the left panel
+  color=WHITE*16+WHITE                    // white borders for the panel
+  pgm={                                   // program should calculate colour for given (abs,ord)
+                                          // and we take abs=x and ord=y
+  col=ifge0(u(abs,ord,0,[u]),LIGHTRED,0)  // red component there if u field is above 0
+  + ifge0(u(abs,ord,0,[v]),GREEN,0)};     // and green if [v] field is above 0
+// NB: lightred+green=yellow, and absence of both is black. 
+
+// Detect the tip of the spiral
+def real ntip; def real xtip; def real ytip; // k-variables to record the tip
+singz when=out
+  v0=[u] c0=0         // trace intersection of
+  v1=[v] c1=0         // u(x,y,t)=0 and v(x,y,t)=0
+  Npoints=ntip 	      // number of tips detected
+  xmean=xtip          // ... their mean x coord 
+  ymean=ytip          // ... their mean y coord
+;
+
+// Plot the tip path as recorded in the k-variables
+def real out_and_tips;
+k_func nowhere=1 pgm={out_and_tips=out*ntip};
+k_draw when=out
+  col0=col2 col1=col3 row0=row0 row1=row1 // Defines the part of the graph 
+                                          // window for this output.
+  color=WHITE*16+WHITE		// Colour of the "window" border.
+  absmin=1 absmax=nx		// Limits for the abscissa	
+  ordmin=1 ordmax=ny		//   and for the ordinate of the plot.
+  lines=0.5			// Join the dots unless jump for 1/2 of the 
+                                // window or more.	
+  pgm={				// Program that defines the drawing algorithm.
+    col=1+(WHITE-1)*mod(t,1000)/1000;	// Colour will be cycling through VGA palette except black
+                                // every 1000 steps.
+    abs=xtip;			// Abscissa is the U variable.
+    ord=ytip;			// Ordinate is the V variable.
+  }
+;
+// Flush the on-screen graphics
+update when=out;
+
+// Record the tip 
+k_print nowhere=1 when=out file=[0].tip append=0 valuesep="\t" list={t*ht;ntip;xtip;ytip};
+
+
+// Keep the picture on the screen for 1 second in the end
+if Graph pause when=end seconds=1;
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;

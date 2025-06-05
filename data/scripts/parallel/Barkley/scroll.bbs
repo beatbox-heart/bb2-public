@@ -1,0 +1,197 @@
+// VNB 2013/02/27
+// Test script for scaling and profiling.
+// Based on ~/Work/2012/Buckle0315/tune.bbs,
+// last known run, cut 1000-fold in duration.
+//
+/* Beatbox example bbs script for parallel Barklay 3D scroll wave simulation.
+ *
+ * Command line inputs: bkl1.rec (provided with this bbs script)
+ * number of MPI processors (integer value)
+ *
+ * Outputs: 1. dump files called half.dmp and last.dmp (in out_dir)
+ *	    2. sampled variables in history.dat (on out_dir)
+ *	    3. 3D ppm files (in directory called ppm)
+ *	    4. scroll filament called singz.dat (in out_dir)
+ *
+ * This bbs script demonstrates the use of the following syntax and devices, as well as things to note are:
+ *    1. The first command-line argument is the name of the pre-recorded file used for the initial conditions;
+ *    2. The second command-line argument is a number used as part of the name of the output directory. 
+ *	It will be 0 for the sequential run and will be a number of threads for parallel runs.
+ *    3. The diff device is called twice as in that model both equations contain diffusion terms, and with different 
+ *	diffusion coefficients. Correspondingly, two extra layers [iu] and [iv] are used to keep the values of 
+ *	these terms instead of just the usual one.
+ *    4. The ppmout device is used to output a "three-dimensional image". It has the usual PPM header, showing the 
+ *	x- and y-sizes of the 3D array it contains, as width and height respectively. However this header is followed 
+ *	not by a nx×ny array of byte triplets, but by nz such arrays, thus making the whole 3D nx×ny×nz array. Note 
+ *	that the "3D ppm" format used for that is NOT the standard multi-image ppm, which also can have nz arrays going 
+ *	one after the other, but there each of them has its own header. Our "3D ppm" format is not standard but it is understood 
+ *	by the EZView viewer (see below).
+ *   5.  The singz device outputs not the position of the tip of the spiral wave, as in 2D simulations discussed above, 
+ *	but a position of such a tip in every z=const cross-section. Since in this simulation the filament of the 
+ *	scroll wave goes monotonically in vertical direction, such collection of spiral tips effectively makes up a 
+ *	description of the filament of the scroll wave. This output was used for processing to measure "buckling" of 
+ *	a scroll wave in the above cited paper. The visualization of the scroll filament can be done independently 
+ *	by the visualizer, see below.
+ *
+ * Before running this script, make sure that the bkl1.rec is in your working directory.
+ * You will also need the provided view.pl (a perl script) in your working directory.
+ * To run this script in parallel and do the exercise, you can edit the scroll.bbs file and then type:
+ * make all
+ * to do all the tasks in the simulation.
+ *
+ */
+def str inrec [1];
+def str np [2];
+def str outdir [0]-[np].dir;
+
+def real hx 0.2;
+def int nx 80;
+def int ny 80;
+def int nz 32;
+def real Lx nx*hx;
+def real Ly ny*hx;
+def real Lz nz*hx;
+
+def real apar   1.1;
+def real bpar   0.19;
+def real epspar 1.0/50.0;
+def real Du     1.00;
+def real Dv     0.10;
+
+def real difflimit  hx*hx/6.0;
+def real ht 0.5*difflimit;
+
+def real Tmax 10.0; // 100.0e3; - here we shortened it 10^4-fold
+def real Tout 0.05;
+def real Tctl 0.2;
+
+def str u 0; 
+def real umin 0.0; 
+def real umax 1.0;
+def real umid 0.5;
+def str v 1; 
+def real vmin -bpar; 
+def real vmax 1.0-bpar;
+def real vmid 0.5*apar-bpar;
+def str iu 2; 
+def str iv 3; 
+
+state xmax=nx+2 ymax=ny+2 zmax=nz+2 vmax=[iv]+1;
+
+def int dt Tout/ht;     // output period
+def int DT Tctl/ht;	// ctlpoint period
+def int t2 (0.5*Tmax)/ht; // dump period
+
+def real T;
+def real begin;
+def real often;
+def real seldom;
+def real halfway;
+def real end;
+
+k_func nowhere=1 name=schedule pgm={
+  T=t*ht;
+  begin =eq(t,0);
+  often =eq(mod(t,dt),0);
+  seldom=eq(mod(t,DT),0);
+  halfway=eq(t,t2);
+  end=ge(t,2*t2); /* to make sure the two halves are equal in length */
+};
+
+shell nowhere=1 
+      when=never 
+      advance=1 
+      cmd="mkdir [outdir]";
+
+// Initial conditions: twisted scroll
+def real x0 0.5*nx+0.5; 
+def real y0 0.5*ny+0.5; 
+def real lam 80;
+def real Nwind 0.1;
+k_func when=begin 
+       name="ic" 
+       file=[inrec] 
+       pgm={
+        phasep= atan2(x-x0,y-y0) - 2*pi*hypot(x-x0,y-y0)/lam + 2*pi*Nwind*z/nz;
+        u[u]=p[u]; u[v]=p[v]
+       };
+
+// The computation
+diff v0=[u] v1=[iu] D=Du hx=hx;
+diff v0=[v] v1=[iv] D=Dv hx=hx;
+euler name=ode1 
+      v0=[u] 
+      v1=[v] 
+      ht=ht 
+      ode=fhnbkl 
+      par={
+         a=apar 
+         b=bpar 
+         eps=epspar 
+         Iu=@[iu] 
+         Iv=@[iv]
+      };
+
+// Sampling for output
+def real uout; 
+def real vout;
+
+sample when=always 
+       x0=1 
+       y0=1 
+       z0=1 
+       v0=[u] 
+       result=uout;
+
+sample when=always 
+       x0=1 
+       y0=1 
+       z0=1 
+       v0=[v] 
+       result=vout;
+
+
+//**************************
+// Output to commands: 
+// for now all commented out;
+// remove 'rem' in front to uncomment. 
+
+
+dump when=halfway file=[outdir]/half.dmp v0=[u] v1=[v];
+dump when=end     file=[outdir]/last.dmp v0=[u] v1=[v];
+
+k_print when=always 
+            nowhere=1 
+            valuesep="\t" 
+            file=[outdir]/history.dat 
+            list={t;uout;vout;};
+
+ppmout when=seldom 
+           file="[outdir]/%06d.ppm" 
+           r=[u] 
+           r0=umin 
+           r1=umax 
+           g=[v] 
+           g0=vmin 
+           g1=vmax 
+           b=[iu] 
+           b0=0 
+           b1=255;
+
+singz when=often 
+          file=[outdir]/singz.dat append=0 
+          v0=[u] c0=umid 
+          v1=[v] c1=vmid
+          everypoint=1 
+          everysection=0 
+          everyrecord=0
+          pointsep="\n" 
+          sectionsep="" 
+          recordsep="\n"
+;
+// end of output commands
+//**************************
+
+stop when=end;
+
+end;

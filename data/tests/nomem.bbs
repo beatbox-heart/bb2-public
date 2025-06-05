@@ -1,0 +1,8 @@
+// Test script to cause "not enough memory" abort
+def int nx 1000000;
+def int ny 1000000;
+def int nz 1000000;
+def int nv 1000;
+state xmax=nx+2 ymax=ny+2 zmax=nz+2 vmax=nv+1;
+stop;
+end;

@@ -1,0 +1,98 @@
+/* Beatbox example bbs script for FHN 1D simulation to demonstrate the load device.
+ *
+ * Inputs: 
+ *   fhn.par with common parameters; 
+ *   fhn1.dmp : dump file produced by the previous simulation fhn1.bbs
+ *
+ * Outputs: 
+ *   onscreen graphics if used;
+ *   fhn1_load.dmp : dump file with results of this simulation. 
+ */
+
+// Include the file fhn.par with input parameters.
+<fhn.par>
+
+// the size of 1D strand
+def int nx 100; 
+
+// The size of the model is xmax*ymax*zmax*vmax, where vmax=3 is the number 
+// of the reserved dynamical variables: 
+// 2 dynamical variables for the FHN model + 1 dynamical variable reserved 
+// for the intercellular current (the Laplacian). 
+state xmax=nx+2 ymax=1 zmax=1 vmax=[i]+1;
+
+// Define the timing variables:
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often is for output rates, 
+ * end is to set up the stopping criterion using stop device.
+ */ 
+def real begin;
+def real often;
+def real end;
+
+// Use the k_func to assign values to the timing variables:
+k_func name=timing nowhere=1 pgm={
+  begin = eq(t,0);          /* 1 when t is equal to zero, 0 otherwise */
+  often = eq(mod(t,10),0);  /* 1 if t is divisible by 10, 0 otherwise */
+  end   = ge(t,2000);	    /* 1 if t is greater or equal than 2000, 0 otherwise */
+};
+
+/* Initial condition using the load device */
+load when=begin v0=0 v1=2 file=fhn1.dmp;
+
+//************************************************
+// Calculations
+
+/* Laplacian using Neumann boundary conditions */ 
+diff v0=[u] v1=[i] hx=hx D=D;
+
+// Update the time step using the Laplacian stored at Iu=@2.
+euler name=ode1 v0=[u] v1=[v] ht=ht ode=fhncub rest=10000
+par={eps=eps bet=bet gam=gam Iu=@[i]};
+
+//************************************************
+// The graphics output window will be with 600x600 resolution with 10-pixel rims,
+// located 10 pixels from the right and 10 pixels from the top of the screen. 
+screen WINX=-10 WINY=10 XMAX=620 YMAX=340;
+// The coordinates of the output zone
+def int row0 30; def int row1 329;
+def int col0 10; def int col1 609;
+
+// If the X11 graphics is switched off, then 
+// these clock devices would still print time labels to the stdout,
+// so the "if" clause at the front disables that. 
+if Graph clock   when=often color=WHITE row0=1 col0=1; // this shows the integer step counter 
+if Graph k_clock when=often color=WHITE row0=1 col0=21 code=t*ht format="T=%4.1f ms"; // this shows real model time
+// the row, col coords of these are in characters, not pixels
+
+// The run-time plots of the solution
+k_plot name=uplot when=often 
+  col0=col0 col1=col1 row0=row0 row1=row1 // defines the part of the graph window for this output
+  color=WHITE*16+WHITE			  // colour of the "window" border	
+  lines=1 				  // connect the dots
+  clean=1                                 // clean window before drawing this graph
+  ordmin=umin ordmax=umax		  // limits for the ordinate of the plot
+  N=nx					  // the abscissa will be integer running from 1 to nx
+  pgm={ord=u(abs,0,0,[u]);col=LIGHTRED};  // ordinate is value of u variable at the point, plot in light red
+k_plot name=vplot when=often 
+  col0=col0 col1=col1 row0=row0 row1=row1 // in the same window
+  color=WHITE*16+WHITE			  // 
+  lines=1 				  // 
+  clean=0                                 // but do not clean it beforehand
+  ordmin=vmin ordmax=maxv		  // limits for the ordinate
+  N=nx					  // 
+  pgm={ord=u(abs,0,0,[v]);col=LIGHTBLUE}; // which is now v variable, and plotted in light blue
+update when=often;  // this signals that the graphics output buffer is flushed to the screen
+
+
+// Dump into the file fhn1.dmp.
+/* Dump all state variables from all nodes into a binary file for future use. */ 
+dump append=0 when=end v0=0 v1=2 file=[0].dmp;
+
+// Keep the picture on the screen until the user presses Enter
+if Graph pause seconds=1 when=end;
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;

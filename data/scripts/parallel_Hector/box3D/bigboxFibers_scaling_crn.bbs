@@ -1,0 +1,311 @@
+/*
+ * Beatbox example bbs script for CRN big box anisotropy 3D simulation, with some calcultations and output being identical to humanAtrium.bbs script. 
+ * This is distributed with the SVN repository. Use these bbs scripts
+ * to make your own as most of the devices are shown here.
+ * 
+ * To run the bbs script sequentially at the command line (in a
+ * terminal), use:
+ * 
+ * Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ * 
+ * This program simulates CRN 3D box 
+ * geometry. The geometry is the bigCubeFibers.bbg geometry. 
+ *        
+ * ********************************************************
+ * A script for Mario to conduct the profiling.
+ * Comments have been added to ease the reading of this script.
+ * I have removed all the redundant command line inputs,
+ * and made the simulation short. To reduce simulation time,
+ * reduce Period (see below).
+ * 
+ * A brief verbose summary of what this script does:
+ * 
+ * 1. It sets up a simulation for scroll waves, and defibrillation 
+ *    in the human atrium geometry.
+ * 2. It uses the phase distribution method for initiating the scroll
+ *    waves.
+ * 3. It uses the resonant feedback stimulation method to try and
+ *    eliminate this scroll wave.
+ * 4. It saves output periodically in ppm format.
+ * 5. It checkpoints the state of the simulation once in a binary dump 
+ *    to allow a restart.
+ * 
+ */
+
+/* 
+ *  The number of "layers" in the simulation.  The layers correspond
+ *  to the number of state variables plus a few more to store
+ *  simulation data. You may need the information as a string (str) or
+ *  as an int (neqn).
+ *
+ *  Input files: bigCubeFibers.bbg, crn1.rec
+ *
+ *  command line call examples:
+ *
+ *  mpirun -n 1 Beatbox humanAtrium.bbs
+ *
+ * assuming that the node/computer has some minimum memory, or for
+ * multiple processors:
+ *
+ *  mpirun -n 243 Beatbox humanAtrium.bbs
+ *
+ * To get inbuilt profiling information, we can do:
+ *
+ *  mpirun -n 243 Beatbox humanAtrium.bbs -profile 
+ *
+ */
+def str iext 24; 
+def int neqn [iext];
+
+/*
+ *
+ *
+ * Define the space step (hx) for the finite differences, the time
+ * step for the forward solution (ht).  Cm is cell capacitance. It is
+ * peculiar to the cell model used in this script. In other scripts,
+ * Cm may already be part of the ODE system.  Period regulates the
+ * duration of the simulation.  small t is a BeatBox reserved counter
+ * of time steps. Capital T is used to calculate the physical time.
+ *
+ */
+def real hx 0.33;      // Cell spacing.
+def real ht 0.05;      // Time step.
+def real Cm 100.0;     // Capacitance.
+def real Period 100.0; // To make simulation shorter, reduce Period. 
+def real T;
+
+def real Amp 1.0;     // Defibrillation stimulus amplitude.
+def real Dur 5.0;     // Duration of stimulus
+def real Del 40.0;    // Time duration between registration of signal and 
+                      // application of stimulus.
+def real Tstart 5.0;  // Start the stimulation protocol after Tstart.
+
+// fracy and fracz have been set to be between 0 and 1. They dictate
+// where the scroll is initiated.
+def real fracz 0.5;
+def real fracy 0.5;
+
+/*
+ * Set up of some output and stimulus parameters.
+ */
+
+def real begin;
+def real every1ms;
+def real every10ms;
+def real end;
+
+/*
+ * Diffusion constant. This regulates the speed at which the
+ * electrical wave propagtes in the heart.
+ */
+def real D 0.0735;
+
+/*
+ * Various layers (or state variables) that you will use to produce
+ * ppm output.
+ */
+def str V 0; 
+def real Vmin -120; 
+def real Vmax  80;
+def real Vmid -50;
+def str oi 14; 
+def real oimin 0.0; 
+def real oimax 1.0; 
+def real oimid 0.5;
+def str f 5;   
+def real fmin  0.0;  
+def real fmax 1.0;  
+def real fmid 0.5;
+
+/* 
+ * Schedule parameters.  These parameters are used to set the output
+ * parameters using k_func device calls.
+ */
+
+def long onems 1.0/ht;  // Timesteps in one ms.
+def long tenms 10.0/ht; // Timesteps in ten ms.
+def long DT Period/ht;	// Number of time steps performed during the simulation.
+
+/*
+ * A call to the state device is mandatory in any bbs script that does
+ * a simulation. A state device sets up the simulation environment,
+ * sets aside the required memory, and declares the required sized u
+ * array in which the simulation state variables are stored.
+ *
+ * Only variable declarations can be done before calling the state
+ * device.  The state device is called once in a simulation.  All
+ * other devices between state and end are called at each time step.
+ * This call to the state device requires the file: humanAtriumFibres.bbg
+ * to be in same directory.
+ */
+state geometry=bigCubeFibers.bbg  // Geometry file to read the ICs from.
+      anisotropy=1		      // Claim anisotropy to force use another 
+                                      // variant of diff.
+      vmax=[iext]+1;
+
+/*
+ * Calls to a k_func device are made to calculate simulation
+ * variables. These variables are visible to devices. Several logical
+ * functions are defined in beatbox for use by devices.
+ */
+k_func name=timing 
+       when=always 
+       nowhere=1 
+       pgm={
+          T=t*ht;
+          begin     = eq(t,0);
+          every1ms  = eq(mod(t,onems),0);
+          every10ms = eq(mod(t,tenms),0);
+          end       = ge(T,Period);
+       };
+
+/*
+ * Initialise the system using phase distribution method. This method
+ * of initiating scroll waves requires:
+ *
+ *  crn1.rec
+ *
+ *
+ *  The initiation is done only at the beginning indicated by
+ *  when=begin (see value of begin above).
+ */
+
+def real z0 fracz*zmax+0.5; 
+def real y0 fracy*ymax+0.5; 
+def real lam 1000.0/hx;
+k_func when=begin 
+       file=crn1.rec 
+       t0=0 
+       t1=0 
+       x0=1 
+       x1=xmax-1 
+       y0=1 
+       y1=ymax-1 
+       z0=1 
+       z1=zmax-1 
+       pgm={
+         phaseu=atan2(z-z0,y-y0)-2*pi*hypot(z-z0,y-y0)/lam;
+       };
+
+/*
+ * The sample device registers a signal at x0, y0, z0.  The sampled
+ * signal is stored in the variable signal.  "result" is a BeatBox
+ * reserved variable.
+ */
+def real signal;
+sample when=always 
+       x0=100 
+       y0=105 
+       z0=280 
+       v0=[V] 
+       result=signal;
+
+/*
+ * Once the signal is sampled, find out if the front has reached the
+ * registration location. This is done using the k_poincare device.
+ */
+
+def real front; 
+def real Tfront;
+k_poincare nowhere=1 
+           when=always 
+           sign=1 
+           which=0 
+           pgm={front=signal-Vmid; Tfront=T};
+
+/*
+ * Using all the variables and parameters defined, and inbuilt logical
+ * functions, we define a simulation force which has value of Amp when
+ * time is between Tfront and Tfront+Del.
+ */
+def real force;
+k_func when=always 
+       nowhere=1 
+       pgm={
+         force=Amp*ge(T,Tstart)*ge(T,Tfront+Del)*le(T,Tfront+Del+Dur);
+       };
+
+// The computations.
+diff v0=[V] 
+     v1=[iext] 
+     Dpar=D Dtrans=D
+     hx=hx;
+k_func when=force 
+       pgm={u[iext]=u[iext]+force};
+euler v0=[V] 
+      v1=neqn-1 
+      ht=ht 
+      ode=crn
+      rest=0 
+      par={
+        ht=ht;
+        IV=@[iext];
+        gk1=0.18; // CAF. Values of electrophysiological parameters 
+                  // can be manipulated in the euler device call. 
+                  // To see other electrophysiological parameters, 
+                  // see src/crn_par.h and src/crn_step.h.
+      };
+
+/******************************************************************/
+/* To run the script without ANY output, leave in or add a 'rem' keyword 
+ * to the beinning of each device. Remove a 'rem' word from before a 
+ * device if you want to include it in the run, e.g. instead of:
+ *
+ *  rem ppmout when=... 
+ *
+ * make it:
+ *
+ *  ppmout when=...
+ */
+
+/*
+ *
+ * Call to ppmout device. This the ppm output is in 3 layers with a
+ * header and binary char format. Written in this way, a ppm directory
+ * is NOT required.
+ */
+
+ppmout when=every10ms 
+           file="crn3d_%06d.ppm" 
+           mode="w"
+           r=[V]    r0=Vmin  r1=Vmax
+           g=[oi]   g0=oimin g1=oimax
+           b=[f]    b0=fmin  b1=fmax
+;
+
+/* 
+ * Call to k_print to give ASCII text output of time, signal in column
+ * format.  The [0] is the first argument to the Beatbox binary (see
+ * src/beatbox.c)
+ */
+
+k_print nowhere=1 
+        when=every1ms 
+        file=[0].dat 
+        append=0 
+        valuesep="\t" 
+        list={T;signal;};
+
+/* Dump for for subsequent restart */
+
+/*
+dump when=end 
+     v0=0 
+     v1=neqn-1 
+     file=[0].dmp;
+*/
+/* ... till here, then save, and run again*************************/
+
+/*
+ * A stop criterion is required, otherwise the simulation continues
+ * indefinitely.
+ */
+stop when=end; 
+
+/*
+ *
+ * One call to the end statement is mandatory. the end on the previous
+ *  line is a variable, the end on this line is a device call.
+ */
+end;
+

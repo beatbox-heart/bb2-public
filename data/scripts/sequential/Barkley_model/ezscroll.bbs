@@ -1,0 +1,72 @@
+/* 
+ * Imitate EZSCROLL demo
+ */ 
+
+// Barkley model parameters
+def real apar 0.75;
+def real bpar 0.01;
+def real cpar 1.0/50.;
+def real delta 1.0e-3;
+
+def str u 0;
+def str v 1;
+def str i1 2;
+def str i2 3;
+
+// real time graphic output limits (sequential mode only)
+def real umin 0.0; def real umax 1.0; def real umid 0.5;
+def real vmin 0.0; def real maxv 1.0; def real vmid apar*umid-bpar;
+
+
+def int nx 61; def int ny 61; def int nz 61;
+state xmax=nx+2 ymax=ny+2 zmax=nz+2 vmax=[i2]+1;
+
+def real Lx 40;
+def real hx Lx/(nx-1);
+def real STABILITY_LIMIT hx*hx*3.0/8.0;
+def real ht 0.8*STABILITY_LIMIT;
+def real D 1.0; 
+
+
+def real begin;
+def real end;
+def real out;
+def int tout 8;
+def int tend 1000;
+k_func name=timing nowhere=1 pgm={
+  begin = eq(t,0);
+  out   = eq(mod(t,tout),0);
+  end   = ge(t,tend);
+};
+
+// Initial conditions: filament cross
+def real xc 0.5*xmax-1; 
+def real yc 0.5*ymax-1+10;
+def real zc 0.5*zmax-1;
+k_func when=begin name="ic" pgm={
+  u[u]=(lt(x,xc)*gt(y,yc)+ge(x,xc)*lt(y,yc))*1.0;
+  u[v]=(lt(x,xc)*gt(z,zc)+ge(x,xc)*lt(z,zc))*apar*0.5;
+};
+
+def int winsize=500;
+ezview when=out 
+  width=winsize height=winsize winx=-1 winy=1
+  autostart=0
+  phi0=70 theta0=130 distance0=5
+  verbose=1
+  show_surface=1 ulayer=[u] uc=umid color_mode=0
+  vlayer=[v] vc=vmid vmin=vmin maxv=maxv alphamin=1 alphamax=1
+  show_filament=0 layer1=[u] const1=umid layer2=[v] const2=vmid
+  write_filament=0 filament="filament.dat"
+  bg_r=0.4 bg_g=0.4 bg_b=1.0
+  bbox_r=0 bbox_g=0 bbox_b=0
+  write_images=0
+  images="pnmflip -tb | pnmtopng > [0]%07.0f.png"
+  imagescode="t/tout"
+;  
+
+pause when=end seconds=-1;
+stop when=end;
+
+ezstep v0=[u] v1=[i2] a=apar b=bpar eps=cpar D=D hx=hx ht=ht delta=delta explicit=0 split=1 manypoint=1;
+end;

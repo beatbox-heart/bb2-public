@@ -1,0 +1,69 @@
+// Make a record of 0D pulse
+/*
+  Example bbs script to produce FHN AP.
+  Inputs: fhn.par with common parameters. 
+  Outputs: record with name fhn_ap.vtg
+  To run, use the command:
+  Beatbox_SEQ fhn0_ap.bbs
+*/
+state xmax=1 ymax=1 zmax=1 vmax=3;
+
+// Computation parameters
+<fhn.par>
+// Schedule and display parameters
+def long dt 0.1/ht;		// output period
+def long DT 1000;	// ctlpoint period
+
+// Timing variables
+def real begin;
+def real often;
+def real end;
+def real T;
+def real T0; // start time of the chosen pulse
+
+k_func name=timing nowhere=1 pgm={
+	T=t*ht;
+	begin =eq(t,0);
+	often =eq(mod(t,dt),0);
+	end =ge(T,100);
+};
+
+// Point sample
+def real U;
+def real V;
+def real Iu;
+reduce name=U_sample operation=max v0=[u] result=U;
+reduce name=V_sample operation=max v0=[v] result=V;
+
+def real U_rest;
+def real V_rest;
+
+// Feed-back stimulation: push when close to the resting state;
+def real pulsecount;
+def real chosenpulse;
+k_func name=restTest nowhere=1 pgm={
+	Iu=lt(U,U_rest+0.05)*lt(V,V_rest+0.05);
+	pulsecount=pulsecount+gt(Iu,0);
+	chosenpulse=ge(pulsecount,5)*often;
+	end=end+ge(pulsecount,6);
+};
+
+k_func name=fb pgm={
+	u0=u0 + Iu;
+};
+
+// The computation
+euler name=ode1 v0=0 v1=1 ht=ht ode=fhncub rest=10000 par={eps=eps bet=bet gam=gam};
+
+// Sample resting u and v values
+reduce name=restU when=begin operation=max v0=[u] result=U_rest;
+reduce name=restV when=begin operation=max v0=[v] result=V_rest;
+
+/*
+Output
+*/
+def real voltage;
+sample x0=0 y0=0 z0=0 v0=0 result=voltage;
+k_print nowhere=1 when=chosenpulse append=0 file=fhn_ap.vtg valuesep=" " recordsep=" \n" list={T; voltage;};
+stop when=end;
+end;

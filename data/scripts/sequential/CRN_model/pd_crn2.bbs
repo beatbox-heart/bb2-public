@@ -1,0 +1,133 @@
+/* Beatbox example bbs scripts for FHN, CRN, LRD cell to 3D simulations. 
+ * This is distributed with the SVN repository. Use these bbs scripts to make your 
+ * own as most of the devices are shown here. 
+ * 
+ * To run the bbs script sequentially at the command line (in a terminal), use: 
+ *  Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ * 
+ * This program simulates FHN CRN LRD 0D (cell) 1D 2D 3D box 3D geometry. The geometry is the ffr.bbg geometry. 
+ *        
+ */ 
+// Initiate spiral wave using phase distribution initial condition in Courtemanche et al atrial model.
+
+// Some model parameters
+def real ms 1.0;        /* assume that CRN model has time unit of 1 ms */
+def real Cm 100; 	/* cell membrn capctnce, pF */
+def real umin -120; // minimum expected voltage
+def real umax 80.; // max expected voltage
+
+/* ht is the constant time step used by the Euler device. */ 
+def real ht  0.01; /* MC's default time step was 0.005 (msec) */
+/* HX is the uniform space step in all directions. Units are that used in your simulation. */ 
+def real hx 0.125;
+/* D is the diffusion constant. Units are that used in your simulation. */ 
+def real D 0.05;
+def real L 37.5; // length of side of square box
+
+def int nx L/hx; // number of nodes/cells in x direction
+def int ny nx; // number of nodes/cells in y direction
+
+// Dynamic variables and layer allocation
+/* Allocation of layers to the state varables. */ 
+def str V 0; 
+def real Vmin -120; def real Vmax  80; def real Vmid -50;
+/* Allocation of layers to the state varables. */ 
+def str oi 14; 
+def real oimin 0.0; def real oimax 1.0; def real oimid 0.5;
+/* Allocation of layers to the state varables. */ 
+def str f 5; 
+def real fmin  0.0; def real fmax 1.0; def real fmid 0.5;
+
+def int neqn 24;
+/* Allocation of layers to the state varables. */ 
+def str i 24; 
+def real imin  0.0; def real imax 20.0; def real imid 0.5*imax;
+
+// The computational grid
+/* The size of the model is xmax*ymax*zmax*vmax 
+ * where vmax is the number of dynamical variables in the cell model of ODEs. 
+ * xmax=1, ymax=1, zmax=1 represents a cell (OD) model, while 
+ * all other values of xmax, ymax, zmax represent tissue models. 
+ */ 
+state xmax=nx+2 ymax=ny+2 zmax=1 vmax=[i]+1;
+
+// Schedule and display parameters
+def long dt 10;         // screen output period
+def long DT 100;	// files output period
+def real T;		// model time, time units
+def real Tmax 1000;		// model max time, time units
+
+// New estimates of Amp, in fact the complete script. Amp = 5 gives spiral -> fib -> termination of re-entry.
+//def real Amp 0.0;
+//def real Dur 5.0;
+//def real Del 1.0;
+
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;
+def real often;
+def real seldom;
+def real end;
+
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+  T     =t*ht;
+  begin =eq(t,0);
+  often =eq(mod(t,dt),0);
+  seldom=eq(mod(t,DT),0);
+  end   =ge(T,Tmax);
+};
+
+/* Phase distribution method based initial conditions */
+def real x0 0.5*nx+0.5; def real y0 0.5*ny+0.5; def real lam 1000.0/hx;
+k_func when=begin
+  name=initial file=pd_crn1.rec t0=0 t1=0 x0=1 x1=nx y0=1 y1=ny pgm={
+  phaseu=atan2(x-x0,y-y0)-2*pi*hypot(x-x0,y-y0)/lam;
+};
+
+/* The computations */
+/* Compute the Laplacian and store it into the i layer. */ 
+diff v0=[V] v1=[i] hx=hx D=D;
+/* Computation of 1 time step update of the rhs and add Laplacian. 
+ * the Laplacian at IV=@[i]. 
+ */ 
+euler name=ode1 v0=0 v1=neqn-1 ht=ht ode=crn par={
+ht=ht;
+IV=@[i];
+};
+
+
+// Create the directory for the image files
+// (no problem if it is already there)
+def str outdir [0].dir; // so it will be fhn2.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+// advance=1 means this will be done BEFORE the first step
+
+// This is the simpler version which uses what is in the layers,
+// only by linear scaling [umin,umax]->[0,255] etc. 
+imgout when=seldom
+  // On-the-fly conversion including flipping top/bottom flip
+  filter="pnmflip -tb | pnmtopng > [outdir]/uvi%07.0f.png"
+  r=[V]  r0=Vmin  r1=Vmax // [u]-layer defines red component
+  g=[oi] g0=oimin g1=oimax // [v]-layer defines green component
+  b=[f]  b0=fmin  b1=fmax;    // [i]-layer defibes blue component
+
+  
+/* Several ASCII outputs of variables and run time measurements */
+singz when=often v0=[V] c0=Vmid v1=[oi] c1=oimid hx=hx file=[0].trj;
+def real voltage;
+sample when=always x0=xmax/2+10 y0=ymax/2+10 z0=0 v0=0 result=voltage;
+def real cai_transient;
+sample when=always x0=xmax/2+10 y0=ymax/2+10 z0=0 v0=8 result=cai_transient;
+k_print nowhere=1 when=often file=[0].samples append=0 valuesep="\t" list={T;voltage;cai_transient;};
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;
+

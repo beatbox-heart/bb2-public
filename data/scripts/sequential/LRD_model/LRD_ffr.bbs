@@ -1,0 +1,89 @@
+/* Beatbox example bbs script.
+ * The purpose of this script is to allow 3D simulation using the
+ * ffr.bbg rabbit geometry.
+ *
+ * This bbs script demonstrates:
+	1. The use of the anisotropic diff device.
+ * Inputs: ffr.bbg
+ *
+ * Outputs: 1. 3D ppm files (in sub-dir ppm/)
+            2. a record of all dynamical variables at given point location where the file is called LRD_ffr.rec in out/
+	    3. a dump file called LRD_ffr.dmp in out/
+ *
+ * Before running this simulation, make sure you have ppm/ and out/ sub-directories.
+ * To run this simulation in serial, use the command:
+ * Beatbox_SEQ LRD_ffr.bbs -verbose
+ * To run this in parallel using np number of processors, use the command:
+ * mpirun -n np Beatbox LRD_ffr.bbs -verbose -profile
+ */ 
+// Computation parameters
+<lrd.par> // Include the file lrd.par with input parameters.
+
+def int neqn [iext];
+
+/*
+state with fibre orientation (anisotropy).
+*/
+state
+	geometry=ffr.bbg
+	vmax=[iext]+1
+	normaliseVectors=1
+	anisotropy=1
+;
+
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;
+def real end;
+
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+	begin = eq(t,0);
+	end   = ge(t,100);
+};
+
+// Stimulus
+/* Apply stimulus to tissue specified by x0,x1,y0,y1,z0,z1. If 
+ * any of these are not specified, then the max or min values are presumed 
+ */ 
+k_func when=begin x0=18 x1=22 y0=18 y1=22 z0=18 z1=22 pgm={u[V]=Vmax;};
+
+// The computation
+/* Compute the Laplacian using fibre orientation */ 
+diff v0=[V] v1=[iext] Dpar=D Dtrans=D/4 hx=hx;
+/* Computation of 1 time step update. 
+ * In spatial simulations, the Laplacian is stored at Iu=@vmax. 
+ */ 
+euler v0=[V] v1=neqn-1 ht=ht ode=lrd rest=10000 par={ht=ht Iu=@[iext]};
+
+/* PPMOUT gives 2D/3D ppm file format output at a rate specified by when= parameter. */ 
+ppmout 
+	file="out/[0]_%04d.ppm" mode="w"
+	r=[V]		r0=Vmin		r1=Vmax
+	g=[xi] 		g0=0		g1=1
+	b=[dvdt] 	b0=0		b1=1
+;
+
+// Record device outputs values of variables at the specified locations.
+record
+	x0=35 x1=35
+	y0=35 y1=35
+	z0=35 z1=35
+	v0=[V] v1=neqn-1
+	filehead="Fibre Orientation Test"
+	file=out/[0].rec mode=append
+;
+
+/* Dump all state variables from all nodes into a binary file for future use. */ 
+dump append=0 file=out/[0].dmp;
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+
+end;

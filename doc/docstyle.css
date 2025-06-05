@@ -1,0 +1,215 @@
+<!--
+
+/* white background */
+body 
+{
+    color:#000000;
+}
+
+
+/* use this for embedded bits of code */
+pre 
+{ 
+    background-color:#FFFF99; 
+    border: 2px dashed #FF6666;
+    padding-top: 7px;
+    padding-bottom: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin: 10px;
+    white-space: pre-wrap;
+}
+
+/* paragraph style for questions things that need addressing */
+p.quest 
+{
+    background-color:#FF6666; 
+    border: 4px solid #AAAAAA;
+    padding-top: 7px;
+    padding-bottom: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin: 10px;
+    white-space: pre-wrap;
+}
+quest 
+{
+    background-color:#FF6666; 
+}
+
+
+novel
+{
+    color:#800060; 
+    background-color:#FFFFEE; 
+}
+p.novel
+{
+    color:#800060; 
+    background-color:#FFFFEE; 
+}
+tr.novel
+{
+    color:#800060; 
+    background-color:#FFFFEE; 
+}
+li.novel
+{
+    color:#800060; 
+    background-color:#FFFFEE; 
+}
+
+
+discard
+{
+    text-decoration: line-through;
+    color:#FF0000; 
+    background-color:#FFFFEE; 
+}
+p.discard
+{
+    text-decoration: line-through;
+    color:#FF0000; 
+    background-color:#FFFFEE; 
+}
+tr.discard
+{
+    text-decoration: line-through;
+    color:#FF0000; 
+    background-color:#FFFFEE; 
+}
+li.discard
+{
+    text-decoration: line-through;
+    color:#FF0000; 
+    background-color:#FFFFEE; 
+}
+
+/* paragraph style for captions */
+p.caption
+{
+    text-align: center;
+    font-style: italic;
+    font-size: smaller;
+    text-indent: 0;
+    border: thin silver solid;
+}
+
+/* centre tables */
+table
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Table header background colour */
+table th
+{
+    background-color: #eeeeee;
+}
+
+/* table cells */
+table td
+{
+    padding: 5px;
+}
+
+/* Add properties for tables for firgures */
+table.figure
+{
+    border: 1px;
+    vertical-align: top;
+    text-align: left;
+}
+
+/* place captions below the table */
+caption
+{
+    caption-side: bottom;
+}
+
+/* link colours */
+a  
+{ 
+    color:#0000FF; 
+}
+
+a:visited 
+{ 
+    color:#800080; 
+}
+
+a:hover 
+{ 
+    color:#008000; 
+}
+
+a:active { 
+    color:#FF0000; 
+}
+
+/* centering an image */
+.centeredImage 
+{
+    text-align:center;
+    margin-top:0px;
+    margin-bottom:0px;
+    padding:0px;
+}
+  
+/* Got this from: 
+
+       http://www.tumfatig.net/20110811/automatic-html-numbered-headings/ 
+       
+       It automatically numbers the h1, h2 and h3 headers.
+       Have modified it to suit.
+*/  
+
+/* numbering headings */
+body /* Reset the counter for H1 */
+{ 
+    counter-reset: H1;
+}     
+
+h1.numbered:before 
+{
+    content: counter(H1) ". ";    /* Print the H1 number */
+    counter-increment: H1;        /* Add 1 to next H1 */
+}
+
+h1 /* Reset the counter for H2 on a new H1 appearing */
+{ 
+    counter-reset: H2; 
+}
+
+h2.numbered:before 
+{
+    content: counter(H1) "." counter(H2) " ";
+    counter-increment: H2;
+}
+
+h2 /* Reset the counter for H3 on a new H2 appearing */
+{ 
+    counter-reset: H3; 
+}
+
+h3.numbered:before 
+{
+    content: counter(H1) "." counter(H2) "." counter(H3) " ";
+    counter-increment:H3;
+}
+
+h3 /* Reset the counter for H4 on a new H3 appearing */
+{ 
+    counter-reset: H4; 
+}
+
+h4.numbered:before 
+{
+    content: counter(H1) "." counter(H2) "." counter(H3)  "." counter(H4) " ";
+    counter-increment:H4;
+}
+
+-->
+ 
+

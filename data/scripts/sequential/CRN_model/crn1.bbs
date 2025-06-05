@@ -1,0 +1,128 @@
+/* Beatbox example bbs scripts for FHN, CRN, LRD cell to 3D simulations. 
+ * This is distributed with the SVN repository. Use these bbs scripts to make your 
+ * own as most of the devices are shown here. 
+ * 
+ * To run the bbs script sequentially at the command line (in a terminal), use: 
+ *  Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ * 
+ * This program simulates CRN 1D human atrial strand.
+ *        
+ */ 
+
+def real ms 1.0;        /* The CRN model has time unit of 1 ms */
+/* Computation parameters. */
+def str V 0; def real Vmin -100; def real Vmax  50;def real Vmid -60;
+def int neqn 24;  /* Number of ODEs in the cell model */
+/* Allocation of layers to the state varables. */ 
+def str i 24;
+
+def real S2 [1]; /* User defined input of S2 interval */
+/* Allocation of layers to the state varables. */ 
+def str file_name [2]; /* User input of output filename for voltage-time plot */
+
+def int xstim 20; /* Stimulation length in terms of FD nodes */
+
+def real L=33.0; // total length of strand
+def real g_k1=[3];   /* User defined input of gK1 */
+def real g_cal=[4];  /* User defined input of gCaL */
+
+/*
+Simulation parameters
+*/
+/* ht is the constant time step used by the Euler device. */ 
+def real ht  0.05; /* Time step */
+/* HX is the uniform space step in all directions. Units are that used in your simulation. */ 
+def real hx 0.33; /* space step */
+/* D is the diffusion constant. Units are that used in your simulation. */ 
+def real D 0.04;  /* Diffusion constant */
+
+def int nx L/hx-1; /* Number of FD nodes in 1D strand depending on space step */
+
+def real Cm 100.0; 	/* cell membrn capctnce, pF */
+
+def int Nstim 2; /* Number of conditioning stimuli */
+def real Ampl 1200.0; /* Current amplitude of stimuli */
+def real Duration 5.0*ms; /* Duration of stimuli */
+
+/* The size of the model is xmax*ymax*zmax*vmax 
+ * where vmax is the number of dynamical variables in the cell model of ODEs. 
+ * xmax=1, ymax=1, zmax=1 represents a cell (OD) model, while 
+ * all other values of xmax, ymax, zmax represent tissue models. 
+ */ 
+state xmax=nx+2 ymax=1 zmax=1 vmax=neqn+1; /* set up the strand using state device */
+
+// Schedule parameters
+def long dt 1.0/ht;     // output period
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;def real often;def real seldom;def real stim;def real stim2;def real end;def real T;
+def real c=0.5;		/* rough estimate of conduction velocity */
+
+/* Registration variables/parameters required for measuring CV */
+def int xone=nx*0.33; def int xtwo=nx*0.67;	// recording points at x = 1/3 L and 2/3 L
+def real uone; def real utwo;			// recorded voltages
+def real frontone=0; def real fronttwo=0;	// flags: nonzero when the front has just crossed
+def int countone=0; def int counttwo;		// counters: how many times it happened
+def real Tone=0; def real Ttwo=0;		// moments of crossing, via linear interpolation
+
+def real Tend=S2*(Nstim-1)+200.0;
+
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+  T     = t*ht;						// time in "milliseconds"
+  often = eq(mod(t,dt),0);				// every dt timesteps
+  stim  =(le(mod(T,S2),Duration)*le(T,S2*Nstim))*Ampl/Cm; // stimulus pulse
+  end   = ge(T,Tend);					// enough is enough
+};
+
+// The computation
+/* Compute the Laplacian. */ 
+diff v0=[V] v1=[i] hx=hx D=D; // diffusion device
+k_func when=stim x0=0 x1=xstim pgm={u[i]=u[i]+stim;}; // dynamic CVr stimulation
+/* Computation of 1 time step update. 
+ * In spatial simulations, the Laplacian is stored at Iu=@vmax. 
+ */ 
+euler v0=[V] v1=neqn-1 ht=ht ode=crn par={ // ODE solver
+ht=ht;
+gk1=g_k1;
+gcaL=g_cal;
+IV=@[i]
+};
+
+/* CV measurement******************************************************/
+// Measure the signal from electrode one
+sample when=always x0=xone v0=[V] result=uone;
+// Register when it crosses the value umid upwards
+k_poincare nowhere=1 when=always sign=1 which=0 pgm={frontone=uone-Vmid; Tone=T};
+// Count how many times it happened
+k_func when=frontone nowhere=1 pgm={countone=countone+1;Tone=Tone} debug=stdout;
+// Measure the signal from electrode two
+sample when=always x0=xtwo v0=[V] result=utwo; // measure even before it is "on", for output
+// Register when it crosses the value umid upwards
+k_poincare nowhere=1 when=always sign=1 which=0 pgm={fronttwo=utwo-Vmid; Ttwo=T};
+// Count how many times it happened and print the message
+k_func when=fronttwo nowhere=1 pgm={counttwo=counttwo+1;Ttwo=Ttwo} debug=stdout;
+// Calculate and print the speed in the end
+// ... but only if all pulses went through
+def real success=0;
+k_func nowhere=1 when=always pgm={success=eq(countone,Nstim)*eq(counttwo,Nstim)};
+def real CV;
+k_func  nowhere=1 when=success pgm={CV=(hx*(xtwo-xone))/(Ttwo-Tone)};
+/**********************************************************************/
+
+/* Output the S2, CV, and other parameters to construct the CVr plot */
+k_print nowhere=1 when=end file=[0].cv append=1 valuesep="\t" list={S2; CV; ht; hx; D; g_k1; g_cal};
+
+/* Record "lines" of the 1D voltage distribution periodically to make a voltage-time plot.
+   Record all or sampled variables in your simulation. */ 
+record when=often x0=0 x1=xmax-1 v0=0 append=0 xsep=" " file=[2];
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;

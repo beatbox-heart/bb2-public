@@ -1,0 +1,88 @@
+// ballfcont.bbs: continuation of ballf.bbs, starting from its control point. 
+
+def str bbg [1]; // Geometry file of the ball.
+def str ctl [2]; // file with the control point for another run
+def str out [3]; // file with the results
+
+def  real hx 0.15; // discretization step
+def  real xc 7.2; // disc centre x-position in grid coords
+def  real yc 7.6; // disc centre y-position in grid coords
+def  real zc 7.3; // disc centre y-position in grid coords
+
+def str  num 0;		// the layer for the numerical solution
+def str  lap 1;		// .. its laplacian
+def str  ini 2;		// the layer for the initial condition
+def str  ana 3;		// the layer for the analytical solution
+def str sqdf 4;		// the layer for the square of the difference
+def str  sup 5;		// the layer for the maximum of sqdf
+
+def real ht 0.03*(hx/0.5)**2;	// t.u. - changed proportionally to square of space step
+def real D 1.0; 	// diffusion coefficient, s.u.^2/t.u
+def real R 1.0;		// ball radius
+def real kappa1=4.493409458;
+def real lambda D*(kappa1/R)**2;	// time decay rate
+
+def real C0norm=0; def real L2norm=0; // these are actually squares of the norms
+def real C0norm_t; def real L2norm_t; // ... and L2norm_t is not normalized by ht*hx yet
+
+state geometry=[bbg] vmax=[sup]+1;
+
+// Schedule and display parameters
+def long dt 0.01/ht;    // output period
+def real begin;		// time to apply initial condition
+def real run;		// time to do the calculations
+def real twice;         // when ctlpoint is called
+def real Tend 0.2;	// duration of simulation
+def int t2 0.5*Tend/ht;	// ctlpoint shall save at that step
+def real end;		// time to stop
+def real T;		// current time in t.u.
+
+k_func nowhere=1 pgm={
+  T=t*ht;
+  begin =eq(t,0);
+  run   =gt(t,0);
+  twice =eq(t,0)+eq(t,t2);
+  end   =ge(T,Tend);
+};
+ctlpoint when=twice bythread=0 file=[ctl];
+
+// initial conditions
+k_func when=begin pgm={
+  def real X;
+  def real Y;
+  def real Z;
+  def real r;
+  X=(x-xc)*hx;
+  Y=(y-yc)*hx;
+  Z=(z-zc)*hx;
+  r=sqrt(X*X+Y*Y+Z*Z);
+  u[ini]=sin(kappa1*r)/r;
+  u[num]=u[ini];
+  u[sup]=0;
+};
+
+// The computation
+// Numerical solution
+diffstep v0=[num] v1=[lap] hx=hx ht=ht D=D;
+
+// Analytical solution and square of its difference with the numerical solution
+k_func when=always pgm={
+  u[ana]=u[ini]*exp(-lambda*T);
+  u[sqdf]=(u[ana]-u[num])**2;
+  u[sup]=max(u[sup],u[sqdf])
+};
+
+// The two norms of the difference
+// Instant: for the given moment of time
+reduce when=always v0=[sqdf] v1=[sqdf] operation=max result=C0norm_t;
+reduce when=always v0=[sqdf] v1=[sqdf] operation=sum result=L2norm_t;
+k_func nowhere=1 pgm={C0norm_t=C0norm_t; L2norm_t=L2norm_t};
+// Global for the time interval from the beginning till now
+k_func nowhere=1 when=always pgm={C0norm=max(C0norm,C0norm_t);L2norm=L2norm+L2norm_t*ht*hx*hx};
+
+// output
+k_print nowhere=1 when=end file=[out] append=0 valuesep="\t" list={sqrt(C0norm); sqrt(L2norm)};
+
+pause when=end seconds=1;
+stop when=end;
+end;

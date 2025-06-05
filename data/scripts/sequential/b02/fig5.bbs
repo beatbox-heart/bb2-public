@@ -1,0 +1,166 @@
+/*
+ * Purpose of this script: bbs script to reproduce Fig. 5 from 
+ * Biktashev 2002 PRL paper. The value of sigma is the input 
+ * parameter,taking value 0.624 for the left panel and 0.625 
+ * for the right panel.
+ *
+ * Command line inputs: value of sigma (0.624 or 0.625)
+ * name of output directory
+ *
+ * Outputs: 
+ *          1. onscreen graphics if used with graphics;
+ *          2. pgm output files for visualisation
+ *          
+ *
+ * This bbs script demonstrates the use of the following syntax and devices:
+ *
+ *  1. Use of command-line arguments to vary a simulation parameter and the 
+ *     name of the output file;
+ *  2. Slightly more complicated k-expressions for piecewise definition of 
+ *     the initial conditions;
+ *  3. Use of k_print device to write the output files in the png format. 
+ *
+ * This script comes with a Makefile that will allow you to do the simulation.
+ * To use this Makefile for the simulations, type at the command line:
+ *
+ * make all
+ *
+ * Alternatively, to run this bbs script from command line with graphics, use 
+ * the following command:
+ *
+ * Beatbox_SEQ fig5.bbs 0.624 or 0.625 output_dir
+ *
+ * and to run without graphics, use the following command:
+ *
+ * Beatbox_SEQ fig5.bbs 0.624 or 0.625 output_dir -nograph
+ *
+ */
+
+def real sigma [1];
+def str outdir [2];
+
+// Other model parameters
+def real D=1.0;
+def real ENa=1.0;
+def real EK=0.0;
+def real tau=10.0;
+def real alpha=1.0;
+def real beta=alpha/(1.0+alpha);
+def real c=sqrt(sigma/tau);
+def real sigmalarge=2.955;
+def real clarge=sqrt(sigmalarge/tau);
+def real xm=-log(beta)/c;
+def real omega 1+tau*c^2*(alpha+1);
+def real omegalarge 1+tau*clarge^2*(alpha+1);
+
+// The layers
+def str E 0;	// voltage
+def str h 1;	// the slow Na gate
+def str I 2;	// intercellular current
+
+// Discretization parameters
+def real hx 0.2; // space discretization step
+def int nx 500;  // is the number of inner points of the grid
+def real L hx*(nx-1); // hence the number of intervals is nx-1
+def real ht 0.01; // time discretization step
+def real Tmax 200-ht; // duration of the simulation; discard last step to make number of outputs=200
+
+// Initial condition parameters
+def int Xstep 0.850*L;
+def int Xout  0.05*nx;
+
+// Output period, in time steps
+def long dt 1.0/ht;         
+
+// Visualization limits
+def real Emin -alpha;
+def real Emax omegalarge;
+def real hmin 0.0;
+def real hmax 1.0;
+
+state xmax=nx+2 ymax=1 zmax=1 vmax=[I]+1;
+
+def real begin; def real often;def real end;
+k_func nowhere=1 pgm={
+  begin =eq(t,0);
+  often =eq(mod(t,dt),0);
+  end   =ge(t*ht,Tmax);
+};
+
+//************************************************
+// Calculations
+
+// Initial + Dirichlet boundary conditions + tau distribution 
+k_func when=begin pgm={
+  def real X;   // the x variable in solution (8)
+  X=x*hx-Xstep; // measured relative to the point Xstep
+  u[E]=ifle0(X-xm,alpha*(exp(c*X)-1.0),omega-tau*sigma/(1.0+sigma)*exp(-X/(tau*c)));
+  u[h]=ifle0(X,1.0,exp(-X/(tau*c)));
+};
+
+
+// The diffusion substep: second derivative of [E] times D goes to [I]
+diff v0=[E] v1=[I] hx=hx D=D;
+euler name=ode1 v0=[E] v1=[h] ht=ht ode=b02 par={
+  EK=EK;
+  ENa=ENa;
+  tau=tau;
+  IE=@[I];
+};
+
+//************************************************
+// The graphics output window will be with 600x600 resolution with 10-pixel rims,
+// located 10 pixels from the right and 10 pixels from the top of the screen. 
+screen WINX=-10 WINY=10 XMAX=820 YMAX=440;
+// The coordinates of the output zone
+def int row0 30; def int row1 429;
+def int col0 10; def int col1 809;
+
+// If the X11 graphics is switched off, then 
+// these clock devices would still print time labels to the stdout,
+// so the "if" clause at the front disables that. 
+if Graph clock   when=often color=WHITE row0=1 col0=1; // this shows the integer step counter 
+if Graph k_clock when=often color=WHITE row0=1 col0=21 code=t*ht format="T=%4.1f ms"; // this shows real model time
+// the row, col coords of these are in characters, not pixels
+
+// The run-time plots of the solution
+k_plot name=uplot when=often 
+  col0=col0 col1=col1 row0=row0 row1=row1 // defines the part of the graph window for this output
+  color=WHITE*16+WHITE			  // colour of the "window" border	
+  lines=1 				  // connect the dots
+  clean=1                                 // clean window before drawing this graph
+  ordmin=Emin ordmax=Emax		  // limits for the ordinate of the plot
+  N=nx					  // the abscissa will be integer running from 1 to nx
+  pgm={ord=u(abs,0,0,[E]);col=LIGHTRED};  // ordinate is value of u variable at the point, plot in light red
+k_plot name=vplot when=often 
+  col0=col0 col1=col1 row0=row0 row1=row1 // in the same window
+  color=WHITE*16+WHITE			  // 
+  lines=1 				  // 
+  clean=0                                 // but do not clean it beforehand
+  ordmin=hmin ordmax=hmax		  // limits for the ordinate
+  N=nx					  // 
+  pgm={ord=u(abs,0,0,[h]);col=LIGHTBLUE}; // which is now v variable, and plotted in light blue
+update when=often;  // this signals that the graphics output buffer is flushed to the screen
+
+// Keep the picture on the screen until the user presses Enter
+if Graph pause when=end;
+
+// File output.
+// We produce "plain pgm" format 
+// (see http://netpbm.sourceforge.net/doc/pgm.html)
+// ready to be converted to png
+// or any other common image format by netpbm routines. 
+k_print 
+  when=often	// same period as screen output
+  nowhere=1	// uses global k-variables and functions
+  file=[2]	// file name is the second command-line parameter
+  append=0 	// rewrite if file already exists
+  filehead="P2 500 200 255" // P2=plain pgm, 500=width=nx, 200=height=no of outputs
+  N=nx  	// width in pixels
+  list={int(255*crop((u(1+i,0,0,[E])-Emin)/(Emax-Emin),0.0,1.0))} // pixel value 0..255
+  fieldsep="\n"
+  recordsep="\n";
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;

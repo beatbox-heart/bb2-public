@@ -1,0 +1,73 @@
+/* 
+ * Driver for Hodgkin-Huxley 1952 minimalistic ionic model
+ */
+
+/* 
+   at the compilation time a flag macro GATE in hh52m.c 
+   can be used to decide what to do with gates.
+
+   It should be set on GATE 2 for computation as Markov
+   chain variables.
+*/
+def int neqn 14; /* number of layers of state variables */ 
+def real dt 0.001;	    /* time step */
+
+/* declare schedule variables */
+def real begin;
+def real end;
+def real T;
+
+/* configuration of the dimensions */
+state xmax=1 ymax=1 zmax=1 vmax=neqn+1;
+
+/* Schedule */
+k_func name=schedule nowhere=1 pgm={
+  T = t*dt;			/* simulation time */
+  begin =eq(T, 0);		/* start of simulation [ms] */
+  end   =ge(T, 10.);		/* end of simulation [ms] */
+};
+
+/* Reaction substep */
+rushlarsen v0=0 v1=neqn-1 ht=dt ionic=hh52m order=totg exp_mc=ntabmrl
+  par={ht=dt};
+
+/* define output variable */
+def real v;
+sample x0=0 v0=0 result=v;
+/* ik channel */
+def real C3;
+sample x0=0 v0=1 result=C3;
+def real C2;
+sample x0=0 v0=2 result=C2;
+def real C1;
+sample x0=0 v0=3 result=C1;
+def real O_Na;
+sample x0=0 v0=4 result=O_Na;
+def real I3;
+sample x0=0 v0=5 result=I3;
+def real I2;
+sample x0=0 v0=6 result=I2;
+def real I1;
+sample x0=0 v0=7 result=I1;
+def real I0;
+sample x0=0 v0=8 result=I0;
+
+/* ina channel */
+def real closed4;
+sample x0=0 v0=9 result=closed4;
+def real closed3;
+sample x0=0 v0=10 result=closed3;
+def real closed2;
+sample x0=0 v0=11 result=closed2;
+def real closed1;
+sample x0=0 v0=12 result=closed1;
+def real O_K;
+sample x0=0 v0=13 result=O_K;
+
+/* write output to a file */
+k_print nowhere=1 when=always file="hh52m.vtg" append=0
+  valuesep="\t" list={T;v;O_K;O_Na;};
+
+/* end simulation */
+stop when=end;
+end;

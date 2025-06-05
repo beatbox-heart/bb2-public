@@ -1,0 +1,146 @@
+/* Beatbox example bbs scripts for FHN, CRN, LRD cell to 3D simulations. 
+ * This is distributed with the SVN repository. Use these bbs scripts to make your 
+ * own as most of the devices are shown here. 
+ * 
+ * To run the bbs script sequentially at the command line (in a terminal), use: 
+ *  Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ * 
+ * This program simulates CRN 0D (cell) restitution.
+ *        
+ */ 
+
+
+/*
+The following input parameters are local to the bbs script and store
+the arguments passed to crn0_rest.bbs
+For example, [1] is the 2nd argument passed to the bbs
+script at the command line, or in the shell script.
+You are free to choose the names of these paramters as
+they are user defined.
+*/
+def int Nstim [1];
+def real Period [2];
+/* Allocation of layers to the state varables. */ 
+def str out [3];
+/* Allocation of layers to the state varables. */ 
+def str out2 [4];
+def real repol [5];
+def real gk1 [6];
+def real gca_l [7];
+
+// number of variables in the ODE
+def int neqn 24;	/* Number of model ODEs */
+
+/* Computation parameters */
+/* These parameter define the layer location of voltage (V = 0), the Vmin, Vmax and the midpoint. */
+def str V 0; def real Vmin -100; def real Vmax  50;def real Vmid -60;
+
+/* model parameters */
+def real ms 1.0;        /* assume that CRN model has time unit of 1 ms */
+/* ht is the constant time step used by the Euler device. */ 
+def real ht  0.01; 	/* MC's default time step was 0.005 (msec) */
+def real Cm 100; 	/* cell membrn capctnce, pF */
+
+// a string parameter to be used in identifying layer "24" i.e. the total current.
+def str i 24;
+
+// size of the model xmax*ymax*zmax*vmax 
+/* The size of the model is xmax*ymax*zmax*vmax 
+ * where vmax is the number of dynamical variables in the cell model of ODEs. 
+ * xmax=1, ymax=1, zmax=1 represents a cell (OD) model, while 
+ * all other values of xmax, ymax, zmax represent tissue models. 
+ */ 
+state xmax=1 ymax=1 zmax=1 vmax=neqn+1; /* The state device constructs the model in Beatbox */
+
+// modelling parameters
+def long dt 2.0/ht;	   /* output rate */
+def real Ampl 1200.;      /* Current stimulation amplitude */
+def real Duration 5.0*ms; /* Stimulation duration of each current pulse */
+
+def real Tend=Period*Nstim; /* Total duration of the simulation */
+
+// Schedule parameters.
+/* Declare global timing variables. In general: 
+ * begin is for when the simulation begins, 
+ * often, seldom, once, paceout are for output rates (see the k_func device), 
+ * end is often used in the examples to set up the stopping criterion using stop device, 
+ * stop is the variable used to indicate time for end of simulation not using the stop device. 
+ */ 
+def real begin;
+def real often;
+def real end;
+def real T;
+def real stim;
+def real penult;
+def real final;
+
+// Registration parameters. Variables for APD calculation..
+def real U; // dynamic global voltage variable.
+def real usup=Vmin; // define the expected minumum voltage
+def real uinf=Vmax; // define the expected max. voltage
+def real u70; // variable at 70% repolarisation.
+def real up; // a variable to store the upstroke
+def real down; // a variable to store the downstroke
+def real Tup; // a variable to store the time of upstroke
+def real Tdown; // a variable to store the time of downstroke
+
+/*
+the k_func device is used to calculate
+the time in physical units (T)
+the beginning of simulation (begin)
+the rate of output (often)
+the time of stimulation (stim)
+the time when last conditioning stimulus is applied (penult)
+and the premature stimulus time (final)
+etc.
+*/
+/* Assign values to the timing parameters using Beatbox functions for 
+ * greater than (ge), less than (le), modulus (mod), etc. 
+ */ 
+k_func name=timing nowhere=1 pgm={
+  T=t*ht;
+  begin =eq(t,0);
+  often =eq(mod(t,dt),10);
+  stim=lt(mod(T,Period),Duration)*lt(T,Period*Nstim);
+  penult=ge(T,Tend-2*Period)*lt(T,Tend-Period);
+  final=ge(T,Tend-Period)*lt(T,Tend);
+  end=ge(T,Tend);
+};
+
+/* Solve the ODE model with periodic current stimulation */
+// use k_func to define the stimulus amplitude and time profile
+k_func when=always pgm={u[i]=stim*Ampl/Cm;};
+
+/* Computation of 1 time step update. 
+ * In spatial simulations, the Laplacian is stored at Iu=@vmax. 
+ */ 
+euler v0=0 v1=neqn-1 ht=ht ode=crn par={ht=ht; gk1=gk1; gcaL=gca_l; IV=@[i]};
+
+/* Outputs and measurements using sample and k_print */
+def real voltage;
+sample when=always x0=0 y0=0 z0=0 v0=0 result=U;
+def real cai_transient;
+sample when=always x0=0 y0=0 z0=0 v0=9 result=cai_transient;
+def real nai_transient;
+sample when=always x0=0 y0=0 z0=0 v0=8 result=nai_transient;
+def real ki_transient;
+sample when=always x0=0 y0=0 z0=0 v0=10 result=ki_transient;
+k_print nowhere=1 when=often file=[3] append=0 valuesep="\t" list={T; U; cai_transient; nai_transient; ki_transient};
+
+/* Measure the min and max of voltage in penultimate period. */
+k_func nowhere=1 when=penult pgm={uinf=min(U,uinf); usup=max(U,usup); u70=repol*uinf+(1.0-repol)*usup};
+
+/* During the final period, we register the up- and down-crossing of the voltage */
+k_poincare nowhere=1 when=final sign=1  which=0 pgm={up=U-u70; Tup=T};
+k_poincare nowhere=1 when=final sign=-1 which=0 pgm={down=U-u70; Tdown=T};
+k_func nowhere=1 when=up pgm={Tup=Tup;Period=Period;Tend=Tend} debug=stdout;
+k_func nowhere=1 when=down pgm={Tdown=Tdown;Period=Period;Tend=Tend} debug=stdout;
+
+/* Stop after the end of the final period. The stdout is usually screen output, while [4] is the filename from the user. */
+k_print nowhere=1 when=end file=stdout headformat="APD70=" list={Tdown-Tup};
+k_print nowhere=1 when=end file=[4] append=1 valuesep="\t" list={Period;Tdown-Tup};
+
+// stopping criterion
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;

@@ -1,0 +1,52 @@
+/* SK. 
+16/12/2012
+The FentonKarma (1998) cell model is already in the package.
+This bbs program simulates the default action potential.
+*/
+
+/*
+neqn: number of ODEs
+Ampl: amplitude of stimulus: relevant
+*/
+
+def int neqn 3;
+def real Ampl 0.2;
+
+def str i 3;
+def real ht 0.01;
+state xmax=1 ymax=1 zmax=1 vmax=neqn+1;
+
+def real Period 1000.0; /* Period at which stimuli are applied */
+def real Duration 1.0; /* duration of the stimuli */
+
+def real Nstim 10; // stimuli.
+
+def long dt 1.0/ht; 
+
+def real begin;def real often; def real end; def real T;
+def real often2;
+
+k_func nowhere=1 pgm={
+  begin =eq(t,0);  
+  often =eq(mod(t,dt),0);
+  T=t*ht;
+  often2=often*gt(T,8000);
+  end=ge(T,Nstim*Period);
+};
+
+/* The next 2 lines are for the excitable part */
+/*
+k_func when=always pgm={u[i]=lt(mod(T,Period),Duration)*lt(T,Nstim*Period)*Ampl;};
+euler v0=0 v1=neqn-1 ht=ht ode=fk model=0 par={ht=ht; u_c=0.01; usi_c=0.95; tau_si=100.0; k=0.001; Iu=@[i];};
+*/
+
+/* the next 2 lines are for the oscillatory part, trying to guess parameters that will give me oscillations */
+k_func when=always pgm={u[i]=le(mod(T,Period),Duration)*Ampl;};
+euler v0=0 v1=neqn-1 ht=ht ode=fk model=0 par={ht=ht; Iu=@[i];};
+
+// record the 3 variables.
+record when=often v0=0 v1=neqn-1 file=fk0_ap.vtg;
+
+stop when=end;
+end;
+

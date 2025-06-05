@@ -1,0 +1,173 @@
+/* Beatbox example bbs script for CRN 2D spiral wave simulations.
+ * 
+ * Purpose of this script: Example bbs script for 2D CRN spiral wave simulation.
+ *
+ * Inputs: pd_crn1.rec (file obtained by running pd_crn0.bbs)
+ *
+ * Outputs: 1. onscreen graphics if used with graphics;
+	    2. spiral wave trajectory in ASCII file pd_crn2.trj;
+	    3. png images of frames of the 2D simulation;
+ *          
+ *
+ * This bbs script demonstrates the use of the following syntax and devices:
+ * 1. more extensive use of k-variables to save typing and ease modification;
+ * 2. use of k_func as a computational device for creating intial conditions by phase distribution method, 
+ *     using data from file pd_crn1.rec obtained by the previous simulation of pd_crn1.bbs;
+ * 3. use of computational devices d_dt and grad2d to compute time derivative and absolute value of spatial gradient of a field;
+ * 4. use of run-time graphics device k_paint to crudely visualize distribution of dynamic fields in the plane using 16-colour VGA palette;
+ * 5. use of singz device which detects spiral wave tips and is both computational and output;
+ * 6. use of shell output device to call arbitrary OS command from BeatBox (here to create an output directory for the image files);
+ * 7. use of imgout and k_imgout output devices to output image files;
+ * 8. use pause device for suspending execution and keeping the last picture on the screen for a fixed time interval.
+ *
+ * Before running this script, make sure that a correct pd_crn1.rec has been created by running pd_crn1.bbs.
+ * To run this bbs script with graphics, use the following command:
+ * Beatbox_SEQ pd_crn2.bbs
+ *  and to run without graphics, use the following command:
+ * Beatbox_SEQ pd_crn2.bbs -nograph
+ *
+ */
+
+// CRN Model parameters
+def real ms 1.0;        /* CRN model has time unit of 1 ms */
+def real Cm 100; 	/* cell membrn capacitance, pF */
+
+// The simulation time step.
+// ht is the constant time step used by the Euler device. 
+def real ht  0.01;          /* MC's default time step was 0.005 (msec) */
+
+// simulation space step
+def real hx 0.125;
+
+// diffusion coefficient
+def real D 0.03125;
+
+// Dynamic variables and layer allocation:
+// define the names for some state varables layers e.g. for visualisation by k_draw
+def str V 0;   // layer 0 reserved for the trans-membrane voltage in the CRN model will be called V
+def str oi 14; // layer 14 reserved for the I_to inactivation gating variable will be called oi
+def str f 5;   // layer 5 reserved for the I_CaL voltage dependent inactivation gating variable will be called f
+
+// Expected limits of the variables v, oi, and f for on-screen visualization in k_draw
+def real Vmin -120; 
+def real Vmax  80; 
+def real Vmid -50;
+def real oimin 0.0; 
+def real oimax 1.0; 
+def real oimid 0.5;
+def real fmin  0.0; 
+def real fmax 1.0; 
+def real fmid 0.5;
+
+def int neqn 24; // the total number of dynamic variables in the CRN cell model 
+
+// Allocation of layer named i and numbered neqn=24 to store Laplacian, see the usage below.  
+def str i neqn;
+def real imin  0.0; def real imax 20.0; def real imid 0.5*imax;
+
+
+// Some model parameters
+//def real umin -120; // minimum expected voltage
+//def real umax 80.; // max expected voltage
+
+def real L 37.5; // length of side of square box
+
+def int nx L/hx; // number of nodes/cells in x direction
+def int ny nx;   // number of nodes/cells in y direction
+
+
+// The computational grid
+// The size of the model is xmax*ymax*zmax*vmax, 
+// here vmax=25 is the number of the reserved dynamical variables: 
+// 24 dynamical variables (layers) for the CRN model + 1 dynamical variable (layer i=24) allocated 
+// for the intercellular current (the Laplacian). 
+state xmax=nx+2 ymax=ny+2 zmax=1 vmax=[i]+1;   // that means vmax=24+1=25
+
+// Time control variables
+def long dt 10;         // screen output period
+def long DT 100;	// files output period
+def real T;		// time in the CRN model time units
+def real Tmax 150;		// max time in the CRN model time units
+
+
+// Define the device time control variables. 
+def real begin;
+def real often;
+def real seldom;
+def real end;
+
+// Parameters of the initial conditions: initial (x0, y0) coordinates for the tip of the spiral 
+def real x0 0.5*nx+0.5;   // x runs from 1 to nx so 0.5*(nx+1) is the centre
+def real y0 0.5*ny+0.5;   // and so for y
+def real lam 1000.0/hx;   // The pitch of the Archimedean spiral for the phase distribution method measured in space units
+
+
+//***************************
+// Computations
+
+// Use k_func to assign values to the "time control" variables
+k_func name=timing nowhere=1 pgm={
+  T     =t*ht;
+  begin =eq(t,0);
+  often =eq(mod(t,dt),0);
+  seldom=eq(mod(t,DT),0);
+  end   =ge(T,Tmax);
+};
+
+// Initial conditions by phase distribution method: 
+// turning 1D record at pd_crn1.rec into the initial 2D Arch. spiral
+k_func when=begin
+  name=initial file=pd_crn1.rec t0=0 t1=0 x0=1 x1=nx y0=1 y1=ny pgm={
+  phaseu=atan2(x-x0,y-y0)-2*pi*hypot(x-x0,y-y0)/lam;
+};
+
+// This device calculates the diffusion term of the field in layer [V]=0, that is voltage-field, 
+// and puts the result into layer [i]. 
+// The diff device needs space step hx to compute the spatial 
+// derivatives, and the diffusion coefficient D to multiply the result by
+diff v0=[V] v1=[i] hx=hx D=D;
+
+/* Computation of 1 time step update of the rhs and add Laplacian. 
+ * the Laplacian at IV=@[i]. 
+ */ 
+euler name=ode1 v0=0 v1=neqn-1 ht=ht ode=crn par={
+ht=ht;
+IV=@[i];
+};
+
+
+// Create the directory for the image files
+// (no problem if it is already there)
+def str outdir [0].dir; // so it will be pd_crn2.dir
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+// advance=1 means this will be done BEFORE the first step
+
+// This is the simpler version which uses what is in the layers,
+// only by linear scaling [Vmin,Vmax]->[0,255] etc. 
+imgout when=seldom
+  // On-the-fly conversion including flipping top/bottom flip
+  filter="pnmflip -tb | pnmtopng > [outdir]/uvi%07.0f.png"
+  r=[V]  r0=Vmin  r1=Vmax // [V]-layer defines red component
+  g=[oi] g0=oimin g1=oimax // [oi]-layer defines green component
+  b=[f]  b0=fmin  b1=fmax;    // [f]-layer defibes blue component
+
+  
+/* Several ASCII outputs of variables and run time measurements */
+// tip detection 
+singz when=often v0=[V] c0=Vmid v1=[oi] c1=oimid hx=hx file=[0].trj;
+
+// sample voltage, from the layer v0=0, every time step at point x0=xmax/2+10 y0=ymax/2+10, and assign the value to the global variable "voltage"
+def real voltage;
+sample when=always x0=xmax/2+10 y0=ymax/2+10 z0=0 v0=0 result=voltage;
+
+// sample cai_transient, from the layer v0=8, every time step at point x0=xmax/2+10 y0=ymax/2+10, and assign the value to the global variable "cai_transient"
+def real cai_transient;
+sample when=always x0=xmax/2+10 y0=ymax/2+10 z0=0 v0=8 result=cai_transient;
+
+// print the voltage and cai_transient time course into the file pd_crn2.samples using the k_print device.
+k_print nowhere=1 when=often file=[0].samples append=0 valuesep="\t" list={T;voltage;cai_transient;};
+
+/* Stopping criterion. This is mandatory.*/ 
+stop when=end;
+end;
+

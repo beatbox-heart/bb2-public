@@ -1,0 +1,72 @@
+// Test script for dump/load sequential vs parallel: the second part
+def str halffile [1];
+def str fullfile [2];
+
+def real hx 0.2;
+def int nx 40;
+def int ny 40;
+def int nz 16;
+def real Lx nx*hx;
+def real Ly ny*hx;
+def real Lz nz*hx;
+
+def real difflimit  hx*hx/6.0;
+def real ht 0.5*difflimit;
+def real Tmax 1.0; 
+
+def str u 0; 
+def str v 1; 
+def str iu 2; 
+def str iv 3; 
+state xmax=nx+2 ymax=ny+2 zmax=nz+2 vmax=[iv]+1;
+
+def real apar   1.1;
+def real bpar   0.19;
+def real epspar 1.0/50.0;
+def real Du     1.00;
+def real Dv     0.10;
+
+def int t2 (0.5*Tmax)/ht; // dump period
+def real begin;
+def real halfway;
+def real fullway;
+k_func nowhere=1 name=schedule pgm={
+  begin =eq(t,0);
+  fullway=eq(t,t2);
+};
+diff v0=[u] v1=[iu] D=Du hx=hx;
+diff v0=[v] v1=[iv] D=Dv hx=hx;
+euler name=ode1 
+      v0=[u] 
+      v1=[v] 
+      ht=ht 
+      ode=fhnbkl 
+      par={
+         a=apar 
+         b=bpar 
+         eps=epspar 
+         Iu=@[iu] 
+         Iv=@[iv]
+      };
+load when=begin   file=[halffile] v0=[u] v1=[v];
+dump when=fullway file=[fullfile] v0=[u] v1=[v];
+
+/* def real umin 0.0;  */
+/* def real umax 1.0; */
+/* def real vmin -bpar;  */
+/* def real vmax 1.0-bpar; */
+/* ppmout when=fullway */
+/*            file=[0].ppmz */
+/*            r=[u]  */
+/*            r0=umin  */
+/*            r1=umax  */
+/*            g=[v]  */
+/*            g0=vmin  */
+/*            g1=vmax  */
+/*            b=[iu]  */
+/*            b0=-1 */
+/*            b1=1; */
+
+stop when=fullway;
+
+end;

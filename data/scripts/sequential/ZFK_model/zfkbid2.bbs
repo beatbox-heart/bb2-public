@@ -1,0 +1,236 @@
+// Explicit two-dimensional anisotropic bidomain
+
+def str outdir [0].dir;		// where to put the resulting images
+
+// Model parameters
+def real alpha 0.13;		// ZFK threshold
+def real Dix 2.0;		// Diffusivities: intracellular along
+def real Diy 0.2;		// ... intracellular across
+def real Dex 8.0;		// ... extracellular along
+def real Dey 2.0;		// ... extracellular across
+def real Dl Dix*Dex/(Dix+Dex);	// equivalent monodomain along
+def real Dt Diy*Dey/(Diy+Dey);	// equivalent monodomain across
+
+// Problem setting parameters
+def str geom square_20.bbg;	// the geometry
+def real theta 30;		// wave angle (degrees): xi=x*cos(theta*deg)+y*sin(theta*deg)
+
+// Calculatable parameters
+def real deg pi/180;		// angle degree
+def real C cos(theta*deg);	// direction cosines
+def real S sin(theta*deg);	//	of the propagating wave
+def real Di Dix*C**2+Diy*S**2;	// effective diffusivity of intracellular domain
+def real De Dex*C**2+Dey*S**2;	// effective diffusivity of extracellular domain
+def real Deff Di*De/(Di+De);	// overall effective diffusivity
+def real PsitoV De/(Di+De);	// intra potential proportional to trmbr potential
+def real c sqrt(2*Deff)*(0.5-alpha);	// propagation speed
+def real Dmax max(Dix,max(Diy,max(Dex,Dey)));
+
+/*********************/
+// The data structure
+
+// The layers
+def str u 0; def real umin 0; def real umax 1;	// the trmbr voltage
+def str p 1; def real pmin umin*PsitoV; def real pmax umax*PsitoV; // Psi, intracellular potential
+def str s 2; // the source layer, recycled for both equations
+def str h 3; def real hmin umin-pmin; def real hmax umax-pmax; // the opposite of extracellular potential
+def str ua 4; def real uamin umin; def real uamax umax; // the analytical solution for u
+def str pa 5; def real pamin pmin; def real pamax pmax;	// the analytical solution for p
+def str d 6; def real dmin 0; def real dmax 1;	// the squared difference between num and ana
+
+state geometry=[geom] anisotropy=1 vmax=[d]+1;
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]";
+
+def int xbr xmax-2;  // xmax-1=xbr+1 is a no-go point
+def int ybr ymax-2;
+
+// The boundary points, where Dirichlet conditions will be set
+def int xbl 1;		// left boundary point: x=0 is a no-go point
+def int nx xbr-xbl; 	// right boundary point: nx discretization intervals
+def int ybl 1;		// bottom
+def int ny ybr-ybl; 	// top
+
+// The marginal inner points
+def int xil xbl+1;
+def int xir xbr-1;
+def int yil ybl+1;
+def int yir ybr-1;
+
+/********************/
+// Steps and intervals
+def real L 10; 		// square box size
+def real hx L/nx;
+def real xi0 -5; 	// initial position of the front
+def real Tend 40.0; 	// run time
+def real ht 0.5*3./8.*hx^2/Dmax; // length of time step
+def real Tout 0.1;	    // interval between screen outputs
+def real Tpic 2.0;	    // between pictures
+def real Tcomp 0.1;	    // interval between accuracy measurements
+def int tout max(1,Tout/ht);
+def int tpic max(1,Tpic/ht);
+def int tcomp max(1,Tcomp/ht);
+
+// Control
+def real T;
+def real begin;
+def real out;
+def real pic;
+def real comp;
+def real end;
+
+// The two norms of the difference
+def real C0t; def real C0; // these are actually
+def real L2t; def real L2; // squares of the norms
+
+
+/************************/
+// Control
+k_func name=control when=always nowhere=1 pgm={
+  T=t*ht;
+  begin=eq(t,0);
+  comp=eq(mod(t,tcomp),0)+begin; // make sure it is on at the start, need for initial conditions
+  out=eq(mod(t,tout),0)+comp; // make sure analytical solution calculated for output
+  pic=eq(mod(t,tpic),0);
+  end=gt(T,Tend);
+};
+
+/************************/
+// Analytical solution
+def str formula (1./(1+exp((X*C+Y*S-xi0-c*T)/sqrt(2*Deff))));
+k_func name=analytic when=comp x0=xbl x1=xbr y0=ybl y1=ybr pgm={
+   def real X (x-xbl)*hx;
+   def real Y (y-ybl)*hx;
+   u[ua]=[formula];
+   u[pa]=PsitoV*u[ua];
+};
+
+/***********************/
+// Initial condition
+def int xm=(xbl+xbr)/2; def int ym=(ybl+ybr)/2;
+k_func name=initial when=begin x0=xbl x1=xbr y0=ybl y1=ybr pgm={
+  u[u]=u[ua]+0*eq(x,xm)*eq(y,ym);
+  u[p]=u[pa];
+};
+
+/************************/
+// Boundary conditions
+/* broader limits for y to cover the corner points */
+k_func name=left   when=always x0=xbl x1=xbl y0=ybl y1=ybr pgm={
+  def real X (x-xbl)*hx;
+  def real Y (y-ybl)*hx;
+  u[u]=[formula];
+  u[p]=PsitoV*u[u];
+};
+k_func name=right  when=always x0=xbr x1=xbr y0=ybl y1=ybr pgm={
+  def real X (x-xbl)*hx;
+  def real Y (y-ybl)*hx;
+  u[u]=[formula];
+  u[p]=PsitoV*u[u];
+};
+/* narrower limits for x as corner points already covered */
+k_func name=bottom when=always x0=xil x1=xir y0=ybl y1=ybl pgm={
+  def real X (x-xbl)*hx;
+  def real Y (y-ybl)*hx;
+  u[u]=[formula];
+  u[p]=PsitoV*u[u];
+};
+k_func name=top    when=always x0=xil x1=xir y0=ybr y1=ybr pgm={
+  def real X (x-xbl)*hx;
+  def real Y (y-ybl)*hx;
+  u[u]=[formula];
+  u[p]=PsitoV*u[u];
+};
+
+/*****************/
+// Computations
+
+// source term in the elliptic equation
+diff when=always v0=[u] v1=[s] Dpar=Dex Dtrans=Dey hx=hx;
+// solving the elliptic equation
+elliptic when=always x0=xil x1=xir y0=yil y1=yir v0=[s] v1=[p]
+  Dpar=Dex+Dix Dtrans=Dey+Diy hx=hx  
+  tolerance=7.5e-5 delta=0.5 damping=1.0
+  upper_level=3  smoother=GS alternate=0  transfer=correct
+  FMGlevel=3  vcycles=10  preiter=1 postiter=2  maxiter=1000000
+;
+// source term in the parabolic equation
+diff when=always v0=[p] v1=[s] Dpar=Dix Dtrans=Diy hx=hx;
+// timestep of the parabolic equation
+euler when=always x0=xil x1=xir y0=yil y1=yir v0=[u] v1=[u] ode=zfk ht=ht par={alpha=alpha Iu=@[s]};
+
+/**********************************************/
+// Comparison with the exact analytical solution
+k_func name=comparison when=comp x0=xil x1=xir y0=yil y1=yir pgm={
+  u[d]=(u[u]-u[ua])^2+(u[p]-u[pa])^2
+};
+
+// Instant difference: for the given moment of time
+reduce when=comp x0=xil x1=xir y0=yil y1=yir v0=[d] v1=[d] operation="max" result=C0t;
+reduce when=comp x0=xil x1=xir y0=yil y1=yir v0=[d] v1=[d] operation="sum" result=L2t;
+// Global difference: for the time interval from the beginning till now
+k_func name="integrate" nowhere=1 when=always pgm={C0=max(C0,C0t);L2=L2+L2t*ht*hx*hx};
+
+/***************/
+// Visualization
+screen WINX=1 WINY=1; // put the BGI screen into the top left corner of the screen
+clock when=out color=WHITE row0=1 col0=75;
+k_clock when=out color=WHITE row0=1 col0=1 code=T format="T=%4.1f ms";
+
+// Calculate the opposite of extracellular potential, for visualization
+k_func name=phi when=out pgm={u[h]=u[u]-u[p]};
+
+// The solutions 
+k_plot when=out col0=10 col1=629 row0=30 row1=230 color=WHITE*16+WHITE
+  lines=1 linewidth=5 clean=1
+  N=nx
+  ordmin=umin ordmax=umax pgm={
+  ord=u(xbl+abs,ybl+abs,0,[ua]);
+  col=RED;};
+k_plot when=out col0=10 col1=629 row0=30 row1=230 color=WHITE*16+WHITE
+  lines=1 linewidth=1 clean=0
+  N=nx
+  ordmin=umin ordmax=umax pgm={
+  ord=u(xbl+abs,ybl+abs,0,[u]);
+  col=LIGHTRED;};
+k_plot when=out col0=10 col1=629 row0=30 row1=230 color=WHITE*16+WHITE
+  lines=1 linewidth=5 clean=0
+  N=nx
+  ordmin=umin ordmax=umax pgm={
+  ord=u(xbl+abs,ybl+abs,0,[pa]);
+  col=BLUE;};
+k_plot when=out col0=10 col1=629 row0=30 row1=230 color=WHITE*16+WHITE
+  lines=1 linewidth=1 clean=0
+  N=nx
+  ordmin=umin ordmax=umax pgm={
+  ord=u(xbl+abs,ybl+abs,0,[p]);
+  col=LIGHTBLUE;};
+
+
+// The instant norms of the difference
+k_draw when=out row0=270 row1=470 col0=10 col1=630 color=WHITE*16+WHITE lines=0.5
+  absmin=0 absmax=Tend ordmin=-8 ordmax=3 pgm={
+  col=LIGHTRED;abs=T;ord=log(sqrt(C0))/log(10.0)
+};
+k_draw when=out row0=270 row1=470 col0=10 col1=630 color=WHITE*16+WHITE lines=0.5
+  absmin=0 absmax=Tend ordmin=-8 ordmax=3 pgm={
+  col=LIGHTBLUE;abs=T;ord=log(sqrt(L2))/log(10.0)
+};
+
+update;
+
+imgout when=pic filter="pnmflip -tb | pnmtopng > [outdir]/%07.0f.png"
+   r=[u]  r0=umin  r1=umax 
+   g=[p]  g0=pmin  g1=pmax
+   b=[h]  b0=hmin  b1=hmax;
+
+/**************************************************/
+// Calculate and print the global norms of the error
+k_func when=end nowhere=1 debug=stdout pgm={
+  hx=hx;
+  C0=sqrt(C0);
+  L2=sqrt(L2);
+};
+
+// pause when=end seconds=3;
+stop when=end;
+end;

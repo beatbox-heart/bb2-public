@@ -1,0 +1,13 @@
+def real ht  0.01;
+def real hx  0.50;
+def real D   1.0;
+
+def str V 0;  def real Vmin -100.; def real Vmax  50.;def real Vmid -33.75;
+def str x1 4; def real x1min -0.5; def real x1max 1.5;def real x1mid 0.5;
+def str m 1;  def real mmin  -0.5; def real mmax  1.5;def real mmid  0.5;
+def str h 2;  def real hmin  -0.5; def real hmax  1.5;def real hmid  0.5;
+def str j 3;  def real jmin  -0.5; def real jmax  1.5;def real jmid  0.5;
+def str d 5;  def real dmin  -0.5; def real dmax  1.5;def real dmid  0.5;
+def str f 6;  def real fmin  -0.5; def real fmax  1.5;def real fmid  0.5;
+def str Ca 7; def real Camin   0.; def real Camax 7e-6;def real Camid 3e-6;
+def str i 8;

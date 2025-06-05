@@ -1,0 +1,49 @@
+def str out [1];
+
+def str  V 0;
+def str ca 1;
+def str x1 2;
+def str  m 3;
+def str  h 4;
+def str  j 5;
+def str  d 6;
+def str  f 7;
+
+state xmax=1 ymax=1 zmax=1 vmax=[f]+1;
+
+def real ht 0.1;
+def int dt 1.0/ht;
+def real Tmax 300;
+def real T;
+def real begin;
+def real out;
+def real end;
+k_func nowhere=1 pgm={
+  T=ht*t;
+  begin=eq(t,0);
+  out=le(t,dt)+eq(0,mod(t,dt));
+  end=ge(T,Tmax);
+};
+
+k_func when=begin pgm={
+  u[V]=u[V]+50.0;
+};
+
+// record when=out v0=[V] v1=[f] file=[out] append=0;
+k_print when=out nowhere=1 v0=[V] v1=[f] file=[out] append=0 valuesep="\t" list={
+  T;
+  u(0,0,0,[V]);
+  u(0,0,0,[ca]);
+  u(0,0,0,[x1]);
+  u(0,0,0,[m]);
+  u(0,0,0,[h]);
+  u(0,0,0,[j]);
+  u(0,0,0,[d]);
+  u(0,0,0,[f])
+};
+
+stop when=end;
+
+rushlarsen when=always v0=[V] v1=[f] ht=ht ionic=br77 dV=0.01 par={} rest=1e2/ht;
+
+end;

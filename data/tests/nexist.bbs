@@ -1,0 +1,6 @@
+// Negative test: try to open a non(existent) file 
+<nonexistent.file>
+state xmax=3 ymax=1 zmax=1 vmax=2;
+diff v0=0 v1=1 hx=1 D=1;
+stop;
+end;

@@ -1,0 +1,37 @@
+// Make a record of 0D pulse
+
+def int neqn 41;
+
+def real ht 0.005; 	/* ORD default is a fixed time step was 0.005 (msec) */
+def real Cm 1; 	        /* cell membrane capcitance, pF */
+def real umin -120; 
+def real umax 80.;
+
+state xmax=1 ymax=1 zmax=1 vmax=neqn+1;
+
+// Schedule and display parameters
+<std.qui>
+def long dt 2.0/ht;     // output period
+def long DT ht/ht;	// ctlpoint period
+
+def real begin;def real often;def real seldom;def real end;
+k_func [nowhere] pgm={
+  begin =eq(t,0);
+  often =eq(mod(t,dt),0);
+  seldom=eq(mod(t,DT),0);
+  end=ge(t,DT);
+};
+
+
+rem k_func when=always pgm={
+rem  u38=le(t*ht,2.0)*80.0;
+rem };
+
+// The computation
+euler v0=0 v1=neqn-1 ht=ht ode=ord par={ht=ht;};
+
+// Output
+record when=always file=[0].rec append=0 v1=0;
+
+stop when=end;
+end;

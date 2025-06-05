@@ -1,0 +1,60 @@
+<fhncub.par>                                      // model pars are read in from file fhn.par
+def str u 0;					  // u field in 1st layer
+def str v 1;					  // v field in 2nd layer
+def str i 2;					  // diffusion term in 3rd layer
+def str b 3;                                      // spatially dependent parameter in 4th layer
+def real grad [1];                                // its gradient is 1st command-line parameter
+
+// Integer and real stimulation parameters
+def int xr 100; def int yr 100; def int zr 100;   // reg electrode position, in space steps
+def int dr 5;                                     // reg elecrode size, in space steps
+def real Amp 3.0;                                 // pulse amplitude
+def real Dur 0.1;                                 // pulse duration
+def real Del 6.0;                                 // pulse delay
+def real Tstart 100.0;                            // when to switch on the feedback 
+
+// Expected ranges of dynamic variables
+def real umin -2.0; def real umax 2.0;def real umid 0.0;
+def real vmin -1.0; def real vmax 1.5;def real vmid 0.5;
+
+state geometry=ffr.bbg anisotropy=1               // the file contains tissue geometry and fibres
+  normaliseVectors=1				  // the vectors in ffr.bbg are not necessarily normalized
+  vmax=4;                                         // 2 dyn vars + diffusive current + parameter
+
+def real T;def real begin;def real out;def real end; // real vars control work of some devices
+k_func name=timing nowhere=1 pgm={                // this function operates only global variables
+  T     = t*ht;                                   // t is integer time counter; T is real time
+  begin = eq(t,0);                                // 1.0 at the very beginning, otherwise 0.0
+  out   = eq(mod(t,100),0);                       // 1.0 every 100 timesteps, otherwise 0.0
+  end   = ge(T,100.0)};                           // 1.0 after 100 ms, otherwise 0.0
+
+// This function operates at every space point but only at the first time step
+k_func name=IC when=begin pgm={ 
+  u[u]=ifle0(x-25,1.7,-1.7); u[v]=ifle0(y-25,0.7,-0.7); // Cross-field initial conditions
+  u[b]=bet+grad*(z-0.5*zmax)};                      // vertical gradient of parameter
+
+// The feedback 
+def real signal;def real front; def real Tfront; def real force;
+reduce  operation=max result=signal v0=[u] v1=[u] // signal=max of voltage field within given volume
+  x0=xr xr1=xr+dr-1 y0=yr yr1=yr+dr-1 z0=zr zr1=zr+dr-1; // the values are arithmeitc expressions
+k_poincare nowhere=1 sign=1                       // remember T when signal crossed value umid upward
+  pgm={ front=signal-umid; Tfront=T };            
+k_func name=feedback nowhere=1                                  // force lasts Dur ms starting Del ms after crossing
+  pgm={ force=ht*Amp*ge(T,Tstart)*ge(T,Tfront+Del)*le(T,Tfront+Del+Dur) };
+
+// The computation
+diff v0=[u] v1=[i] Dpar=D Dtrans=D/4 hx=hx;       // anisotropic diffusion
+k_func name=stim when=force pgm={u[i]=u[i]+force};          // this applies everywhere, only when force is nonzero
+euler v0=[u] v1=[v] ht=ht ode=fhncub              // cubic FitzHugh-Nagumo kinetics
+   par={eps=eps bet=@[b] gam=gam Iu=@[i]};        // varied beta and current as calculated before
+
+// Output
+ppmout  when=out file="[0]/%04d.ppm" mode="w"     // every 100 timesteps: 
+  r=[u] r0=umin r1=umax                           //    value-discretized
+  g=[v] g0=vmin g1=vmax                           //    output for subsequent
+  b=[i] b0=0 b1=255;                              //    visualization
+k_print nowhere=1 when=always file=stdout list={T; force; signal}; // to monitor work of the feedback 
+record  when=end file=[0].rec when=end v0=0 v1=1; // ascii dump of all field values in the end of run
+
+stop when=end;
+end;

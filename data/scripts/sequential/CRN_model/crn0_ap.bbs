@@ -1,0 +1,70 @@
+/*
+CRN0 bbs AP.
+Beatbox program to demonstrate the CRN 1998 human atrial AP.
+There are no inputs,and the output is crn0_ap.vtg.
+To run,
+Beatbox_SEQ crn0_ap.bbs
+
+*/
+
+// this is the file name that you want the output to be.
+def str file_name crn0.vtg;
+
+def int neqn 24;
+
+def real ms 1.0;        /* assume that CRN model has time unit of 1 ms */
+def real ht 0.005; 	/* MC's default time step was 0.005 (msec) */
+def real Cm 100; 	/* cell membrn capctnce, pF */
+rem def int celltype 1; // it does not work this way!
+
+def str V 0; def real Vmin -120; def real Vmax  80;def real Vmid -50;
+
+def str i 24;
+
+state xmax=1 ymax=1 zmax=1 vmax=neqn+1;
+
+// Schedule and display parameters
+def long dt 2.0/ht;     // output period
+
+def int Nstim 1;
+def real Period 1.0e3*ms;
+def real Ampl 1200.0;
+def real Duration 5.0*ms;
+
+def long DT (Period*Nstim+100.0)/ht; // duration of the simulation.
+
+def real begin;def real often;def real seldom;def real end;
+def real T;
+
+def real odd;
+def real even;
+def real notzero;
+
+def real xout 0;
+def real paceout;
+
+k_func nowhere=1 pgm={
+  T=t*ht;
+  begin =eq(t,0);
+  often =eq(mod(t,dt),10);
+  seldom=eq(mod(t,DT),0);
+  end=ge(t,DT);
+};
+
+k_func when=always pgm={
+  u[i]=le(mod(T,Period),Duration)*Ampl/Cm;
+};
+
+// The computation
+euler v0=0 v1=neqn-1 ht=ht ode=crn par={ht=ht; IV=@[i]};
+
+// Output
+def real voltage;
+sample x0=0 y0=0 z0=0 v0=0 result=voltage;
+def real cai_transient;
+sample x0=0 y0=0 z0=0 v0=9 result=cai_transient;
+
+k_print nowhere=1 when=often file=crn0_ap.vtg append=1 valuesep="\t" list={T; voltage; cai_transient;};
+
+stop when=end;
+end;

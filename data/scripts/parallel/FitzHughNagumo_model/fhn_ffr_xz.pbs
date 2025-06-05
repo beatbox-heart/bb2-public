@@ -1,0 +1,16 @@
+#!/bin/bash --login
+#PBS -N FhnFfrXz
+#PBS -l mppwidth=96
+#PBS -l mppnppn=32
+
+# time requested
+#PBS -l walltime=00:10:00
+#PBS -A e203
+
+# change to the directory where you will run the simulation.
+cd /home/e203/e203/ivb203/work/FitzHughNagumo_model
+
+ulimit -s unlimited
+
+# Launch the parallel job
+aprun -n 96 -N 32 ./Beatbox fhn_ffr_xz.bbs -profile -verbose -nograph

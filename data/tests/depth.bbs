@@ -1,0 +1,6 @@
+// Negative test: recursive call of itself
+<depth.bbs>
+state xmax=1 ymax=1 zmax=1 vmax=2;
+diff v0=0 v1=1;
+stop;
+end;

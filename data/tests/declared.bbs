@@ -1,0 +1,5 @@
+// Negative test: name is reserved
+state xmax=1 ymax=1 zmax=1 vmax=2;
+def real pi 3.14;
+stop;
+end;
