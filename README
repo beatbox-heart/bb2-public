@@ -1,0 +1,72 @@
+BeatBox is a unified cardiac simulation environment that can be used
+to perform biophysically and anatomically realistic cardiac
+simulations. BeatBox provides:
+
+- A script interpreter to allow flexibility in setting up numerical
+experiments, thus eliminating the requirement to manipulate low level
+code and lengthy recompilations each time the simulation schedule is
+altered or a new simulation is constructed;
+
+- Serial and parallel (MPI) simulations;
+
+- A collection of ODE solvers (Euler, RK4);
+
+- A collection of finite differences PDE solvers for isotropic and
+anisotropic tissue models on regular and irregular boundary domains;
+
+- A major selection of CellML cardiac models and other excitable media
+models;
+
+- Multiscale tissue modelling: 0-dimensional individual cell
+simulation, 1-dimensional fibre, 2-dimensional sheet and 3-dimensional
+slab of tissue, up to anatomically realistic whole heart simulations
+using the provided tissue model repository.
+
+- Run time measurements including tip tracing, filament tracing, ECG,
+samples of any variables;
+
+- Extensibility: You can easily plug in your own solvers as well as
+cell kinetics models and tissue models (e.g. MRI finite difference
+meshes) into BeatBox's highly structured code.  BeatBox is free
+software and is distributed under version 3 (or later) of the GNU
+public licence.
+
+
+You can download the most up to date version of Beatbox from:
+
+http://empslocal.ex.ac.uk/people/staff/vnb262/software/BeatBox/
+
+The INSTALL file contains the standard compilation and installation
+instructions with plenty of detail suitable for more experienced
+programmers.
+
+Briefly: 
+
+- download a Beatbox tar ball, say into your $HOME directory,
+- unpack the Beatbox tar ball; this will place the contents in 
+  a new directory, 
+- change into that directory and issue the following commands: 
+
+autoreconf -fi
+export CC=mpicc
+./configure --prefix=$HOME
+make
+make install
+
+If all works well, this will create BeatBox executables both in the
+current directory and install them on to your $HOME/bin/ directory
+which will be created if necessary; you can move them elsewhere if
+required.
+
+
+--- 
+For a brief overview, including compilation and installation,
+please see the file:
+
+doc/beatbox_quickstart.html
+
+---
+For the main BeatBox documentation see the file:
+
+doc/beatbox.html
+

@@ -1,0 +1,195 @@
+Version 2.0 2025/02/XX
+
+- Names of the executables changed to bb2s and bb2p, to mitigate lack of backward compatibility of the user interface in the new major version.
+- Major change: 'par=~kvar' syntactically links device parameter par to global k-variable kvar (only for some devices and some parameers for now)
+- Major change: v0 and v1 are no longer standard parameters of a device's space description, but are only present in devices that use them. 
+- Major change: the standard device's space description allows "where=" parameter.
+- Major change: device diff has more flexible interface (several methods to define diff tensor, including time-dependent),
+  and subsumes earlier devices (diff2dv, diff3dv, ...?).
+- Device ezpaint now works in MPI mode.
+- doc/beatbox.html updated to reflect the changes (still being revised)
+
+
+Version 1.16 2023/08/09
+- the 'ttnnp04' rhs module now accepts parameter 'variant' which can take values 'epi', 'endo' or 'mcell';
+- new predefined "advance" global k_variable which has nonzero value before the main loop starts;
+- an obsolete "window" feature eliminated; this was universal for every device and now is only where needed; should not affect the user interface;
+- a few minor errors corrected and inconsistencies removed. 
+
+Version 1.15 (2022/02/24)
+
+- parameters pbx, pby, pbz addded to ezstep device to allow periodic boundary conditions;
+- devices torx, tory, torz added, to allow periodic boundary conditions in box geometries (to be documented);
+- an error in diff and diffstep devices corrected, which affected accuracy of calculations in anisotropic cases with variable diffusivity tensor;
+- a few minor errors corrected and inconsistencies removed. 
+
+Version 1.14 (2021/05/30)
+
+- In absence of X11 and/or OpenGL graphics, Beatbox now automatically configures so as to not depend on those libraries:
+-- In devices that have graphics as facultative functions, these are disabled;
+-- Devices that totally depend on those are replaced with dummies. 
+- Length of the "version" field in the ctlpoint files is increased to 16 (was 12). This means that ctlpoint files written by pre-1.14 versions of Beatbox will not be correctly read by version 1.14 or later. 
+
+Version 1.13
+
+- New devices: byteout, pw_mult (to be documented)
+- Improved checking of input syntax (diagnosing cases when the name of the defined k-variable is missed).
+- The manual doc/beatbox.html revised to describe available cell models a bit better.
+- A few minor errors corrected and inconsistencies removed. 
+
+Version 1.12.xxxx
+
+- Compatibility with the current version of MPI standard achieved and with legacy versions of it retained. 
+- record device revised: it now is sequential-only (the parallel version was not working anyway), and can produce automatically numbered output files as well as a single file at the user's coice.
+- ezpaint device revised: can draw markers (this is not documented yet)
+- The manual doc/beatbox.html revised to correct inaccuracies, fill gaps, and reflect recent changes.
+- A few minor errors corrected and inconsistencies removed. 
+
+Version 1.11.1052
+
+- Parameters now may be dynamically linked to k-variables or k-expressions (currently applies to ezview parameters)
+- Padding of geometries may be controlled
+- A few minor errors corrected
+
+Version 1.10.1044
+
+- New devices: matout, ezpaint, ezview.
+- k_func knows geom0, geom1.. read/write variables and has advance=1 option. 
+- Consequently, now one can work with geometry and anisotropy defined within script, without a BBG file.
+- ezstep can now do 0D (i.e. reaction without diffusion)
+- Bug fixed in ctlpoint (checks when restarting job with different domain partitioning).
+- Multiple minor errors and inaccuracies corrected.
+- Documentation completed and edited accordingly. 
+
+
+Version 1.9.1012
+
+- New devices: ezstep and ezview
+- Option "bythred=1" in ctlpoint device
+- Parameter names in rhs b02 corrected
+
+Version 1.8.998
+
+- Points with short fibre vectors in geometries intepreted isotropic.
+
+- Added k-function geom() access geometry data.
+
+- Various improvements and bug fixes, in particular for working with very large grids. 
+
+Version 1.7.982
+
+- "configure" is included in distribution so autotools not needed for installation, if only compilation is required
+
+- k_paintgl device added, which paints 2D fields using OpenGL extension of X11
+
+Version 1.6.953
+
+- "ionic" cell model format extended to include Markov Chain (MC) channel descriptions;
+  rushlarsen device now can do Matrix Rush-Larsen (MRL) timestepping for MCs.
+  This involved also inclusion of an extract of GNU Scientific Library (GSL).
+
+- New ionic models illustrating handling of MC and work of MRL. 
+
+- rk4 device added for Runge-Kutta 4th order solver. 
+
+- MPI version now does not create separate "log" file and instead
+  prints full messages to standard output.
+
+- A bug in singz.c fixed: it was not properly parallelized. The
+  previous more accurate tip orientation finding alg still available
+  for sequential runs. Also, it now saves information about found tips
+  into k-variables.
+
+- Multiple minor errors and inaccuracies corrected.
+
+- Documentation completed and edited accordingly. 
+
+Version 1.5.830
+
+- Major change: new device 'rushlarsen', the associated model format
+  'ionic' and two ionic models in this format, br77 (Beeler-Reuter
+  1977) and crn98 (Courtemanche Ramirez Nattel 1998). The ionic crn98
+  is quicker than Courtemanche's original code, mostly due to
+  tabulation of Vm-dependent functions.
+
+- New device 'diffstep' added
+
+- A typo in diff.c fixed which would have caused wrong result if
+  diffusion nonuniform in y direction.
+
+- Several smaller changes, mostly of technical nature not concerning
+  the front-side.
+
+
+Version 1.4.818
+
+- Major changes: new devices 'adi3d' and 'elliptic' for implicit
+  diffusion timestepping and bidomain respectively.
+
+- Several bugs fixed, format of stdout and log file improved,
+  documentation updated.
+
+Version 1.3.567
+
+ - Major change: now it is possible to not allocate processes to empty
+  subdomains (essential when treating 'thin' geometries with high
+  degree of parallelization.
+
+ - The method of domain decomposition can be now chosen from command
+   line, including explicit decomposition formula.
+
+ - New cell models added (mouse, mousevent, crnach)
+
+ - Improvements were made in reporting information to standard output
+   and to the log file, particularly concerning domain partitioning
+   and domain/process allocation.
+
+ - Improvements were made in the manual example scripts, including
+   change of directory structure (they are now classified by cell
+   models).
+
+ - A few bugs fixed, including a major bug when 'euler' device was
+   incorrectly filling its space with standard initial conditions when
+   in parallel mode.
+
+Subversion 1.2.490
+
+ - New device added (pause)
+
+ - New cell model added (b02)
+
+ - Improvements were made in the documenation, logging/error reporting
+   and example scripts
+
+ - Several bug fixes
+
+ - The standard output and log file now report the revision
+   ("subversion") number in addition to the main version number.
+
+Version 1.2
+
+ - A few new devices (k_imgout, activation, vtkout2, ecg) were added.
+
+ - A few new cell models (FKMOD, TNNP, TTNNP04, TTP06) were included.
+
+ - Documentation was improved.
+
+ - Several minor improvements were made in functionality in a number 
+   of modules and bug fixes.
+
+Version 1.1
+
+ - Installation instructions were checked and corrected. 
+
+ - Existing documentation was updated and corrected, some more 
+   documentation was written. 
+
+ - A number of unused source files were removed. 
+
+ - Profiling of devices improved. 
+
+ - Minor improvements in functionality in a number of modules. 
+
+Version 1.0.313
+
+ - Initial public release.
