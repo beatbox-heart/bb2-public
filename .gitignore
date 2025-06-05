@@ -21,3 +21,9 @@ gitfix
 libtool
 stamp-h1
 tag.pl
+src/bb2p
+src/bb2s
+src/bb2d
+src/*.o
+src/.gitignore
+
