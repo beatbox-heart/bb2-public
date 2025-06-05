@@ -1,0 +1,174 @@
+PUBLIC RELEASES
+
+can be obtained from http://empslocal.ex.ac.uk/people/staff/vnb262/software/BeatBox/
+or https://github.com/beatbox-heart
+
+DEVELOPMENT VERSIONS
+
+We have installed a TRAC and SVN instances on a Virtual Machine (VM)
+set up at EPCC. The machine name is:
+
+     beatbox-trac.epcc.ed.ac.uk
+
+We have an TRAC instance at:
+
+    https://beatbox-trac.epcc.ed.ac.uk/trac
+
+TRAC (http://trac.edgewall.org/) is a web project management tool
+that provides us with:
+
+  - A wiki (web pages we can all edit)
+  - A time line which monitors what has changed
+  - A Roadmap if we want to plan dates
+  - A subversion source browser
+  - A ticketing system (for queries or we could use it for actions
+    or just ignore)
+
+You will need a username to be able to do anything. I have created
+the following usernames: sanjay, irina, vadim. I will send the
+corresponding password in a separate mail. Please log into the
+TRAC instance and change your password (you will see a "Login"
+link on the top right) then go to "Preferences" (another link
+on the top right hand corner) and change your password. If, for
+whatever reason, you would like a different username then please
+let me know and I will change it accordingly.
+
+Alongside this we have a subversion repository (svn) which is the
+software repository we agreed to use. I have populated this with
+the software snapshot that Sanjay sent me on 21/06/12 with the
+following changes:
+
+   - The authors file is the amended one suggested by Irina
+   - The beatbox.html documentation that Sanjay sent me and
+   - Here is the biggy with ALL backup files removed, that is
+     there are no .0, .1, .2, .backup, .SomeDate, etc A
+     software repository is supposed to prevent the proliferation
+     of these things from happening. In principle the repository
+     should ALWAYS have working code but you can take branches
+     to work on experimental things that are then merged with
+     the main source trunk. There will always be an audit trail
+     present (as long as you check in code regularly) so you
+     should always be able to recover a previous version of a file
+     (hence you do not need the versioning mechanisms that
+     you have been using).
+
+There are a number of good GUI clients out there including smart svn
+(http://www.syntevo.com/smartsvn/index.html) which is available over
+a number of platforms. It comes as an evaluation version for the
+professional version which expires after a certain period of time
+but the non-professional capabilities it provides afterwards are
+perfectly adequate for nearly all purposes.
+
+I will now cover some of the basic commands that will get you
+started with svn. Basically it falls into the following cycle:
+
+   - checkout the repository (which gives you a local repository of the code)
+   - you can then then modify/add/remove files
+   - once you have completed your editing and have work code you can
+     commit your changes to the repository or
+   - you can update your local copy of your working repository to incorporate
+     any changes that someone else might have made.
+
+In the process of updating or committing changes you may run into a
+conflict situation in which case you and someone else have made changes
+to the same lines of code (generally changes will be merged together
+without a problem). If you do have a conflict you will end up with your
+bit of code and the changes made by some other person. You have to
+resolve these by editing the bits of code that you want to keep from
+your changes and the other person's changes. If you run into this problem
+which is not that usual you can ask me or adrian how to resolve the
+issue (or you can google for "svn conflict resolution" to get good
+references on how to do this).
+
+vvvvvvvvvvvvvvv
+VNB:
+Even before you do the "first thing" described below.
+Edit your ~/.subversion/config 
+so it contains the line
+
+use-commit-times = yes
+
+(without any '#' in the beginning)
+Then the files you download via svn will have correct modification
+stamps, showing when they were committed to the repository, rather than
+when they were donwloaded. 
+^^^^^^^^^^^^^^^
+
+So the first thing you will need to do (assuming that you have an svn
+command line client - and I will cover the command line options here,
+a GUI will have buttons that abstract the same functionality) is to
+checkout the code - you only do this once at the beginning and never
+again on the same machine. Create a directory in which you want the
+code to go (beatbox) and then **in** this subdirectory to checkout the
+code from the repository:
+
+  svn co --username=YourUserName https://beatbox-trac.epcc.ed.ac.uk/svn/trunk ./
+
+You will be prompted for a password and then, assuming you typed
+this in correctly, you will download a copy of the code from
+the repository.
+
+If at some future point you want to update your local repository (that
+is to incorporate files that someone else might have put in the repository)
+then you do:
+
+  svn update
+
+If you do this at the root of your local repository it will update
+all files from that part of the directory tree and all its descendants
+so you could do:
+
+   svn update beatbox
+
+from the root of the local svn repository or you could do :
+
+   svn update *
+
+if you are within the file hierarchy of the repository.
+
+If you have created a new file within the repository you can do
+an:
+
+   svn add NewFile
+
+which will add the NewFile to the repository (you need to do the same
+for directories). It is important to ensure that all file operations
+you do (copying, moving, and deleting) are done using svn as this
+allows the svn repository to keep track of the file changes than
+therefore enables rolling back to previous versions of the code where
+necessary.To migrate any changes back to the repository, including new
+files, you have to do a commit.  You can do this at any level of
+granularity:
+
+   svn commit NewFile -m"A meaningful message."
+
+or
+
+   svn commit SomeDirectory -m"A meaningful message."
+
+which will commit any files from the directory SomeDirectory downwards.
+You will notice that every time you (or someone else commits files) a
+revision number is incremented. That way you can always recover a previous
+state of the repository or of a file. For that reason it is important
+to enter meaningful messages when committing so that you can go back
+to some previous state of the repository and/or find out what changes
+someone has done to a file (or set of files). In my view you should
+commit often as long as you leave the central repository in a working
+state, i.e. do not checkin broken files.
+
+This then allows you to prevent using the previous revision control
+of .0, .1, etc. Also, we end up with one canonical version of the
+code in a repository and not multiple versions languishing on different
+people's machines. There is a lot more that can be done with svn
+but this shortish message should be enough to get you started
+using svn.
+
+If you want to know more then you can google to find lots of good
+resources including tutorials about svn on the web. Amongst these you
+can have have a look at the free svn book at:
+
+    http://svnbook.red-bean.com/
+
+If you have any questions or want anything clarified please get in
+touch with mario or adrian.
+
