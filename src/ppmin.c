@@ -107,9 +107,9 @@ RUN_HEAD(ppmin) {
     for (y=s.y0;y<=s.y1;y++) { 
       for (x=s.x0;x<=s.x1;x++) {
 	if (3!=fread(inbuf,sizeof(*inbuf),3,f)) EXPECTED_ERROR("bad read triple number %ld from %s\n",i,filename);
-	New[ind(x,y,z,r)]=unbyte(inbuf[R],max,r0,r1);
-	New[ind(x,y,z,g)]=unbyte(inbuf[G],max,g0,g1);
-	New[ind(x,y,z,b)]=unbyte(inbuf[B],max,b0,b1);
+	if (r>=0) New[ind(x,y,z,r)]=unbyte(inbuf[R],max,r0,r1);
+	if (g>=0) New[ind(x,y,z,g)]=unbyte(inbuf[G],max,g0,g1);
+	if (b>=0) New[ind(x,y,z,b)]=unbyte(inbuf[B],max,b0,b1);
 	i++;
       } /*  for x */
     } /*  for y */
@@ -122,7 +122,10 @@ RUN_HEAD(ppmin) {
 DESTROY_HEAD(ppmin)
 DESTROY_TAIL(ppmin)
   
-CREATE_HEAD(ppmin) {
+CREATE_HEAD(ppmin)
+{
+  DEVICE_IS_RECTANGULAR;
+
   ACCEPTS(file,NULL);
   if (file[0]=='\0') EXPECTED_ERROR("input file name or mask is required\n");
   ACCEPTS(filecode,"");
@@ -159,7 +162,8 @@ CREATE_HEAD(ppmin) {
   ACCEPTI(b,INONE,-1,(int)vmax-1);
   ACCEPTR(b0,RNONE,RNONE,RNONE);
   ACCEPTR(b1,RNONE,RNONE,RNONE);
-} CREATE_TAIL(ppmin,0)
+}
+CREATE_TAIL(ppmin,0)
 
 #undef R
 #undef G

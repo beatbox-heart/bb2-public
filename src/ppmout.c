@@ -200,7 +200,10 @@ DESTROY_HEAD(ppmout) {
   S->file.f=NULL;
 } DESTROY_TAIL(ppmout)
   
-CREATE_HEAD(ppmout) {
+CREATE_HEAD(ppmout)
+{
+  DEVICE_IS_RECTANGULAR;
+
   ACCEPTI(append,0,0,1);
   ACCEPTQ(file,S->append?"at":"wt",NULL);
 
@@ -315,7 +318,8 @@ CREATE_HEAD(ppmout) {
   } /*  if s.runHere */
 #endif
   
-} CREATE_TAIL(ppmout,0)
+}
+CREATE_TAIL(ppmout,0)
 
 #undef R
 #undef G

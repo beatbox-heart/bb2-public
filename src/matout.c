@@ -205,6 +205,8 @@ DESTROY_HEAD(matout) {
 
 CREATE_HEAD(matout)
 {  
+  DEVICE_IS_RECTANGULAR;
+
   ACCEPTI(v0,INONE,0,vmax-1);
   ACCEPTI(v1,INONE,0,vmax-1);
   ASSERT (v1 >= v0);

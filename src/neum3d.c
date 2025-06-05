@@ -21,7 +21,7 @@
 /* 
  * Experimental module, not for distribution. 
  * Provide Neumann boundary conditions for the 
- * experimental diffusion devices diff2dv, diff2vh. 
+ * experimental diffusion devices diff3dv, diff3vh. 
  *
  * Currently only implemented for box geometry
  * and tested in sequential runs. 
