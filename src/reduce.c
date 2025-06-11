@@ -135,6 +135,8 @@ DESTROY_TAIL(reduce)
 CREATE_HEAD(reduce)
 {
   DEVICE_ALWAYS_RUNS;
+  DEVICE_IS_RECTANGULAR;
+    
   ACCEPTI(v0,INONE,0,(int)vmax-1);
   ACCEPTI(v1,INONE,0,(int)vmax-1);
   ASSERT( v1 >= v0 );

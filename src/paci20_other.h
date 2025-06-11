@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2024) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -18,17 +18,8 @@
  * along with Beatbox.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * List of available ionic cell descriptions.
- */
-D(br77)
-D(crn98)
-D(hh52)
-D(hh52m)
-D(kernik19)
-D(paci18)	/* same as ppcpash18 */
-D(ppcpash18)	/* same as paci18 */
-D(paci20)	/* same as ppcpash18 */
-D(ttp2006)
-/*------------*/
-
+/* List of non-gate dynamic variables */
+_(V,-76.177)	/* (mV) */
+_(Nai,9.47287)	/* (mM) */
+_(Cai,2.63701e-05)	/* (mM) */
+_(Ca_SR,0.127811)	/* (mM) */

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2016) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -18,17 +18,9 @@
  * along with Beatbox.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * List of available ionic cell descriptions.
- */
-D(br77)
-D(crn98)
-D(hh52)
-D(hh52m)
-D(kernik19)
-D(paci18)	/* same as ppcpash18 */
-D(ppcpash18)	/* same as paci18 */
-D(paci20)	/* same as ppcpash18 */
-D(ttp2006)
-/*------------*/
-
+/* List of gates depending not (only) on V */
+_(fCa, 8.77798946134088598e-01) /* && */
+/* These are not "gates" but Markov states */
+/* _(I, 1.42153622323011597e-02) /\* && *\/ */
+/* _(O, 1.65045105312396393e-04) /\* && *\/ */
+/* _(R1, 1.13120363433751106e-02) /\* && *\/ */

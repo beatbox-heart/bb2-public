@@ -92,6 +92,7 @@ common_sources = \
 	hh.h \
 	init.c init.h \
 	ionic.h ioniclist.h \
+	kernik19.c kernik19_const.h kernik19_fddt.h kernik19_ftab.h kernik19_fun.h kernik19_ngate.h kernik19_other.h kernik19_par.h kernik19_tgate.h \
 	k_.c \
 	k_.h \
 	k_calc.h \
@@ -136,6 +137,8 @@ common_sources = \
 	pipe.c pipe.h \
 	poincare.c \
 	ppcpash18.c ppcpash18_fun.h  ppcpash18_ngate.h ppcpash18_other.h ppcpash18_par.h ppcpash18_tgate.h ppcpash18_const.h ppcpash18_ftab.h ppcpash18_fddt.h \
+	paci18.c paci18_fun.h  paci18_ngate.h paci18_other.h paci18_par.h paci18_tgate.h paci18_const.h paci18_ftab.h paci18_fddt.h \
+	paci20.c paci20_fun.h  paci20_ngate.h paci20_other.h paci20_par.h paci20_tgate.h paci20_const.h paci20_ftab.h paci20_fddt.h \
 	ppmout.c \
 	pw_mult.c \
 	qpp.c qpp.h \

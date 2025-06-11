@@ -105,7 +105,7 @@ RUN_HEAD(record)
     for (y=s.y0; y<=s.y1; y++) {
       for (z=s.z0; z<=s.z1; z++) {
 	for (v=v0; v<=v1; v++) {
-	  snprintf(buf, formatwidth+1, format, New[ind(x,y,z,v)]);
+	  snprintf(buf, formatwidth+1, format, (double) New[ind(x,y,z,v)]);
 	  strcat(buf,
 		 (v<v1)? vsep :
 		 (z<s.z1)? zsep :
@@ -136,9 +136,11 @@ DESTROY_TAIL(record)
 /* ----------------------------------------------------------------- */
 CREATE_HEAD(record)
 {
+  DEVICE_IS_RECTANGULAR;
+  
   ACCEPTI(v0,INONE,0,vmax-1);
   ACCEPTI(v1,INONE,0,vmax-1);
-  ASSERT(v1 != v0);
+  ASSERT(v1 >= v0);
   ACCEPTS(filehead,"");
   /* Add newline to filehead if it is nonempty and does not have one already */
   if (filehead[0]!='\0' && filehead[strlen(filehead)-1]!='\n') {
