@@ -1,4 +1,5 @@
 !Makefile
+!bkl1.rec
 *.BAK
 *.ctl
 *.log
