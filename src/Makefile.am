@@ -79,26 +79,18 @@ common_sources = \
 	geometry.c \
 	geometry.h \
 	glerr.h \
-	gpcell.c \
-	gpcell.h \
+	gpcell.c gpcell.h \
         gpc_var.h \
 	grad2d.c \
-	ha.c \
-	ha_cur.h \
-	ha_par.h \
-	ha_un.h \
-	ha_var.h \
-	hh.c \
-	hh.h \
+	ha.c ha_cur.h ha_par.h ha_un.h ha_var.h \
+	hh.c hh.h \
 	init.c init.h \
 	ionic.h ioniclist.h \
 	kernik19.c kernik19_const.h kernik19_fddt.h kernik19_ftab.h kernik19_fun.h kernik19_ngate.h kernik19_other.h kernik19_par.h kernik19_tgate.h \
-	k_.c \
-	k_.h \
+	k_.c k_.h \
 	k_calc.h \
 	k_code.h \
-	k_comp.c \
-	k_comp.h \
+	k_comp.c k_comp.h \
 	k_def.h \
 	k_errors.h \
 	k_exec.c \
@@ -108,17 +100,12 @@ common_sources = \
 	k_func.c \
 	k_poincare.c \
 	k_print.c \
-	linear1.c\
-	linear2.c\
+	linear1.c \
+	linear2.c \
 	load.c \
-	lrd.c \
-	lrd_par.h \
-	lrd_step.h \
-	lrd_var.h \
-	mchtb.c \
-	mchtb.h \
-	mchtbpar.h \
-	mchtbvar.h \
+	lrd.c lrd_par.h lrd_step.h lrd_var.h \
+	mchtb.c mchtb.h \
+	mchtbpar.h mchtbvar.h \
 	mouse.c  mouse_init.h  mouse_par.h  mouse_step.h  \
 	mousevent.c  mousevent_init.h  mousevent_par.h  mousevent_step.h  \
 	mpi_io_choice.h \
@@ -143,6 +130,7 @@ common_sources = \
 	pw_mult.c \
 	qpp.c qpp.h \
 	reduce.c \
+	regular.c \
 	rhs.h rhslist.h \
 	rk4.c \
 	rushlarsen.c \
@@ -162,8 +150,7 @@ common_sources = \
 	trivial.c\
 	update.c \
 	vtkout2.c \
-	windraw.c \
-	windraw.h \
+	windraw.c windraw.h \
 	zeeman.c \
 	zfk.c
 
