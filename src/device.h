@@ -153,6 +153,9 @@ typedef int Create (Device *dev, char *w);
 /*! Declaration of a Device's variable: may change during run, preserved between runs */
 #define DEVICE_VAR(type,name)   type *name=&(S->name);
 
+/*! Declaration of a Device's real k-variable, with k-name */
+#define DEVICE_KREAL(kvar)   REAL *kvar=S->kvar; char *kvar##name=&(S->kvar##name[0]);
+
 /*! Declaration of a Device's array of variables */
 #define DEVICE_ARRAY(type,name) type *name=&(S->name[0]);
 

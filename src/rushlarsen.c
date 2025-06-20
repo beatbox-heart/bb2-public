@@ -1105,7 +1105,7 @@ CREATE_HEAD(rushlarsen)
     if (dev->s.runHere) {
 #endif
       Space s=dev->s;
-#define COMMANDS for (iv=0;iv<=nv;iv++) {u[v0+iv]=(S->u)[iv];}
+#define COMMANDS for (iv=0;iv<nv;iv++) {u[v0+iv]=(S->u)[iv];}
       DO_FOR_ALL_POINTS;
 #undef COMMANDS
       
