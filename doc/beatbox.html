@@ -5186,13 +5186,15 @@ intervals for correct work.  </p>
 
 <table border="1">
 <tr>
-  <th> Type </th>
-  <th> Name </th>
-  <th> Default </th>
-  <th> Min </th>
-  <th> Max </th>
-  <th> Description </th>
+<th scope="col" class="left">Type</th>
+<th scope="col" class="left">Name</th>
+<th scope="col" class="left">Default</th>
+<th scope="col" class="left">Min</th>
+<th scope="col" class="left">Max</th>
+<th scope="col" class="left">Description</th>
 </tr>
+</thead>
+<tbody>
 
 <tr>
   <td><code>int</code></td>
@@ -5253,6 +5255,8 @@ intervals for correct work.  </p>
     if <code>sign=0</code>, then crossing in either direction will be counted as
     activation.</td>
 </tr>
+  
+</tbody>
 </table>
 
 <p>
@@ -5313,14 +5317,17 @@ the name chosen by the analogy with adi2d and adi3d.
 boundaries of its space in the <code>x</code>-direction. Further parameters are: >>
 
 <table border="1">
+<thead>
 <tr>
-  <th> Type </th>
-  <th> Name </th>
-  <th> Default </th>
-  <th> Min </th>
-  <th> Max </th>
-  <th> Description </th>
+<th scope="col" class="left">Type</th>
+<th scope="col" class="left">Name</th>
+<th scope="col" class="left">Default</th>
+<th scope="col" class="left">Min</th>
+<th scope="col" class="left">Max</th>
+<th scope="col" class="left">Description</th>
 </tr>
+</thead>
+<tbody>
 
 <tr>
   <td><code>int</code></td>
@@ -5370,6 +5377,7 @@ boundaries of its space in the <code>x</code>-direction. Further parameters are:
   <td> Diffusion coefficient. NB this can be negative in case of
   cross-diffusion. </td>      
 </tr>
+</tbody>
 </table>
 
 <p>
@@ -5414,14 +5422,17 @@ al. book for implicit solution of heat equation (eqn. 7.56 on page
 boundaries of its space. Further parameter are: </p>
 
 <table border="1">
+<thead>
 <tr>
-  <th> Type </th>
-  <th> Name </th>
-  <th> Default </th>
-  <th> Min </th>
-  <th> Max </th>
-  <th> Description </th>
+<th scope="col" class="left">Type</th>
+<th scope="col" class="left">Name</th>
+<th scope="col" class="left">Default</th>
+<th scope="col" class="left">Min</th>
+<th scope="col" class="left">Max</th>
+<th scope="col" class="left">Description</th>
 </tr>
+</thead>
+<tbody>
 
 <tr>
   <td><code>int</code></td>
@@ -5469,6 +5480,7 @@ boundaries of its space. Further parameter are: </p>
   <td>-</td>
   <td> Diffusion coefficient </td>      
 </tr>
+</tbody>
 </table>
 
 <p>
@@ -11435,12 +11447,6 @@ beatbox/data/scripts/sequential/fhn0.bbs
 beatbox/data/scripts/sequential/fhn1.bbs
 </pre>
 
-<p>
-##########################
-revised this far
-##########################
-</p>
-
 <!-- ========================= -->
 <h2 class="numbered">rk4</h2>
 
@@ -11452,36 +11458,72 @@ Runge-Kutta 4th order; general pointwise ODE stepper for the rhs modules.
 <h3>Parameters</h3>
 
 <table border="1">
-<thead>
 <tr>
-<th scope="col" class="left">Type</th>
-<th scope="col" class="left">Name</th>
-<th scope="col" class="left">Description</th>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
 </tr>
-</thead>
-<tbody>
+
+
 <tr>
-<td class="left"><code>real</code></td>
-<td class="left"><code>ht</code></td>
-<td class="left">Timestep duration.</td>
+  <td><code>int</code></td>
+  <td><code>v0</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Lower bound of the layer range involved</td>
+</tr>
+
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v1</code></td>
+  <td>-</td>
+  <td><code>v0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Upper bound of the layer range involved. The length of the
+    range, <code>v1-v0+1</code>, must equal the number of variables on
+  which the chosen <code>rhs</code> operates. 
+  </td>
 </tr>
 
 <tr>
-<td class="left"><code>str</code></td>
-<td class="left"><code>ode</code></td>
-<td class="left">Name of the <code>rhs</code> module to use.</td>
+  <td class="left"><code>real</code></td>
+  <td class="left"><code>ht</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td>-</td>
+  <td class="left">Timestep duration.</td>
 </tr>
 
 <tr>
-<td class="left"><code>int</code></td>
-<td class="left"><code>rest</code></td>
-<td class="left">If nonzero, the device will make so many steps with the given model to find an approximation of the initial conditions, and then fill the whole device space with this initial condition.</td>
+  <td class="left"><code>str</code></td>
+  <td class="left"><code>ode</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td class="left">Name of the <code>rhs</code> module to use.</td>
 </tr>
 
 <tr>
-<td class="left"><code>codeblock</code></td>
-<td class="left"><code>par</code></td>
-<td class="left">The parameters of the <code>rhs</code> module; their list depends on the module. The codeblock contains k-assignments of the form <code>&lt;parameter&gt;=&lt;k-expression&gt;</code>, separated by blank spaces.</td>
+  <td class="left"><code>int</code></td>
+  <td class="left"><code>rest</code></td>
+  <td><code>0</code></td>
+  <td><code>0</code></td>
+  <td>-</td>
+  <td class="left">If nonzero, the device will make so many steps with the given model to find an approximation of the initial conditions, and then fill the whole device space with this initial condition.</td>
+</tr>
+
+<tr>
+  <td class="left"><code>codeblock</code></td>
+  <td class="left"><code>par</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td class="left">The parameters of the <code>rhs</code> module; their list depends on the module. The codeblock contains k-assignments of the form <code>&lt;parameter&gt;=&lt;k-expression&gt;</code>, separated by blank spaces.</td>
 </tr>
 </tbody>
 </table>
@@ -11543,6 +11585,13 @@ solution and the exact answer at the final moment of time. The example
 is complete with a <code>Makefile</code> which allows to compute a
 series of runs and produce the graph of the numerical convergence,
 illustrating the fourth-order accuracy of the solver.  </p>
+
+<p>
+##########################
+revised this far
+##########################
+</p>
+
 
 <!-- ========================= -->
 <h2 class="numbered">rushlarsen</h2>
