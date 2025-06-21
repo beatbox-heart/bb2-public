@@ -6685,9 +6685,9 @@ forward Euler.
 <tr>
   <td><code>codeblock</code></td>
   <td><code>par</code></td>
-  <td>-</td>
-  <td>-</td>
-  <td>-</td>
+  <td> </td>
+  <td> </td>
+  <td> </td>
   <td>The parameters of the <code>rhs</code> module; their list
   depends on the module. The codeblock should contain k-assignments of
   the form <code>&lt;parameter&gt;=&lt;k-expression&gt;</code>,
@@ -6817,8 +6817,8 @@ description of the parameters that follows, and
 <td><code>codeblock</code></td>
 <td><code>pgm</code></td>
 <td><code>""</code></td>
-<td>-</td>
-<td>-</td>
+<td> </td>
+<td> </td>
 <td>k-program computing colour of a particular "pixel" rectangle
   constituting the raster to be painted. In its absence (i.e. when
   <code>pgm=</code> key is absent in the device description in the
@@ -11520,9 +11520,9 @@ Runge-Kutta 4th order; general pointwise ODE stepper for the rhs modules.
 <tr>
   <td class="left"><code>codeblock</code></td>
   <td class="left"><code>par</code></td>
-  <td>-</td>
-  <td>-</td>
-  <td>-</td>
+  <td> </td>
+  <td> </td>
+  <td> </td>
   <td class="left">The parameters of the <code>rhs</code> module; their list depends on the module. The codeblock contains k-assignments of the form <code>&lt;parameter&gt;=&lt;k-expression&gt;</code>, separated by blank spaces.</td>
 </tr>
 </tbody>
@@ -11586,13 +11586,6 @@ is complete with a <code>Makefile</code> which allows to compute a
 series of runs and produce the graph of the numerical convergence,
 illustrating the fourth-order accuracy of the solver.  </p>
 
-<p>
-##########################
-revised this far
-##########################
-</p>
-
-
 <!-- ========================= -->
 <h2 class="numbered">rushlarsen</h2>
 
@@ -11624,77 +11617,126 @@ definition of ionic modules is found in <i>specification of ionic modules.</i>
 <h3>Parameters</h3>
 
 <table id="tab:rushlarsen-bbs" border="1">
-<caption class="t-above"><span class="table-number">Table 1:</span> Parameters to set up rushlarsen device in <code>BBScript</code></caption>
-
-<colgroup>
-<col  class="left" />
-
-<col  class="left" />
-
-<col  class="left" />
-</colgroup>
-<thead>
 <tr>
-<th scope="col" class="left">type</th>
-<th scope="col" class="left">name</th>
-<th scope="col" class="left">description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="left"><code>real</code></td>
-<td class="left"><code>ht</code></td>
-<td class="left">time step duration.</td>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
 </tr>
 
 <tr>
-<td class="left"><code>str</code></td>
-<td class="left"><code>ionic</code></td>
-<td class="left">name of the cellular model in ionic format.</td>
+  <td><code>int</code></td>
+  <td><code>v0</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Lower bound of the layer range involved</td>
 </tr>
 
 <tr>
-<td class="left"><code>int</code></td>
-<td class="left"><code>rest</code></td>
-<td class="left">number of steps to approximate initial conditions of the dynamical variables (resting state). When the value is set to zero (<code>0</code>), the default initial conditions from the module are used.</td>
+  <td><code>int</code></td>
+  <td><code>v1</code></td>
+  <td>-</td>
+  <td><code>v0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Upper bound of the layer range involved. The length of the
+    range, <code>v1-v0+1</code>, must equal the number of variables on
+  which the chosen <code>rhs</code> operates. 
+  </td>
 </tr>
 
 <tr>
-<td class="left"><code>codeblock</code></td>
-<td class="left"><code>par</code></td>
-<td class="left">model-dependent parameters of ionic module. The parameter is set by a codeblock in a form <code>par={&lt;parameter&gt;=&lt;value&gt;}</code> separated by blank spaces if more than one parameter is specified.</td>
+  <td class="left"><code>real</code></td>
+  <td class="left"><code>ht</code></td>
+  <td> - </td>
+  <td> <code>0</code> </td>
+  <td> - </td>
+  <td class="left">time step duration.</td>
 </tr>
 
 <tr>
-<td class="left"><code>str</code></td>
-<td class="left"><code>order</code></td>
-<td class="left">the order of execution of substeps: one of <code>tog</code>, <code>tgo</code>, <code>totg</code>, where the substeps are done consecutively: <code>t</code> stands for table look-up, <code>o</code> stands for "other" variables and computation non-tabulated gates, <code>g</code> stands for tabulated gating variables.</td>
+  <td><code>str</code></td>
+  <td><code>order</code></td>
+  <td> <code>"totg"</code> </td>
+  <td> </td>
+  <td> </td>
+  <td>the order of execution of substeps: one of <code>tog</code>, <code>tgo</code>, <code>totg</code>, where the substeps are done consecutively: <code>t</code> stands for table look-up, <code>o</code> stands for "other" variables and computation non-tabulated gates, <code>g</code> stands for tabulated gating variables.</td>
 </tr>
 
 <tr>
-<td class="left"><code>str</code></td>
-<td class="left"><code>exp_ngate</code></td>
-<td class="left">defines method of computation of non-tabulated gates: non-zero for exponential (Rush-Larsen); zero (<code>0</code> default) for forward Euler method.</td>
+  <td><code>str</code></td>
+  <td><code>exp_ngate</code></td>
+  <td> <code>0</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td>defines method of computation of non-tabulated gates: non-zero for exponential (Rush-Larsen); zero (<code>0</code> default) for forward Euler method.</td>
 </tr>
 
 <tr>
-<td class="left"><code>real</code></td>
-<td class="left"><code>Vmin, Vmax</code></td>
-<td class="left">minimal and maximal value of voltage for tabulation. Default is <code>-200</code>, <code>200</code> respectivelly.</td>
+  <td><code>str</code></td>
+  <td><code>exp_mc</code></td>
+  <td> <code>"tabmrl"</code> </td>
+  <td> </td>
+  <td> </td>
+  <td>specifies method of integration of Markov chains: <code>mcfe</code> forward Euler, <code>tabmrl</code> MRL with tabulation, <code>ntabmrl</code> MRL without tabulation (MRL only if subchain has a control variable, otherwise uses forward Euler)</td>
 </tr>
 
 <tr>
-<td class="left"><code>real</code></td>
-<td class="left"><code>dV</code></td>
-<td class="left">voltage-step for the tabulation of gating transition rates. Default is <code>0.01</code>. Value <code>0.0</code> disables tabulation.</td>
+  <td><code>str</code></td>
+  <td><code>ionic</code></td>
+  <td> - </td>
+  <td> </td>
+  <td> </td>
+  <td> name of the cellular model in ionic format.</td>
 </tr>
 
 <tr>
-<td class="left"><code>str</code></td>
-<td class="left"><code>exp_mc</code></td>
-<td class="left">specifies method of integration of Markov chains: <code>mcfe</code> forward Euler, <code>tabmrl</code> MRL with tabulation, <code>ntabmrl</code> MRL without tabulation (MRL only if subchain has a control variable, otherwise uses forward Euler)</td>
+  <td><code>codeblock</code></td>
+  <td><code>par</code></td>
+  <td> </td>
+  <td> </td>
+  <td> </td>
+  <td>model-dependent parameters of ionic module. The parameter is set by a codeblock in a form <code>par={&lt;parameter&gt;=&lt;value&gt;}</code> separated by blank spaces if more than one parameter is specified.</td>
 </tr>
-</tbody>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>Vmin</code></td>
+  <td> <code>-200</code> </td>
+  <td> - </td>
+  <td> - </td>
+  <td> minimal value of voltage for tabulation. </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>Vmax</code></td>
+  <td> <code>200</code> </td>
+  <td> - </td>
+  <td> - </td>
+  <td> maximal value of voltage for tabulation. </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>dV</code></td>
+  <td> <code>0.01</code> </td>
+  <td> <code>0</code> </td>
+  <td> - </td>
+  <td>voltage-step for the tabulation of gating transition rates. Default is <code>0.01</code>. Value <code>0.0</code> disables tabulation.</td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>rest</code></td>
+  <td> <code>0</code> </td>
+  <td> <code>0</code> </td>
+  <td> - </td>
+  <td>number of steps to approximate initial conditions of the dynamical variables (resting state). When the value is set to zero (<code>0</code>), the default initial conditions from the module are used.</td>
+</tr>
+
 </table>
 
 <p>
@@ -11842,7 +11884,6 @@ A script for simulation with Markov chain can be found in:
 beatbox/data/scripts/hh52/hh52m.bbs
 </pre>
 
-
 <!-- ========================= -->
 <h2 class="numbered">sample</h2>
 
@@ -11850,7 +11891,7 @@ beatbox/data/scripts/hh52/hh52m.bbs
 
 <p>
 Assigns a dynamic variable value from a specified point in the mesh to
-a k variable.
+a k-variable.
 </p>
 
 <h3>Parameters</h3>
@@ -11863,14 +11904,34 @@ space parameter is the dynamic variable to be sampled at
 point <code>(x0, y0, z0)</code>.
 </p>
 
-<table border="1">
+<table id="tab:rushlarsen-bbs" border="1">
 <tr>
-<th>Type </th><th> Name </th><th> Description </th>
-</tr><tr>
-
-<td><code>k</code> variable</td><td>result</td><td>Name of the k
-variable into which the sampled value should be stored.</td>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
 </tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v0</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Layer from which sampling is done</td>
+</tr>
+
+<tr>
+  <td> <code>real  <a href="#varlink">varlink</a> </code> </td>
+  <td><code>result</code></td>
+  <td>-</td>
+  <td> </td>
+  <td> </td>
+  <td>Name of the k-variable into which the result should be stored.</td>
+</tr>
+
 </table>
 
 <h3>Typical Syntax</h3>
@@ -11886,6 +11947,13 @@ All example scripts can be found in data/scripts of the package distribution. Ex
 beatbox/data/scripts/sequential/fhn0.bbs
 beatbox/data/scripts/sequential/fhn1.bbs
 </pre>
+
+<p>
+##########################
+revised this far
+##########################
+</p>
+
 
 <!-- ========================= -->
 <h2 class="numbered">singz</h2>
