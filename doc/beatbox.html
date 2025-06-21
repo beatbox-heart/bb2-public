@@ -11948,13 +11948,6 @@ beatbox/data/scripts/sequential/fhn0.bbs
 beatbox/data/scripts/sequential/fhn1.bbs
 </pre>
 
-<p>
-##########################
-revised this far
-##########################
-</p>
-
-
 <!-- ========================= -->
 <h2 class="numbered">singz</h2>
 <h3>Overview</h3>
@@ -11968,10 +11961,8 @@ for the second field (angle psi), and the cosine of the angle between
 the two gradients.  Device <code>singz</code> is essentially
 two-dimensional; when called in a 3D simulation, it simply does the
 same job in every <i>z</i>=const cross-section, hence the 'z' in the
-name of the device. At present, true three-dimensional filaments can
-be obtained by post-processing, say by
-<a href="http://empslocal.ex.ac.uk/people/staff/vnb262/software/EZView/">
-<code>ezview</code>.
+name of the device. True three-dimensional filaments can
+be obtained by device <code>ezview</code>.
 </a>
 </p>
 
@@ -11994,130 +11985,237 @@ coordinates.
 
 <h3>Parameters</h3>
 <table border="1">
+
 <tr>
-<th>Type</th><th>Name</th><th>Default</th><th>Description</th>
-</tr><tr>
-  
-  <td><code>int</code></td><td><code>v0</code></td><td>&nbsp;</td><td>
-    The layer in which the first dynamic field is located. 
-  </td>
-</tr><tr>
-
-    <td><code>int</code></td><td><code>v1</code></td><td>&nbsp;</td><td>
-    The layer in which the second dynamic field is located. 
-  </td>
-</tr><tr>
-
-    <td><code>real</code></td><td><code>c0</code></td><td>&nbsp;</td><td>
-    The constant defining the first dynamic field's isoline.
-  </td>
-</tr><tr>
-
-    <td><code>real</code></td><td><code>c1</code></td><td>&nbsp;</td><td>
-    The constant defining the second dynamic field's isoline.
-  </td>
-</tr><tr>
-
-    <td><code>str</code></td><td><code>file</code></td><td>&nbsp;</td><td>
-    Relative path to the output file that will contain the coordinates
-    of the found singular points.
-  </td>
-</tr><tr>
-  
-  <td><code>int</code></td><td><code>append</code></td><td>0</td><td>
-    Should the file be appended to?
-  </td>
-</tr><tr>
-
-
-    <td><code>str</code></td><td><code>pointsep</code></td><td>"&nbsp;"</td><td>
-      In the file output, separator between records of individual points
-  </td>
-</tr><tr>
-
-    <td><code>str</code></td><td><code>sectionsep</code></td><td> <code>"\t"</code> </td><td>
-      In the file output, separator between outputs from different z-sections, if any
-  </td>
-</tr><tr>
-
-    <td><code>str</code></td><td><code>recordsepsep</code></td><td> <code>"\n"</code> </td><td>
-      In the file output, separator between outputs from different calls of the device,
-      done at different times. 
-  </td>
-</tr><tr>
-
-    <td><code>int</code></td><td><code>everypoint</code></td><td> <code>0</code> </td><td>
-      In the file output, time <code>t</code> value will precede
-      coordinates of every found singularity point. 
-  </td>
-</tr><tr>
-
-    <td><code>int</code></td><td><code>everysection</code></td><td> <code>0</code> </td><td>
-      In the file output, time <code>t</code> value will precede
-      the output from every z-section.
-  </td>
-</tr><tr>
-
-    <td><code>int</code></td><td><code>everyrecord</code></td><td> <code>1</code> </td><td>
-      In the file output, time <code>t</code> value will precede
-      the output from every call of the device.
-      <br />
-      <strong>NB</strong> Exactly one of
-      <code>everypoint,everysection,everyrecord</code> must be 1, the
-      others must be 0. 
-  </td>
-</tr><tr>
-
-    <td><code>int</code></td><td><code>precise_orientation</code></td><td>0</td><td>
-      If nonzero, the orientation of the tips is calculated using a
-      higher-order scheme, involving a 4x4 template.
-      <br />
-      Not available in
-      MPI because the thickness of the inter-domain "halo" slices is
-      restricted to one grid point.
-  
-</tr><tr>
-    <td><code>k-variable</code></td><td><code>Npoints</code></td><td></td><td>
-      Name of the k-variable for the number of singular points. 
-    </td>
-  
-</tr><tr>
-    <td><code>k-variable</code></td><td><code>xmean</code></td><td></td><td>
-      Name of the k-variable for the mean <code>x</code>-coordinates of
-    the singular points. 
-    </td>
-  
-</tr><tr>
-    <td><code>k-variable</code></td><td><code>ymean</code></td><td></td><td>
-      Name of the k-variable for the mean <code>y</code>-coordinates of
-    the singular points. 
-    </td>
-  
-</tr><tr>
-    <td><code>k-variable</code></td><td><code>zmean</code></td><td></td><td>
-      Name of the k-variable for the mean <code>z</code>-coordinates of
-    the singular points. 
-    </td>
-  
-</tr><tr>
-    <td><code>k-variable</code></td><td><code>xstddev</code></td><td></td><td>
-      Name of the k-variable for the standard deviation of the <code>x</code>-coordinates of
-    the singular points. 
-    </td>
-  
-</tr><tr>
-    <td><code>k-variable</code></td><td><code>ystddev</code></td><td></td><td>
-      Name of the k-variable for the standard deviation of the <code>y</code>-coordinates of
-    the singular points. 
-    </td>
-  
-</tr><tr>
-    <td><code>k-variable</code></td><td><code>zstddev</code></td><td></td><td>
-      Name of the k-variable for the standard deviation of the <code>z</code>-coordinates of
-    the singular points. 
-    </td>
-  
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
 </tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>v0</code> </td>
+  <td> - </td>
+  <td> <code>0</code> </td>
+  <td> <code>vmax-1</code> </td>
+  <td> The layer in which the first dynamic field is located. </td>
+</tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>v1</code> </td>
+  <td> - </td>
+  <td> <code>0</code> </td>
+  <td> <code>vmax-1</code> </td>
+  <td> The layer in which the second dynamic field is located. </td>
+</tr>
+
+<tr>
+  <td> <code>real</code> </td>
+  <td> <code>c0</code> </td>
+  <td> - </td>
+  <td> - </td>
+  <td> - </td>
+  <td> The constant defining the first dynamic field's isoline. </td>
+</tr>
+
+<tr>
+  <td> <code>real</code> </td>
+  <td> <code>c1</code> </td>
+  <td> - </td>
+  <td> - </td>
+  <td> - </td>
+  <td> The constant defining the second dynamic field's isoline. </td>
+</tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>precise_orientation</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>0</code> </td>
+  <td>
+    If nonzero, the orientation of the tips is calculated using a
+    higher-order scheme, involving a 4x4 template.
+    <br />
+    Not available in
+    MPI because the thickness of the inter-domain "halo" slices is
+    restricted to one grid point.  
+</tr>
+
+<tr>
+  <td> <code>str</code> </td>
+  <td> <code>pointsep</code> </td>
+  <td> <code>"&nbsp"</code> </td>
+  <td> </td>
+  <td> </td>
+  <td> In the file output, separator between records of individual points </td>
+</tr>
+
+<tr>
+  <td> <code>str</code> </td>
+  <td> <code>sectionsep</code> </td>
+  <td> <code>"\t"</code> </td>
+  <td> </td>
+  <td> </td>
+  <td> In the file output, separator between outputs from different z-sections, if any </td>
+</tr>
+
+<tr>
+  <td> <code>str</code> </td>
+  <td> <code>recordsepsep</code> </td>
+  <td> <code>"\n"</code> </td>
+  <td> </td>
+  <td> </td>
+  <td> In the file output, separator between outputs from different calls of the device, done at different times. </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>everypoint</code></td>
+  <td> <code>0</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td> In the file output, time <code>t</code> value will precede coordinates of every found singularity point.
+    In MPI, this parameter must be equal to <code>1</code>.
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>everysection</code></td>
+  <td> <code>0</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td> In the file output, time <code>t</code> value will precede the output from every z-section.
+    In MPI, this parameter must be equal to <code>0</code>.
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>everyrecord</code></td>
+  <td> <code>1</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td>
+    In the file output, time <code>t</code> value will precede
+    the output from every call of the device.
+    In MPI, this parameter must be equal to <code>0</code>.
+    <br />
+    <strong>NB</strong> Exactly one of
+    <code>everypoint,everysection,everyrecord</code> must be 1, the
+    others must be 0. 
+  </td>
+</tr>
+
+<tr>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
+  <td><code>Npoints</code></td>
+  <td> <code>""</code> </td>
+  <td> </td>
+  <td> </td>
+  <td>
+    Name of the k-variable for the number of singular points.
+    <code>Npoints=""</code> means this facility is not used. </td>  
+</tr>
+
+<tr>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
+  <td><code>xmean</code></td>
+  <td> <code>""</code> </td>
+  <td> </td>
+  <td> </td>
+  <td>
+    Name of the k-variable for the mean <code>x</code>-coordinates of the singular points.
+    <code>xmean=""</code> means this facility is not used. </td>  
+  </td>  
+</tr>
+
+<tr>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
+  <td><code>ymean</code></td>
+  <td> <code>""</code> </td>
+  <td> </td>
+  <td> </td>
+  <td>
+    Name of the k-variable for the mean <code>y</code>-coordinates of the singular points.
+    <code>ymean=""</code> means this facility is not used. </td>  
+  </td>  
+</tr>
+
+<tr>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
+  <td><code>zmean</code></td>
+  <td> <code>""</code> </td>
+  <td> </td>
+  <td> </td>
+  <td>
+    Name of the k-variable for the mean <code>z</code>-coordinates of the singular points.
+    <code>zmean=""</code> means this facility is not used. </td>  
+  </td>  
+</tr>
+
+<tr>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
+  <td><code>xstddev</code></td>
+  <td> <code>""</code> </td>
+  <td> </td>
+  <td> </td>
+  <td>
+    Name of the k-variable for the standard deviation of the <code>x</code>-coordinates of the singular points.
+    <code>xstddev=""</code> means this facility is not used. </td>  
+  </td>  
+</tr>
+
+<tr>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
+  <td><code>ystddev</code></td>
+  <td> <code>""</code> </td>
+  <td> </td>
+  <td> </td>
+  <td>
+    Name of the k-variable for the standard deviation of the <code>y</code>-coordinates of the singular points.
+    <code>ystddev=""</code> means this facility is not used. </td>  
+  </td>  
+</tr>
+
+<tr>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
+  <td><code>zstddev</code></td>
+  <td> <code>""</code> </td>
+  <td> </td>
+  <td> </td>
+  <td>
+    Name of the k-variable for the standard deviation of the <code>z</code>-coordinates of the singular points.
+    <code>zstddev=""</code> means this facility is not used. </td>  
+  </td>  
+</tr>
+
+<tr>
+  <td><code>str</code></td>
+  <td><code>file</code></td>
+  <td> <code>""</code> </td>
+  <td> </td>
+  <td> </td>
+  <td>
+    Relative path to the output file that will contain the coordinates of the found singular points.
+    <code>file=""</code> means this facility is not used. </td>  
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>append</code></td>
+  <td> <code>1</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td> Should the file be appended to? </td>
+</tr>
+
 </table>
 
 <p> All k-variables must be of real type, and are optional
@@ -12298,11 +12396,12 @@ beatbox/data/tests/fhn3side.bbs
 <h2 class="numbered">stop</h2>
 <h3>Overview</h3>
 <p>
-Stops the simulation run.
+This device stops the simulation run whenever it is called. 
 </p>
 <h3>Parameters</h3>
 <p>
-None.
+This device is is spaceless and does not have any device-specific parameters.
+It only uses the standard parameter <code>when</code>.
 </p>
 <h3>Typical Syntax</h3>
 The typical syntax of <code>stop</code> device is as follows. Assuming 
@@ -12317,17 +12416,17 @@ in all the example bbs scripts.
 <!-- ========================= -->
 <h2 class="numbered">update</h2>
 
-This device updates the VGA run time visualisation window.  Typically this is
-expected to be called in the end of each lap in which any VGA graphics output
-was done.
+This device ``updates'' the VGA run time visualisation window, i.e. performs
+<code>XCopyArea</code> from the working pixmap buffer to the X window and then
+<code>XFlush</code> to make the X window current.  Typically this is expected to be
+called in the end of each lap in which any VGA graphics output was done.
 
 <h3>Parameters</h3>
-<table border="1">
 
-  <p>
-  This device does not have any device-specific parameters. It only uses the
-  standard <code>when</code> parameter.
-  </p>
+<p>
+This device is is spaceless and does not have any device-specific parameters.
+It only uses the standard parameter <code>when</code>.
+</p>
 
 <h3>Typical Syntax</h3>
 
@@ -12341,6 +12440,14 @@ update when=often; // run time graphics are updated when often is true.
 beatbox/data/sequential/pd/scripts_crn0.bbs
 beatbox/data/sequential/pd/scripts_crn1.bbs
 </pre>
+
+
+<p>
+##########################
+revised this far
+##########################
+</p>
+
 
 <!-- ========================= -->
 <h2 class="numbered">vtkout2</h2>
