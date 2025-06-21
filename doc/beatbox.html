@@ -1237,7 +1237,7 @@ and <code>b</code> are equal.
 and <code>b</code> are not equal.
 </li>
 <li>
-<code>mod(a, b)</code> - A synonym for </code>fmod</code>.
+<code>mod(a, b)</code> - A synonym for >>fmod>>.
 </li>
 <li>
 <code>max(a, b)</code> - Returns the greater of <code>a</code>
@@ -1780,11 +1780,12 @@ shown in Listing <a href="#G.5">G.5</a>.
 
 <p>
 Some devices may request parameters formatted and understood not as
-literal values, but as a codestring,  <novel>a varlink, a codelink</novel> or a block.
+literal values, but as a <code>codestring</code>,  <novel>a <code>varlink</code>, a <code>codelink</code></novel> or a <code>block</code>.
 </p> 
 
 <ul>
-  <li> A <a name="codestring"><em>codestring</em></a>
+  <li>
+  A <a name="codestring"><em>codestring</em></a>
   is provided in the same way as a string
   parameter, with the exception that the string must be a valid
   Beatbox script expression. Equivalently, it is provided in the same
@@ -1795,7 +1796,8 @@ literal values, but as a codestring,  <novel>a varlink, a codelink</novel> or a 
   expression as the simulation is running, rather than reduce it to a
   literal value.  </li>
 
-  <li class="novel"> A <a name="varlink"><em>varlink</em></a>
+  <li class="novel">
+  A <a name="varlink"><em>varlink</em></a>
   is like a codestring, except it must be just
   a single global k-variable.  </li>
 
@@ -1814,7 +1816,7 @@ literal values, but as a codestring,  <novel>a varlink, a codelink</novel> or a 
   choice to use either of the syntaxes, and have correspondingly
   different behaviour.  <br />
   
-  NB <code>codelink</code> is a new feature, and is so far
+  NB <code>  <a href="#codelink">codelink</a>  </code> is a new feature, and is so far
   implemented only in some parameters in some devices. The plans are
   to extend this feature to all device parameters where it would make
   sense. Meanwhile, you can find whether a particular parameter can be
@@ -1850,7 +1852,7 @@ literal values, but as a codestring,  <novel>a varlink, a codelink</novel> or a 
 </ul>
 
 <p>
-Example uses of a <a href="#codelink"><code>codelink</code></a> and a <a href="#block"><code>block</code></a> are shown below. 
+Example uses of a <code>  <a href="#codelink">codelink</a>  </code> and a  <a href="#block">block</a>  are shown below. 
 </p>
 
 <p>
@@ -1978,7 +1980,7 @@ for <code>name</code> is the device name.
 The device's "condition". The value given for <code>when</code> must be the name
 of a real k-variable.  The device will be run only on timesteps (loops of the
 device ring) when the value of this variable is nonzero.  Think of this
-parameter as a <a href="#codestring"><code>codestring</code></a>, where the code is restricted to just one real
+parameter as a  <a href="#codestring">codestring</a> , where the code is restricted to just one real
 variable; allowing here a generic k-expression would be more consistent but
 also more expensive. In particular, a literal value (i.e. a numerical
 constant) cannot be used for this parameter.  For devices that should run on
@@ -2122,7 +2124,7 @@ default.
 
 
 <tr class="novel">
-<td class="left"><code>real <a href="#codestring"><code>codestring</code></a></code></td>
+<td class="left"><code>real  <a href="#codestring">codestring</a> </code></td>
 <td class="left"><code>where</code></td>
 <td class="left"><code>-</code></td>
 <td class="left">n/a</td>
@@ -2146,7 +2148,7 @@ default.
 </tr>
 
 <tr class="novel">
-<td class="left"><code>real <a href="#varlink"<code>varlink</code></a></code></td>
+<td class="left"><code>real  <a href="#varlink">varlink</a> </code></td>
 <td class="left"><code>relist</code></td>
 <td class="left"><code>never</code></td>
 <td class="left">n/a</td>
@@ -2516,7 +2518,7 @@ integer enumerators, hence the format string should be one accepting
 integer values, e.g. <code>%d</code>. In the device descriptions in
 this manual, the parameters defining the file masks used with this
 method, are designated as type
-<a name="sequence"><em>sequence</em></a>. Such <a href="#sequence"><code>sequence</code></a>
+<a name="sequence"><em>sequence</em></a>. Such  <a href="#sequence">sequence</a> 
 parameters by themselves are character strings, but they
 are implicitly accompanied by the
 following parameters optional with fixed names:
@@ -2916,12 +2918,12 @@ uses of BeatBox and can be used as templates for your specific
 tasks. These scripts are located under:
 </p>
 <ul>
-<li><code><a href="../data/scripts/sequential/">data/scripts/sequential</a></code>
+<li><a href="../data/scripts/sequential/">data/scripts/sequential</a>
 for scripts illustrating the fundamentals, which can or should be run
 in sequential mode, and
 </li>
 <li>
-<code><a href="../data/scripts/parallel_Hector">data/scripts/parallel_Hector</a></code>
+<a href="../data/scripts/parallel_Hector">data/scripts/parallel_Hector</a>
 for more specialized script illustrating parallel work.
 </li>
 </ul>
@@ -5308,7 +5310,7 @@ the name chosen by the analogy with adi2d and adi3d.
 <h3>Parameters</h3>
 
 <p> This is a "rectangular" device; Neumann conditions are assumed at the
-boundaries of its space in the <code>x</code>-direction. Further parameters are: </code>
+boundaries of its space in the <code>x</code>-direction. Further parameters are: >>
 
 <table border="1">
 <tr>
@@ -5354,7 +5356,7 @@ boundaries of its space in the <code>x</code>-direction. Further parameters are:
   <td><code>real</code></td>
   <td><code>hx</code>
   <td>-</td></td>
-  <td><code>0<sup>+</sup></code></td>
+  <td><code>0<sup>+</sup</code>></td>
   <td>-</td>
   <td> Space step.</td>      
 </tr>
@@ -5454,7 +5456,7 @@ boundaries of its space. Further parameter are: </p>
   <td><code>real</code></td>
   <td><code>hx</code>
   <td>-</td></td>
-  <td><code>0<sup>+</sup></code></td>
+  <td><code>0<sup>+</sup</code>></td>
   <td>-</td>
   <td> Space step</td>      
 </tr>
@@ -5647,7 +5649,7 @@ given location.
   <td><code>real</code></td>
   <td><code>ht</code></td>
   <td>-</td>
-  <td><code>0<sup>+</sup></code></td>
+  <td><code>0<sup>+</sup</code>></td>
   <td><code>-</code></td>
   <td> time step</td>
 </tr>
@@ -5746,7 +5748,7 @@ below the table of parameters.
   <td><code>real</code></td>
   <td><code>hx</code></td>
   <td>-</td>
-  <td><code>0<sup>+</sup></code></td>
+  <td><code>0<sup>+</sup</code>></td>
   <td>-</td>
   <td>
     Space step
@@ -5818,7 +5820,7 @@ below the table of parameters.
 </tr>
 
 <tr>
-  <td><code>real <a href="#varlink"<code>varlink</code></a></code></td>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
   <td><code>reweight</code></td>
   <td><code>never</code></td>
   <td>-</td>
@@ -6426,9 +6428,9 @@ solution at a given point should have a given value.
 <tr>
   <td><code>int</code></td>
   <td><code>upper_level</td>
-  <td></code>-1</td>
-  <td></code>-1</td>
-  <td></code>xmax</td>
+  <td</code</code>-1</td>
+  <td>>>-1</td>
+  <td>>>xmax</td>
   <td>
   The maximal number of lavels in multigrid.
   The original (basic) grid is at level 0, and each next level has the
@@ -7100,7 +7102,7 @@ description of the parameters that follows, and
 </tr>
   
 <tr>
-<td><code>real <a href="#varlink"<code>varlink</code></a></code></td>
+<td><code>real  <a href="#varlink">varlink</a> </code></td>
 <td><code>xtip</code></td>
 <td><code>""</code></td>
 <td>-</td>
@@ -7110,7 +7112,7 @@ description of the parameters that follows, and
 </tr>
   
 <tr>
-<td><code>real <a href="#varlink"<code>varlink</code></a></code></td>
+<td><code>real  <a href="#varlink">varlink</a> </code></td>
 <td><code>ytip</code></td>
 <td><code>""</code></td>
 <td>-</td>
@@ -7144,7 +7146,7 @@ printing a floating-point value, e.g. "%.0f" which can be used to enumerate the
 </tr>
 
 <tr>
-<td><code>real <a href="#codestring"><code>codestring</code></a></code></td>
+<td><code>real  <a href="#codestring">codestring</a> </code></td>
 <td><code>filtercode</code></td>
 <td><code>"t"</code></td>
 <td>-</td>
@@ -7211,7 +7213,7 @@ by <code>filter</code> to produce the actuall shell command. </td>
   
 
 <tr>
-<td><code>real <a href="#codestring"><code>codestring</code></a></code></td>
+<td><code>real  <a href="#codestring">codestring</a> </code></td>
 <td><code>titlecode</code></td>
 <td><code>"t"</code></td>
 <td>-</td>
@@ -8519,7 +8521,7 @@ More explanation
 </tr>
 
 <tr>
-<td><code>real <a href="#codestring"><code>codestring</code></a></code></td>
+<td><code>real  <a href="#codestring">codestring</a> </code></td>
 <td><code>imagescode</code></td>
 <td><code>"t"</code></td>
 <td>-</td>
@@ -8538,7 +8540,7 @@ More explanation
 </tr>
 
 <tr>
-<td><code>real <a href="#codestring"><code>codestring</code></a></code></td>
+<td><code>real  <a href="#codestring">codestring</a> </code></td>
 <td><code>titlecode</code></td>
 <td><code>"t"</code></td>
 <td>-</td>
@@ -8833,7 +8835,7 @@ new file every time it is run, enumerated in a prescribed way.
 </tr>
   
 <tr>
-  <td><code><a href="#codestring"><code>codestring</code></a></code></td>
+  <td><code> <a href="#codestring">codestring</a> </code></td>
   <td><code>code</code></td>
   <td><code>"t"</code></td>
   <td>-</td>
@@ -9030,7 +9032,7 @@ parameters
 </tr>
 
 <tr>
-  <td><code>real <a href="#codestring"><code>codestring</code></a></code></td>
+  <td><code>real  <a href="#codestring">codestring</a> </code></td>
   <td><code>code</code></td>
   <td>"t"</td>
   <td>-</td>
@@ -9309,7 +9311,7 @@ predefined k-functions <code>u(.,.,.,.)</code> and/or
       to enumerate the output files. </td>
   </tr>
   <tr>
-    <td><code><a href="#codestring"><code>codestring</code></a></code></td>
+    <td><code> <a href="#codestring">codestring</a> </code></td>
     <td><code>filtercode</code></td>
     <td><code>t</code></td>
     <td></td>
@@ -9570,7 +9572,7 @@ in its
   </tr>
 
   <tr>
-    <td><code><a href="#codestring"><code>codestring</code></a></code></td>
+    <td><code> <a href="#codestring">codestring</a> </code></td>
     <td><code>titlecode</code></td>
     <td><code>"t"</code></td>
     <td>-</td>
@@ -9747,7 +9749,7 @@ in its
   </tr>
 
   <tr>
-    <td><code><a href="#codestring"><code>codestring</code></a></code></td>
+    <td><code> <a href="#codestring">codestring</a> </code></td>
     <td><code>filtercode</code></td>
     <td><code>"t"</code></td>
     <td>-</td>
@@ -10172,7 +10174,7 @@ The device is spaceless, as it works only with global k-variables.
   </tr>
   
   <tr>
-    <td><code><a href="#codestring"><code>codestring</code></a></code></td>
+    <td><code> <a href="#codestring">codestring</a> </code></td>
     <td><code>headcode</code></td>
     <td>""</td>
     <td>-</td>
@@ -10696,7 +10698,7 @@ are unused by this device.
 </tr>
 
 <tr>
-  <td><code>real <a href="#varlink"<code>varlink</code></a></code></td>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
   <td><code>result</code></td>
   <td>-</td>
   <td>-</td>
@@ -10706,7 +10708,7 @@ are unused by this device.
 </tr>
 
 <tr>
-  <td><code>real <a href="#varlink"<code>varlink</code></a></code></td>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
   <td><code>timestep</code></td>
   <td>-</td>
   <td>-</td>
@@ -10771,8 +10773,8 @@ This device is rectangular. Further parameters are:
 </tr>
 
 <tr>
-  <td><a href="#sequence"><code>sequence</code></a></td>
-  <td>file</td>
+  <td> <a href="#sequence">sequence</a> </td>
+  <td><code>file</code></td>
   <td>-</td>
   <td>-</td>
   <td>-</td>
@@ -10780,12 +10782,12 @@ This device is rectangular. Further parameters are:
 </tr>
 
 <tr>
-  <td><code>int <a href="#codestring"><code>codestring</code></a></code></td>
+  <td><code>int  <a href="#codestring">codestring</a> </code></td>
   <td><code>filecode</code></td>
   <td>""</td>
   <td>-</td>
   <td>-</td>
-  <td>Integer-valued k-expression used in the format specifier</td>
+  <td>Integer-valued k-expression used in the filename format specifier</td>
 </tr>
 
 <tr>
@@ -10925,8 +10927,8 @@ This device is rectangular. Further parameters are:
 </tr>
 
 <tr>
-  <td><a href="#sequence"><code>sequence</code></a></td>
-  <td>file</td>
+  <td> <a href="#sequence">sequence</a> </td>
+  <td><code>file</code></td>
   <td>-</td>
   <td>-</td>
   <td>-</td>
@@ -11130,7 +11132,7 @@ This device is rectangular. Further parameters are:
 
 
 <tr>
-  <td><a href="#sequence"><code>sequence</code></a></td>
+  <td> <a href="#sequence">sequence</a> </td>
   <td><code>filesequence</code></td>
   <td><code>""</code></td>
   <td>-</td>
@@ -11248,7 +11250,7 @@ This device is rectangular. Further parameters are:
 
 <tr>
   <td><code>str</code></td>
-  <td><code>recordsep</code>
+  <td><code>recordsep</code></td>
   <td><code>"\n\n"</code></td>  
   <td>-</td>
   <td>-</td>
@@ -11267,6 +11269,87 @@ All example scripts can be found in data/scripts of the package distribution. Ex
 <pre>
 beatbox/data/scripts/sequential/fhn0.bbs
 </pre>
+
+<!-- ========================= -->
+<novel>
+<h2 class="numbered">regular</h2>
+
+<p>
+ This device implements a very special (narrow) but important function for
+ which <code>k_func</code> is often used: it raises a certain k-variable flag at a regular grid of time
+ steps, which can be used as a <code>when</code> parameter controlling work of
+ some devices. Whereas <code>k_func</code> is more universal and versatile,
+ execution of k-codes is relatively expensive and even very simple
+ <code>k_func</code> programs can take considerably fraction of time when
+ running in 0D, i.e. "single cell", aka "ODE mode" (<code>xmax=1, ymax=1,
+ zmax=1</code>). 
+</p>
+
+<p>
+The device is spaceless, as it works only with global k-variables.
+</p>
+
+<table border="1">
+<tr>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>t0</code></td>
+  <td><code>0</code></td>
+  <td><code>0</code></td>
+  <td>-</td>
+  <td>Earliest time step</td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>dt</code></td>
+  <td><code>1</code></td>
+  <td><code>1</code></td>
+  <td>-</td>
+  <td>Interval in time stepts</td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>t1</code></td>
+  <td><code>inf</code></td>
+  <td><code>t0</code></td>
+  <td>-</td>
+  <td>Latest time step</td>
+</tr>
+
+<tr>
+  <td><code>real  <a href="#varlink">varlink</a> </code></td>
+  <td><code>result</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>  
+  <td> When <code>t0 &le; t &le; t1</code>, and <code>(t-t0)</code> is divisible by
+  <code>dt</code>, the global real k-variable is assigned the value of <code>1</code>,
+  otherwise it is assigne the value of <code>0</code>.    
+  </td>
+</tr>
+
+<tr>
+  <td><code>str</code></td>
+  <td><code>debug</code></td>
+  <td>""</td>
+  <td>-</td>
+  <td>-</td>
+  <td>Relative path to output file for debugging purposes. If
+  <code>stdout</code>, will print to screen of the parent shell.
+  </td>
+</tr>
+</table>
+ </novel>
 
 <!-- ========================= -->
 <h2 class="numbered">reduce</h2>
@@ -11312,21 +11395,21 @@ This device is rectangular. Further parameters are:
 </tr>
 
 <tr>
-  <td> <a href="#varlink"<code>varlink</code></a> </td>
-  <td><code>result</code></td>
-  <td>-</td>
-  <td>-</td>
-  <td>-</td>
-  <td>Name of the k-variable into which the result should be stored.</td>
-</tr>
-
-<tr>
   <td><code>str</code></td>
   <td><code>operation</code></td>
   <td>-</td>
   <td>-</td>
   <td>-</td>
   <td> Name of the operation to perform. Accepted values are “sum”, “product”, “min” and “max”. </td>
+</tr>
+
+<tr>
+  <td> real  <a href="#varlink">varlink</a>  </td>
+  <td><code>result</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td>Name of the k-variable into which the result should be stored.</td>
 </tr>
 
 <tr>
@@ -12826,12 +12909,12 @@ Rush-Larsen method.
 <p>
 Experimental module for testing and developement of matrix Rush-Larsen
 method into rushlarsen device. The model is based on the
-<i><code>hh52</code></i> model. The INa and IK current is  substituted by equivalent Markov
+<i><<hh52</code></i> model. The INa and IK current is  substituted by equivalent Markov
 chain definition. 
 </p>
 
 <p>
-An example of a script using rushlarsen module with <code>hh52m</code> cellular
+An example of a script using rushlarsen module with <<hh52m</code> cellular
 model is in:
 </p>
 
