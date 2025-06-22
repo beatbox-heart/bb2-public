@@ -79,7 +79,7 @@ solver for the bidomain models and some semi-implicit solvers are now
 A special feature of Beatbox is its flexibility in setting various
 experimental protocols, without the need to recompile the package.  A
 simulation is set up by constructing an input script that spatial
-model (1D cable, 2D rectangel, 3D box, or 2D/3D geometry) details, and "devices", which perform
+model (0D "single cell"/ODE, 1D cable, 2D rectangle, 3D box, or 2D/3D geometry) details, and "devices", which perform
 computations, input/output, and control functions. The simulation
 script is typically called <code>filename.bbs</code>, where the
 conventional extension <code>bbs</code> stands for "beatbox script",
@@ -2171,12 +2171,16 @@ presumed <code>0</code>.</p>
 <p><sup>&#9314;</sup>Only in 3D, i.e. <code>zmax &ge; 3</code>; otherwise, this is not used and
 presumed <code>0</code>.</p>
 
-<p> Some devices are "<strong>spaceless</strong>", i.e. not associated with
+<p> Some devices are
+<a name="spaceless"> <em>spaceless</em></a>,
+i.e. not associated with
 any particular part of the grid, or, on the contrary, must work with the whole
 grid. If any space parameters are specified for such a device, they are
 ignored and a warning message is output.   </p>
 
-<p> Some devices arre "<strong>rectangular</strong>", i.e. restriction with the
+<p> Some devices are
+<a name="rectangular"> <em>rectangular</em></a>,
+i.e. restriction with the
 <code>where</code> parameter is not allowed. If this parameter is specified
 for such a device, it is ignored and a warning message is output. Note that
 a rectangular device may well operate with arbitrary geometries; this only means, that
@@ -5313,7 +5317,7 @@ the name chosen by the analogy with adi2d and adi3d.
 
 <h3>Parameters</h3>
 
-<p> This is a "rectangular" device; Neumann conditions are assumed at the
+<p> This is a  <a href="#rectangular">rectangular</a>  device; Neumann conditions are assumed at the
 boundaries of its space in the <code>x</code>-direction. Further parameters are: >>
 
 <table border="1">
@@ -5418,7 +5422,7 @@ al. book for implicit solution of heat equation (eqn. 7.56 on page
 
 <h3>Parameters</h3>
 
-<p> This is a "rectangular" device; Neumann conditions are assumed at the
+<p> This is a  <a href="#rectangular">rectangular</a>  device; Neumann conditions are assumed at the
 boundaries of its space. Further parameter are: </p>
 
 <table border="1">
@@ -5533,7 +5537,7 @@ on the command line.
 <h3>Overview</h3>
 <p>
 Prints the current integer timestep to <code>stdout</code> and VGA graphics
-window. It is spaceless, does not have any device-specific parameters, and is fully
+window. It is  <a href="#spaceless">spaceless</a> , does not have any device-specific parameters, and is fully
 defined by the standard device parameter <code>when</code> and
 standard window parameters <code>row0</code>, <code>col0</code> and
 <code>color</code>. In this case, <code>row0</code> and <code>col0</code> are
@@ -5576,7 +5580,7 @@ facilitate a branching point in long simulations.
 
 <h3>Parameters</h3>
 
-<p> Device is spaceless as it operates with the whole grid. Other parameter
+<p> Device is  <a href="#spaceless">spaceless</a>  as it operates with the whole grid. Other parameter
 are: </p>
 
 <table border="1">
@@ -6185,7 +6189,7 @@ binary file.
 
 <h3>Parameters</h3>
 
-<p>This device is rectangular. Further parameters are: </p>
+<p>This device is  <a href="#rectangular">rectangular</a> . Further parameters are: </p>
 
 <table border="1">
 <tr>
@@ -6798,7 +6802,7 @@ description of the parameters that follows, and
 
 <h3>Parameters</h3>
 
-<p>This device is rectangular. Further parameters are: </p>
+<p>This device is  <a href="#rectangular">rectangular</a> . Further parameters are: </p>
 
 <table border="1">
 <thead>
@@ -7328,7 +7332,7 @@ warning messages.
 
 <h3>Parameters</h3>
 
-<p>This device is rectangular. Further parameters are: </p>
+<p>This device is  <a href="#rectangular">rectangular</a> . Further parameters are: </p>
 
 <table border="1">
 <thead>
@@ -7539,7 +7543,7 @@ More explanation
 
 <h3>Parameters</h3>
 
-<p>This device is rectangular. Further parameters are: </p>
+<p>This device is  <a href="#rectangular">rectangular</a> . Further parameters are: </p>
 
 <table border="1">
 <thead>
@@ -8750,7 +8754,7 @@ Computation is done using second-order accurate central differences.
 
 <h3>Parameters</h3>
 
-<p>This device is rectangular. Further parameters are: </p>
+<p>This device is  <a href="#rectangular">rectangular</a> . Further parameters are: </p>
 
 <table border="1">
 <thead>
@@ -8819,7 +8823,7 @@ new file every time it is run, enumerated in a prescribed way.
 
 <h3>Parameters</h3>
 
-<p>This device is rectangular. Further parameters are: </p>
+<p>This device is  <a href="#rectangular">rectangular</a> . Further parameters are: </p>
 
 <table border="1">
 <tr>
@@ -9017,7 +9021,7 @@ the displayed value to be defined by an arbitrary k-expression. </p>
 <h3>Parameters</h3>
 
 <p>
-Same as <code>clock</code>, this device is spaceless, and takes window parameters
+Same as <code>clock</code>, this device is  <a href="#spaceless">spaceless</a> , and takes window parameters
 <code>row0</code>, <code>col0</code> as "character" coordinates of the
 beginning of the output string in the common VGA window, and
 <code>color</code> for its colours. In addition, it takes the following
@@ -9088,7 +9092,7 @@ at each call.
 
 <h3>Parameters</h3>
 
-<p> This device is spaceless. In addition to the standard VGA window parameters, it takes:</p>
+<p> This device is  <a href="#spaceless">spaceless</a> . In addition to the standard VGA window parameters, it takes:</p>
 
 <table border="1">
 <tr>
@@ -9294,7 +9298,7 @@ direct linear mapping of the grid values. Available only in sequential mode.
 
 <h3>Parameters</h3>
 
-<p> The device is technically spaceless in that it does not take space
+<p> The device is technically  <a href="#spaceless">spaceless</a>  in that it does not take space
 parameters, --- although it can (and normally does) use grid data, via
 predefined k-functions <code>u(.,.,.,.)</code> and/or
 <code>geom(.,.,.,.)</code> in its <code>pgm</code> codeblock.</p>
@@ -9406,7 +9410,7 @@ field. Available only in sequential mode.</p>
 <h3>Parameters</h3>
 
 <p>
-<p> The device is technically spaceless in that it does not take space
+<p> The device is technically  <a href="#spaceless">spaceless</a>  in that it does not take space
 parameters, --- although it can (and normally does) use grid data, via
 predefined k-functions <code>u(.,.,.,.)</code> and/or <code>geom(.,.,.,.)</code>
 in its
@@ -9555,7 +9559,7 @@ compatibility with legacy scripts.</p>
 
 <h3>Parameters</h3>
 
-<p> The device is technically spaceless in that it does not take space
+<p> The device is technically  <a href="#spaceless">spaceless</a>  in that it does not take space
 parameters, --- although it can (and normally does) use grid data, via
 predefined k-functions <code>u(.,.,.,.)</code> and/or <code>geom(.,.,.,.)</code>
 in its
@@ -9801,7 +9805,7 @@ device plots a whole curve at each call. Available only in sequential mode.
 
 <h3>Parameters</h3>
 
-<p> This device is spaceless. In addition to the standard VGA window parameters, it takes:</p>
+<p> This device is  <a href="#spaceless">spaceless</a> . In addition to the standard VGA window parameters, it takes:</p>
 
 <table border="1">
 <tr>
@@ -10000,7 +10004,7 @@ crossing in either direction.
 <h3>Parameters</h3>
 
 <p>
-The device is spaceless, as it works only with global k-variables.
+The device is  <a href="#spaceless">spaceless</a> , as it works only with global k-variables.
 <!-- Since the <code>k_poincare</code> device works with a k-variable, it -->
 <!-- does not apply to any subset of the dynamic grid, so must be run -->
 <!-- with <code>nowhere=1</code>. -->
@@ -10128,7 +10132,7 @@ beginning of the file and/or at the beginning of each line may be specified. </p
 <h3>Parameters</h3>
 
 <p>
-The device is spaceless, as it works only with global k-variables.
+The device is  <a href="#spaceless">spaceless</a> , as it works only with global k-variables.
 </p>
 
 <table border="1">
@@ -10295,7 +10299,7 @@ size is an integer multiple of the data size to be read.
 
 <h3>Parameters</h3>
 
-<p>This device is rectangular. Further parameters are: </p>
+<p>This device is  <a href="#rectangular">rectangular</a> . Further parameters are: </p>
 
 <table border="1">
 <tr>
@@ -10444,7 +10448,7 @@ integers representable by the chosen type.
 
 <h3>Parameters</h3>
 
-This device is rectangular. Further parameters are:
+This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
 
 <table border="1">
 <tr>
@@ -10772,7 +10776,7 @@ Makes little sense in actual simulations, but can be used e.g. for post-processi
 
 <h3>Parameters</h3>
 
-This device is rectangular. Further parameters are:
+This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
 
 <table border="1">
 <tr>
@@ -10926,7 +10930,7 @@ specified in the PPM header and the file size.
 
 <h3>Parameters</h3>
 
-This device is rectangular. Further parameters are:
+This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
 
 <table border="1">
 <tr>
@@ -11113,7 +11117,7 @@ runs of the record device.
 
 <h3>Parameters</h3>
 
-This device is rectangular. Further parameters are:
+This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
 
 <table border="1">
 <tr>
@@ -11299,7 +11303,7 @@ beatbox/data/scripts/sequential/fhn0.bbs
 </p>
 
 <p>
-The device is spaceless, as it works only with global k-variables.
+The device is  <a href="#spaceless">spaceless</a> , as it works only with global k-variables.
 </p>
 
 <table border="1">
@@ -11377,7 +11381,7 @@ specified k-variable.
 
 <h3>Parameters</h3>
 
-This device is rectangular. Further parameters are:
+This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
 
 <table border="1">
 <tr>
@@ -12401,7 +12405,7 @@ This device stops the simulation run whenever it is called.
 </p>
 <h3>Parameters</h3>
 <p>
-This device is is spaceless and does not have any device-specific parameters.
+This device is is  <a href="#spaceless">spaceless</a>  and does not have any device-specific parameters.
 It only uses the standard parameter <code>when</code>.
 </p>
 <h3>Typical Syntax</h3>
@@ -12425,7 +12429,7 @@ called in the end of each lap in which any VGA graphics output was done.
 <h3>Parameters</h3>
 
 <p>
-This device is is spaceless and does not have any device-specific parameters.
+This device is is  <a href="#spaceless">spaceless</a>  and does not have any device-specific parameters.
 It only uses the standard parameter <code>when</code>.
 </p>
 
@@ -12458,7 +12462,7 @@ the difference is only the ASCII header.
 
 <h3>Parameters</h3>
 
-This device is rectangular. Further parameters are:
+This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
 
 <table border="1">
 <tr>
