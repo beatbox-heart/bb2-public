@@ -2546,7 +2546,7 @@ following parameters optional with fixed names:
   as "existing").</li>
 </ul>
 This method is used e.g. by devices
-<!-- <code>byteout</code>, -->
+<a href="#byteout"><code>byteout</code></a>,
 <a href="#ppmin"><code>ppmin</code></a>,
 <a href="#ppmout"><code>ppmout</code></a>,
 <a href="#record"><code>record</code></a>,
@@ -5167,6 +5167,22 @@ Content to be added.
 
 <h1 class="numbered">Beatbox Device Reference</h1>
 
+
+<!-- TODO: -->
+
+<!-- D(ecg) -->
+<!-- D(neum2d) -->
+<!-- D(neum3d) -->
+<!-- D(pw_mult) /* -> l_prod */ -->
+
+<!-- S(adi2d_composite) -->
+<!-- S(skrecord) -->
+<!-- S(torx) -->
+<!-- S(tory) -->
+<!-- S(torz) -->
+<!-- S(screen_dump) -->
+
+
 <!-- ======================== --> 
 <h2 class="numbered">activation</h2>
 <h3>Overview</h3>
@@ -5530,6 +5546,237 @@ you say in that directory:
 </pre>
 <p>
 on the command line. 
+
+
+<!-- ========================= -->
+<h2 class="numbered">bytein</h2>
+<h3>Overview</h3>
+
+<p>
+The "inverse" of <a href="#byteout"> <code>byteout</code> </a>: input a 4D subset of the grid from a file, assuming discretization 1 byte per real grid value. 
+</p>
+
+
+<h3>Parameters</h3>
+
+<table border="1">
+<tr>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td> <code>str</code> </td>
+  <td> <code>file</code> </td>
+  <td> - </td>
+  <td> - </td>
+  <td> - </td>
+  <td> Name of the input file, or "mask" if a series of input files is used. </td>
+</tr>
+
+<tr>
+  <td><code>int  <a href="#codestring">codestring</a> </code></td>
+  <td><code>filecode</code></td>
+  <td>""</td>
+  <td>-</td>
+  <td>-</td>
+  <td>Integer-valued k-expression used in the <code>file</code> understood as the format specifier</td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v0</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Lower bound of the layer range to be input. </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v1</code></td>
+  <td>-</td>
+  <td><code>v0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Upper bound of the layer range to be input. </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>u0</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td> Grid value to which <code>0</code> in the input maps.  </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>u1</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td> Grid value to which <code>255</code> in the input maps.  </td>
+</tr>
+
+<tr>
+  <td><code>str</code></td>
+  <td><code>debug</code></td>
+  <td><code>""</code></td>
+  <td> </td>
+  <td> </td>
+  <td> Name of the file to print debugging information to (if not <code>""</code>). </td>
+</tr>
+
+</table>
+
+<h3>Typical Syntax</h3>
+
+<p>
+The clock device is mainly used during simulations with run time VGA graphics.
+The typical syntax of <code>clock</code> device is as follows.
+The clock device is mainly used during run time graphics simulations.
+The typical syntax of <code>clock</code> device is as follows.
+</p>
+
+<pre>
+clock when=often color=WHITE row0=10 col0=20; 
+</pre>
+
+<h3>Instances of clock in Example Scripts</h3>
+<pre>
+beatbox/data/scripts/sequential/FitzHughNagumo_model/fhn0.bbs
+beatbox/data/scripts/sequential/FitzHughNagumo_model/fhn1.bbs
+beatbox/data/scripts/sequential/FitzHughNagumo_model/fhn2.bbs
+</pre>
+The inputs, outputs, and methods of running for fhn0-fhn2.bbs
+have been described in previous sections. 
+
+<!-- ========================= -->
+<h2 class="numbered">byteout</h2>
+<h3>Overview</h3>
+
+<p>
+Outputs a 4D subset of the grid into a file, after discretising to 1 byte per value.
+Economic compared to <code>dump</code>, but is practical only for "conceptual" models like FHN where all dynamic variables have similar scales,
+but not for "ionic" or other realistic models, where the range of the voltage variable (&sim;100) is vastly different from the range of
+gating variables (&sim;1) or intracellular Calcium concentration (&sim;10<sup>-3</sup>), since discretization here is done using the same range for all layers. 
+</p>
+
+
+<h3>Parameters</h3>
+
+<table border="1">
+<tr>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td>  <a href="#sequence">sequence</a>  </td>
+  <td> <code>file</code> </td>
+  <td> - </td>
+  <td> - </td>
+  <td> - </td>
+  <td> Format specifier for the sequence of files produced. </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>append</code></td>
+  <td><code>0</code></td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
+  <td> If <code>1</code>, new images are appended to the same <code>file</code>, otherwise to new files in the sequence. </td>
+</tr>
+
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v0</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Lower bound of the layer range to be output. </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v1</code></td>
+  <td>-</td>
+  <td><code>v0</code></td>
+  <td><code>vmax-1</code></td>
+  <td>Upper bound of the layer range to be output. </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>u0</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td> Grid value that maps to <code>0</code> in the output.  </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>u1</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td> Grid value that maps to <code>255</code> in the output.  </td>
+</tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>bgbyte</code> </td>
+  <td> <code>255</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>255</code> </td>
+  <td> Byte value representing the void: only allowed if <code>geometry</code> is on.  </td>
+</tr>
+
+<tr>
+  <td><code>str</code></td>
+  <td><code>debug</code></td>
+  <td><code>""</code></td>
+  <td> </td>
+  <td> </td>
+  <td> Name of the file to print debugging information to (if not <code>""</code>). </td>
+</tr>
+
+</table>
+
+<h3>Typical Syntax</h3>
+
+<p>
+The clock device is mainly used during simulations with run time VGA graphics.
+The typical syntax of <code>clock</code> device is as follows.
+The clock device is mainly used during run time graphics simulations.
+The typical syntax of <code>clock</code> device is as follows.
+</p>
+
+<pre>
+clock when=often color=WHITE row0=10 col0=20; 
+</pre>
+
+<h3>Instances of clock in Example Scripts</h3>
+<pre>
+beatbox/data/scripts/sequential/FitzHughNagumo_model/fhn0.bbs
+beatbox/data/scripts/sequential/FitzHughNagumo_model/fhn1.bbs
+beatbox/data/scripts/sequential/FitzHughNagumo_model/fhn2.bbs
+</pre>
+The inputs, outputs, and methods of running for fhn0-fhn2.bbs
+have been described in previous sections. 
+
 
 
 <!-- ========================= -->
@@ -9217,7 +9464,7 @@ part of the simulation run.
     <td><code>1</code></td>
     <td>
       If 1, then in addition to regular execution as defined by the
-    <code>when</code> parameter, this device instance will be executed at parse time,
+    <code>when</code> parameter, this device instance will be executed before the very first step (<code>t=0</code>), i.e. at parse time,
     right after its creation. This can be convenient for implementing initial
     conditions. 
     </td>
@@ -10644,6 +10891,68 @@ To run this script, use the following command:
 bb2s matout.bbs
 </pre>
 
+
+<!-- ========================= -->
+<h2 class="numbered">pause</h2>
+
+<h3>Overview</h3>
+
+<p>
+Hold on for a number of seconds or until user hits <code>Enter</code> in the parent shell from which <code>Beatbox</code> was launched. 
+Has no effect in parallel mode.
+</p>
+
+<h3>Parameters</h3>
+<p>
+The device is  <a href="#spaceless">spaceless</a> . 
+</p>
+
+<table border="1">
+  <tr>
+    <th>Type</th>
+    <th>Name</th>
+    <th>Default</th>
+    <th>Min</th>
+    <th>Max</th>
+    <th>Description</th>
+  </tr>
+
+  <tr>
+    <td><code>real</code></td>
+    <td><code>seconds</code></td>
+    <td><code>-1</code></td>
+    <td>-</td>
+    <td>-</td>
+    <td>Number of seconds to pause if <code>seconds &ge; 0</code>, or until the user hits <code>Enter</code>, if <code>seconds < 0 </code>. </td>
+  </tr>
+  
+  <tr>
+    <td><code>int</code></td>
+    <td><code>echo</code></td>
+    <td><code>0</code></td>
+    <td><code>0</code></td>
+    <td><code>1</code></td>
+    <td>If <code>1</code>, a message is printed to <code>stdout</code> when the pause starts. For <code>seconds < 0 </code>, the default is <code>echo=1</code>.
+  </tr>
+</table>
+
+<h3>Typical Syntax</h3>
+
+<pre>
+pause when=end seconds=3;
+</pre>
+
+<p>
+Here the execution pauses when k-variable <code>end</code> is nonzero, for 3 seconds, for instance, to let the user see the final
+state of the graphics windows before they are closed at the completion of the run. 
+</p>
+
+
+<h3>Instances of <code>pause</code> in Example Scripts</h3>
+<pre>
+beatbox/data/scripts/sequential/FitzHughNagumo_model/fhn1.bbs
+</pre>
+
 <!-- ========================= -->
 <h2 class="numbered">poincare</h2>
 
@@ -10759,7 +11068,7 @@ is increasing (slope sign 1).  Additionally, the value of the integer
 time counter <code>t</code> will be stored <code>tfront1</code>.
 </p>
 
-<h3>Instances of k_poincare in Example Scripts</h3>
+<h3>Instances of <code>poincare</code> in Example Scripts</h3>
 <pre>
 beatbox/data/scripts/sequential/FitzHughNagumo_model/fhn1.bbs
 </pre>
@@ -11952,6 +12261,99 @@ All example scripts can be found in data/scripts of the package distribution. Ex
 beatbox/data/scripts/sequential/fhn0.bbs
 beatbox/data/scripts/sequential/fhn1.bbs
 </pre>
+
+
+<!-- ========================= -->
+<h2 class="numbered">shell</h2>
+
+<h3>Overview</h3>
+
+<p>
+Executes an OS command in a subshell. 
+</p>
+
+<h3>Parameters</h3>
+
+<p>
+This device is  <a href="#spaceless">spaceless</a> . 
+</p>
+
+<table border="1">
+<tr>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>advance</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td>
+    If <code>1</code>, then in addition to regular execution as defined by the
+    <code>when</code> parameter, this device instance will be executed before the very first step (<code>t=0</code>), i.e. at parse time,
+    right after its creation.
+  </td>
+</tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>critical</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td> If <code>1</code>, then a failure in executing the shell command results in the abnormal termination of the run. </td>
+</tr>
+
+<tr>
+  <td> <code>str</code> </td>
+  <td> <code>cmd</code> </td>
+  <td> <code>""</code> </td>
+  <td> </td>
+  <td> </td>
+  <td> The shell command to be executed. May contain a <code>real</code> format specifier, e.g. <code>"%g"</code> or <code>"%f"</code>.  </td>
+</tr>
+
+<tr>
+  <td>  <a href="#codestring">codestring</a>  </td>
+  <td> <code>code</code> </td>
+  <td> <code>"t"</code> </td>
+  <td> </td>
+  <td> </td>
+  <td> A real-valued k-expression that will be printed through <code>cmd</code> as a format (if it contains the real format specifier) to form the
+  shell command to be exectued. </td>
+</tr>
+
+<tr>
+  <td> <code>str</code> </td>
+  <td> <code>echo</code> </td>
+  <td> <code>"beatbox> %s\n"</code> </td>
+  <td> </td>
+  <td> </td>
+  <td> If non-empty, this string will be used as a format through which the value of <code>cmd</code> at the moment of execution is printed to <code>stdout</code>.   </td>
+</tr>
+
+</table>
+
+<h3>Typical Syntax</h3>
+
+<pre>
+shell nowhere=1 when=never advance=1 cmd="mkdir [outdir]"; 
+</pre>
+<p> In this example, string macro <code>[outdir]</code> was defined above in the script, meaning a subdirectory that will be used for output.
+The shell command will be executed only at read-time ("<code>advance=1</code>") but not ever during run-time ("<code>when=never</code>"). 
+
+<h3>Instances of sample in Example Scripts</h3>
+The above example is from 
+<pre>
+beatbox/data/scripts/sequential/fhn2.bbs
+</pre>
+
 
 <!-- ========================= -->
 <h2 class="numbered">singz</h2>
