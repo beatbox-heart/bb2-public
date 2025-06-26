@@ -9,6 +9,7 @@
 *.o
 *.rec
 *.tar.gz
+*.tmp
 *.vtg
 .DS_Store
 .deps
