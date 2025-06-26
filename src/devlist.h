@@ -44,6 +44,7 @@ D(k_func)
 D(k_print)
 D(k_poincare)
 D(load)
+D(mpipaint)
 D(neum2d)
 D(neum3d)
 D(pause)
@@ -62,6 +63,8 @@ D(vtkout2)
 
 /**************** SEQUENTIAL ONLY ******************/
 
+S(adi1d)
+S(adi2d)
 S(adi3d)
 S(bytein)
 S(ezpaint)

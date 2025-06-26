@@ -109,6 +109,7 @@ common_sources = \
 	mouse.c  mouse_init.h  mouse_par.h  mouse_step.h  \
 	mousevent.c  mousevent_init.h  mousevent_par.h  mousevent_step.h  \
 	mpi_io_choice.h \
+	mpipaint.c mpipaint.h \
 	ms.c \
 	n62.c n62.h \
 	neum2d.c \
@@ -161,6 +162,8 @@ bb2p_SOURCES = \
 
 bb2s_SOURCES = \
 	${common_sources} \
+	adi1d.c \
+	adi2d.c \
 	adi3d.c \
 	bytein.c \
 	ezpaint.c ezpaint.h \
