@@ -232,22 +232,35 @@ The recommended way to obtain BeatBox is to download the most recent
 official release from the BeatBox home page,
 </p>
 
-<ul><li>
-<a href="http://empslocal.ex.ac.uk/people/staff/vnb262/software/BeatBox/">
-http://empslocal.ex.ac.uk/people/staff/vnb262/software/BeatBox/
-</a>
-</li></ul>
+<ul>
+  <li>
+  <a href="http://empslocal.ex.ac.uk/people/staff/vnb262/software/BeatBox/">
+  http://empslocal.ex.ac.uk/people/staff/vnb262/software/BeatBox/
+  </a>
+  (at present we have difficulty updating this page so it may be outdated)
+  </li>
+  <li>
+  <a href="https://wiener.ex.ac.uk/vadim/software/BeatBox/index.html">
+  https://wiener.ex.ac.uk/vadim/software/BeatBox/
+  </a>
+  (this is more up-to-date but the webserver has security features not up to scratch and so you may need to persuade your browser that you trust it). 
+  </li>
+</ul>
 
 <p>
 An alternative which may be more appropriate for beta-testers, is to
-obtain the most recent version of BeatBox code from its SVN
-repository, say by issuing the following commands:
+obtain the most recent version of BeatBox code from its <code>github</code>
+repository, by visiting
+<a href="https://github.com/beatbox-heart/bb2-public">https://github.com/beatbox-heart/bb2-public</a>
+or 
+by issuing the following commands:
 </p>
 <pre>
 mkdir ~/beatbox
 cd ~/beatbox
-svn co --username=anonymous --password=beatbox https://beatbox-trac.epcc.ed.ac.uk/svn/trunk/ ./
+git clone https://github.com/beatbox-heart/bb2-public ./
 </pre>
+
 <p>
 Note that this will be a read-only copy of the repository, i.e. you
 will not be able to check any modifications back in. If you would like
@@ -10891,6 +10904,375 @@ To run this script, use the following command:
 bb2s matout.bbs
 </pre>
 
+<!-- ========================= -->
+<h2 class="numbered">mpipaint</h2>
+
+<h3>Overview</h3>
+
+<p>
+
+
+This is 2D visualising device using <code>OpenGL</code>, based on the
+graphical part of D. Barkley's <a
+href="http://homepages.warwick.ac.uk/~masax/Software/ez_software.html">
+<code>EZSPIRAL</code> </a>, similar to <code>ezpaint</code>, with the differences:
+<ol>
+  <li> <code>mpipaint</code> works both in sequential and in parallel modes, whereas <code>ezpaint</code> only in
+  sequential mode; </li>
+  <li> <code>mpipaint</code> only works with the linear mapping of grid values
+  (as in <code>EZSPIRAL</code>), without the k-functions extension available in
+  <code>ezpaint</code>. </li>
+</ol>
+
+In comparison to EZSPIRAL, it does not provide any run-time dialogue, but does include the
+function of plotting tip path on top of the raster. The position of
+the tip is not computed in this device, but is expected to
+be computed elsewhere, say by the singz device, and passed via
+k-variables. The colour scheme is either defined by k-functions
+computing the RGB colour components, or by linear mapping of grid values of
+selected layers to these components. The possibility of saving the
+graphics as image files is provided. Further detail are in the
+description of the parameters that follows, and
+<a href="#mpipaint-explanations">after it</a>. 
+
+<h3>Parameters</h3>
+
+<p>This device is  <a href="#rectangular">rectangular</a> . Further parameters are: </p>
+
+<table border="1">
+<thead>
+<tr>
+<th>Type</th>
+<th>Name</th>
+<th>Default</th>
+<th>Min</th>
+<th>Max</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+
+<tr>
+<td><code>str</code></td>
+<td><code>aspect</code></td>
+<td><code>"xy"</code></td>
+<td>-</td>
+<td>-</td>
+<td> When used in 3D with the "grid colours" option, defines
+  which pair of Cartesian coordinates are used to paint the raster. Valid
+  values are "xy", "yx", "xz", "zx", "yz" and "zy". 
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+
+
+<tr>
+<td><code>int</code></td>
+<td><code>rlayer</code></td>
+<td><code>-1</code></td>
+<td><code>-1</code></td>
+<td><code>vmax-1</code></td>
+<td>For the values between 0 and <code>vmax-1</code>
+  inclusive, this defines the grid layer that determines the red
+  colour componenent. Negative values mean red component will not be
+  included. 
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+
+<tr>
+<td><code>real</code></td>
+<td><code>rmin</code></td>
+<td><code>0.0</code></td>
+<td>-</td>
+<td>-</td>
+<td>Values at or below this will produce zero red
+  colour componenent.
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+
+<tr>
+<td><code>real</code></td>
+<td><code>rmax</code></td>
+<td><code>1.0</code></td>
+<td>-</td>
+<td>-</td>
+<td>Values at or above this will produce maximal red
+  colour componenent.
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+
+<tr>
+<td><code>int</code></td>
+<td><code>glayer</code></td>
+<td><code>-1</code></td>
+<td><code>-1</code></td>
+<td><code>vmax-1</code></td>
+<td>For the values between 0 and <code>vmax-1</code>
+  inclusive, this defines the grid layer that determines the green
+  colour componenent. Negative values mean green component will not be
+  included. 
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+
+<tr>
+<td><code>real</code></td>
+<td><code>gmin</code></td>
+<td><code>0</code></td>
+<td>-</td>
+<td>-</td>
+<td>Values at or below this will produce zero green
+  colour componenent.
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+
+<tr>
+<td><code>real</code></td>
+<td><code>gmax</code></td>
+<td><code>1</code></td>
+<td>-</td>
+<td>-</td>
+<td>Values at or above this will produce maximal green
+  colour componenent.
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+
+<tr>
+<td><code>int</code></td>
+<td><code>blayer</code></td>
+<td><code>-1</code></td>
+<td><code>-1</code></td>
+<td><code>vmax-1</code></td>
+<td>For the values between 0 and <code>vmax-1</code>
+  inclusive, this defines the grid layer that determines the blue
+  colour componenent. Negative values mean blue component will not be
+  included. 
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+
+<tr>
+<td><code>real</code></td>
+<td><code>bmin</code></td>
+<td><code>0</code></td>
+<td>-</td>
+<td>-</td>
+<td>Values at or below this will produce zero blue
+  colour componenent.
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+
+<tr>
+<td><code>real</code></td>
+<td><code>bmax</code></td>
+<td><code>1</code></td>
+<td>-</td>
+<td>-</td>
+<td>Values at or above this will produce maximal blue
+  colour componenent.
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+ 
+<tr>
+<td><code>real</code></td>
+<td><code>bg_r</code></td>
+<td><code>0</code></td>
+<td><code>0</code></td>
+<td><code>1</code></td>
+<td>red component of the background colour representing
+  the void.
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</td>
+</tr>
+  
+<tr>
+<td><code>real</code></td>
+<td><code>bg_g</code></td>
+<td><code>0</code></td>
+<td><code>0</code></td>
+<td><code>1</code></td>
+<td>green component of the background colour representing
+  the void.
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</tr>
+  
+<tr>
+<td><code>real</code></td>
+<td><code>bg_b</code></td>
+<td><code>0</code></td>
+<td><code>0</code></td>
+<td><code>1</code></td>
+<td>blue component of the background colour representing
+  the void.
+  To be used only without the <code>pgm={...}</code> codeblock. 
+</tr>
+  
+<tr>
+<td><code>real  <a href="#varlink">varlink</a> </code></td>
+<td><code>xtip</code></td>
+<td><code>""</code></td>
+<td>-</td>
+<td>-</td>
+<td>Name of the k-variable containing the current
+  x-coordinate of the tip (in the grid system of coordinates). </td>
+</tr>
+  
+<tr>
+<td><code>real  <a href="#varlink">varlink</a> </code></td>
+<td><code>ytip</code></td>
+<td><code>""</code></td>
+<td>-</td>
+<td>-</td>
+<td>same, y-coordinate. </td>
+</tr>
+  
+<tr>
+<td><code>int</code></td>
+<td><code>ntipmax</code></td>
+<td><code>100</code></td>
+<td><code>1</code></td>
+<td>-</td>
+<td>Maximal number of preceding tip positions used to draw
+  the tip path. Only used when <code>xtip</code> and <code>ytip</code>
+  are specified.
+</td>
+</tr>
+  
+<tr>
+<td><code>str</code></td>
+<td><code>filter</code></td>
+<td><code>""</code></td>
+<td>-</td>
+<td>-</td>
+<td>The mask of a shell command line that will receive the content of
+the window in the PPM format; expected to be used to produce an image
+  file of the same. The mask can contain a C-style format field for
+printing a floating-point value, e.g. "%.0f" which can be used to enumerate the
+  output files. </td>
+</tr>
+
+<tr>
+<td><code>real  <a href="#codestring">codestring</a> </code></td>
+<td><code>filtercode</code></td>
+<td><code>"t"</code></td>
+<td>-</td>
+<td>-</td>
+<td>a formula to compute the enumerator for the images: 
+  will be interpreted as a real and printed through the format defined
+by <code>filter</code> to produce the actuall shell command. </td>
+</tr>
+
+<tr>
+<td><code>int</code></td>
+<td><code>winx</code></td>
+<td><code>-1</code></td>
+<td>-</td>
+<td>-</td>
+<td>horizontal position of the window from left edge of screen, pixels </td>
+</tr>
+<tr>
+<td><code>int</code></td>
+<td><code>winy</code></td>
+<td><code>0</code></td>
+<td>-</td>
+<td>-</td>
+<td>vertical position of the window from top edge of screen, pixels</td>
+</tr>
+
+<tr>
+<td><code>int</code></td>
+<td><code>width</code></td>
+<td><code>512</code></td>
+<td><code>1</code></td>
+<td>-</td>
+<td>window width, pixels</td>
+</tr>
+
+<tr>
+<td><code>int</code></td>
+<td><code>height</code></td>
+<td><code>512</code></td>
+<td><code>1</code></td>
+<td>-</td>
+<td>window height, pixels</td>
+</tr>
+
+<tr>
+<td><code>int</code></td>
+<td><code>doublebuffer</code></td>
+<td><code>0</code></td>
+<td><code>0</code></td>
+<td><code>1</code></td>
+<td>A 0/1 flag showing whether the double buffer will be
+  used for rendering. The advantages and disadvantages are probably
+  minor but are platform dependent. </td>
+</tr>
+
+<tr>
+<td><code>str</code></td>
+<td><code>title</code></td>
+<td><code>"ezpaint t=%.0f"</code></td>
+<td>-</td>
+<td>-</td>
+<td>The title of the window. May contain one '%' field for a real. </td>
+</tr>
+  
+
+<tr>
+<td><code>real  <a href="#codestring">codestring</a> </code></td>
+<td><code>titlecode</code></td>
+<td><code>"t"</code></td>
+<td>-</td>
+<td>-</td>
+<td>The formula computing the value to be displayed in
+  the window title.</td>
+</tr>  
+</table>
+
+<p id="mpipaint-explanations">
+<h3> Further detail </h3>
+</p>
+
+<p>
+Same comments are due regarding usage of <code>mpipaint</code> in the 3D
+case, as for <code>ezpaint</code>.
+Namely, 
+any pair of Cartesian coordinates can be used
+to generate the raster, as defined by the <code>aspect</code> parameter. 
+The most straightforward use in 3D is for <code>aspect=xy</code> by setting 
+<code>z0=z1</code> in its Space. This would then display the selected
+z-cross-section of the solution. Setting instead <code>z0 &lt; z1</code>
+allows the possibility to represent a ``thick'' layer of grid as a 2D image. This is
+done by averaging the colours of all the points with the given <code>x</code>
+and <code>y</code> coordinates and for all <code>z0 &le; z &le; z0</code>,
+excluding any void points. If all points in this range happen to be
+void, then the "background colour" <code>bg_r, bg_g, bg_b</code> is displayed.
+Similar for other aspects (<code>yx,xz,zx,yz,zy</code>), <i>mutatis mutandis</i>. 
+</p>
+
+<p>
+As in <code>ezpaint</code>, the <code>xtip</code> and <code>ytip</code> variables always
+represent the position of the tip in the raster coordinates, rather than grid
+coordinates. 
+</p>
+
+<h3>Instances of mpipaint in Example Scripts</h3>
+
+<p>
+Examples of ezpaint device can be found in the
+following:
+</p>
+
+<pre class="example">
+beatbox/data/scripts/parallel/Barkley_model/rabbit.bbs
+</pre>
 
 <!-- ========================= -->
 <h2 class="numbered">pause</h2>
