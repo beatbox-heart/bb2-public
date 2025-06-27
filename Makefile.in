@@ -467,6 +467,8 @@ dist_scripts_hector = \
 dist_scripts_parallel = \
                 $(paralldir)/Barkley/Makefile \
                 $(paralldir)/Barkley/bkl1.rec \
+                $(paralldir)/Barkley/rabbit3.bbg \
+                $(paralldir)/Barkley/rabbit-mpi.bbs \
                 $(paralldir)/Barkley/scroll.bbs \
                 $(paralldir)/Barkley/view.pl \
                 $(paralldir)/CRN_model/crn_ffr.bbs \

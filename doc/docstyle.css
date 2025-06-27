@@ -8,8 +8,16 @@ body
 
 
 /* use this for embedded bits of code */
+code
+{
+    color:#0000BB;
+    font-style: sans-serif;
+}
+
 pre 
 { 
+    color:#0000BB;
+    font-style: sans-serif;
     background-color:#FFFF99; 
     border: 2px dashed #FF6666;
     padding-top: 7px;
