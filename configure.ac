@@ -1,4 +1,4 @@
-AC_INIT([BeatBox],[2.0],[V.N.Biktashev@exeter.ac.uk])
+AC_INIT([BeatBox],[2.1],[V.N.Biktashev@exeter.ac.uk])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([-Wall gnu])
 myhost=`uname -n`
