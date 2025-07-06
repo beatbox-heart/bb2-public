@@ -1390,8 +1390,8 @@ The block parameters expect the values in the form of text enclosed by
 curly brackets, <code>{...}</code>. Such block text may span several
 lines of the script and may contain contain its own set of
 <code>&lt;name&gt;=&lt;value&gt;</code> pairs (what we shall call a
-<a name="codeblock"><em>codeblock</em></a>) or list of k-expressions
-(<a name="listblock"><em>listblock</em></a>).
+<em> <a href="#codeblock">codeblock</a> </em>) or list of k-expressions
+<em> <a href="#listblock">listblock</a> </em>).
 There may be defaults for block parameters, but of course not minimal
 or maximal values. 
 </p>
@@ -1528,7 +1528,7 @@ fibres, instead of the isotropic <code>D</code>.
 
 <p class="novel">
 Another way to specify nontrivial geometry is via
-<code>pgm={...}</code> codeblock parameter. This block shall contain a
+<code>pgm={...}</code>  <a href="#codeblock">codeblock</a>  parameter. This block shall contain a
 k-program similar to one in <code>localfunc</code> (see below); it is
 supposed to assign nonzero values to the <code>geom0</code>
 local variable at all points that are intended to represent the tissue, zero
@@ -2212,7 +2212,7 @@ ones) are described in detail in
 the <a href="#Beatbox_Device_Reference">Beatbox Device Reference</a>
 below. However the <code>k_func</code> device is so important for
 understanding of the Beatbox control flow that it warrants consideration
-immediately. This device takes a codeblock parameter
+immediately. This device takes a  <a href="#codeblock">codeblock</a>  parameter
 <code>pgm</code> which is expected to be a "k-program", that is a set
 of one or more "k-assignments", separated by semicolons. A
 k-assignment is a string of the form:
@@ -2271,7 +2271,7 @@ read from the <code>file</code>.
 
 <p>
 In addition, you can define extra local k-variables within the body of the
-<code>pgm={...}</code> codeblock, in the same syntax as the global k-variables
+<code>pgm={...}</code>  <a href="#codeblock">codeblock</a> , in the same syntax as the global k-variables
 outside.
 </p>
 
@@ -2737,7 +2737,7 @@ grid. This device uses layers 0 and 1, as <code>v0=0</code>,
 <code>v1=1</code>. It uses time discretization step
 <code>ht=0.03</code>, and the right-hand sides of the FitzHugh-Nagumo
 model are selected by <code>ode=fhncub</code>. The parameters of the
-model are defined by the name-value pairs within the codeblock parameter
+model are defined by the name-value pairs within the  <a href="#codeblock">codeblock</a>  parameter
 <code>pgm</code>, namely &epsilon;=0.2, &beta;=0.8, &gamma;=0.5. The
 parameter <code>Iu</code> stands for the extra term in the right-hand
 side for the <i>u</i> variable, which is defined here, through the
@@ -6947,13 +6947,13 @@ forward Euler.
 </tr>
 
 <tr>
-  <td><code>codeblock</code></td>
+  <td> <a href="#codeblock">codeblock</a> </td>
   <td><code>par</code></td>
   <td> </td>
   <td> </td>
   <td> </td>
   <td>The parameters of the <code>rhs</code> module; their list
-  depends on the module. The codeblock should contain k-assignments of
+  depends on the module. The  <a href="#codeblock">codeblock</a>  should contain k-assignments of
   the form <code>&lt;parameter&gt;=&lt;k-expression&gt;</code>,
   separated by blank spaces.</td>    
 </tr>
@@ -7078,7 +7078,7 @@ description of the parameters that follows, and
 <tbody>
 
 <tr>
-<td><code>codeblock</code></td>
+<td> <a href="#codeblock">codeblock</a> </td>
 <td><code>pgm</code></td>
 <td><code>""</code></td>
 <td> </td>
@@ -7086,7 +7086,7 @@ description of the parameters that follows, and
 <td>k-program computing colour of a particular "pixel" rectangle
   constituting the raster to be painted. In its absence (i.e. when
   <code>pgm=</code> key is absent in the device description in the
-  script or codeblock is empty), the raster is
+  script or  <a href="#codeblock">codeblock</a>  is empty), the raster is
   defined by the alternative methods, based on grid values. 
   In addition to standard
   global k-variables, the following local variables are defined:
@@ -7116,7 +7116,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Number of <code>abs</code> values, i.e. number of
   "pixels" in the raster in the horizontal direction.
-  To be used only with the <code>pgm={...}</code> codeblock,
+  To be used only with the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> ,
   otherwise it is defined by the Space parameters of this device instance. 
 </td>
 </tr>
@@ -7128,7 +7128,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>-</td>
 <td>Mininal value of <code>abs</code> variable.
-  To be used only with the <code>pgm={...}</code> codeblock. 
+  To be used only with the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
   
@@ -7139,7 +7139,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>-</td>
 <td>Maximal value of <code>abs</code> variable.
-  To be used only with the <code>pgm={...}</code> codeblock. 
+  To be used only with the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7152,7 +7152,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Number of <code>ord</code> values, i.e. number of
   "pixels" in the raster in the horizontal direction.
-  To be used only with the <code>pgm={...}</code> codeblock,
+  To be used only with the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> ,
   otherwise it is defined by the Space parameters of this device instance.   
 </td>
 </tr>
@@ -7164,7 +7164,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>-</td>
 <td>Mininal value of <code>ord</code> variable.
-  To be used only with the <code>pgm={...}</code> codeblock. 
+  To be used only with the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
   
@@ -7175,7 +7175,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>-</td>
 <td>Maximal value of <code>ord</code> variable.
-  To be used only with the <code>pgm={...}</code> codeblock. 
+  To be used only with the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7187,7 +7187,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Number of <code>app</code> values, i.e. number of
   "pixels" in the raster in the "depth" direction.
-  To be used only with the <code>pgm={...}</code> codeblock,
+  To be used only with the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> ,
   otherwise it is defined by the Space parameters of this device instance. 
 </td>
 </tr>
@@ -7199,7 +7199,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>-</td>
 <td>Mininal value of <code>app</code> variable.
-  To be used only with the <code>pgm={...}</code> codeblock. 
+  To be used only with the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
   
@@ -7210,7 +7210,7 @@ description of the parameters that follows, and
 <td><code>appmin</code></td>
 <td>-</td>
 <td>Maximal value of <code>app</code> variable.
-  To be used only with the <code>pgm={...}</code> codeblock.
+  To be used only with the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> .
   If <code>napp=1</code>, then must be <code>appmax=appmin</code>. 
 </td>
 </tr>
@@ -7224,7 +7224,7 @@ description of the parameters that follows, and
 <td> When used in 3D with the "grid colours" option, defines
   which pair of Cartesian coordinates are used to paint the raster. Valid
   values are "xy", "yx", "xz", "zx", "yz" and "zy". 
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7239,7 +7239,7 @@ description of the parameters that follows, and
   inclusive, this defines the grid layer that determines the red
   colour componenent. Negative values mean red component will not be
   included. 
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7251,7 +7251,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or below this will produce zero red
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7263,7 +7263,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or above this will produce maximal red
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7277,7 +7277,7 @@ description of the parameters that follows, and
   inclusive, this defines the grid layer that determines the green
   colour componenent. Negative values mean green component will not be
   included. 
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7289,7 +7289,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or below this will produce zero green
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7301,7 +7301,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or above this will produce maximal green
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7315,7 +7315,7 @@ description of the parameters that follows, and
   inclusive, this defines the grid layer that determines the blue
   colour componenent. Negative values mean blue component will not be
   included. 
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7327,7 +7327,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or below this will produce zero blue
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -7339,7 +7339,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or above this will produce maximal blue
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
  
@@ -7351,7 +7351,7 @@ description of the parameters that follows, and
 <td><code>1</code></td>
 <td>red component of the background colour representing
   the void.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
   
@@ -7363,7 +7363,7 @@ description of the parameters that follows, and
 <td><code>1</code></td>
 <td>green component of the background colour representing
   the void.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </tr>
   
 <tr>
@@ -7374,7 +7374,7 @@ description of the parameters that follows, and
 <td><code>1</code></td>
 <td>blue component of the background colour representing
   the void.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </tr>
   
 <tr>
@@ -9365,7 +9365,7 @@ at each call.
 </tr>
 
 <tr>
-  <td><code>codeblock</code></td>
+  <td>  <a href="#codeblock">codeblock</a>  </td>
   <td><code>pgm</code></td>
   <td>-</td>
   <td>-</td>
@@ -9491,7 +9491,7 @@ part of the simulation run.
     <td>-</td>
     <td>
       Relative path to file containing data for phase distribution. 
-      See <a href="#The k_func Device">The k_func Device</a>
+      See <a href="#The_k_func_Device">The k_func Device</a>
       for detail. 
     </td>
   </tr>
@@ -9509,14 +9509,14 @@ part of the simulation run.
   </tr>
   
   <tr>
-    <td><code>codeblock</code></td>
+    <td>  <a href="#codeblock">codeblock</a>  </td>
     <td><code>pgm</code></td>
     <td>-</td>
     <td>-</td>
     <td>-</td>
     <td>
       The k-program to be executed when the device is run.
-      See <a href="#The k_func Device">The k_func Device</a>
+      See <a href="#The_k_func_Device">The k_func Device</a>
       for detail. 
     </td>
   </tr>
@@ -9561,7 +9561,7 @@ direct linear mapping of the grid values. Available only in sequential mode.
 <p> The device is technically  <a href="#spaceless">spaceless</a>  in that it does not take space
 parameters, --- although it can (and normally does) use grid data, via
 predefined k-functions <code>u(.,.,.,.)</code> and/or
-<code>geom(.,.,.,.)</code> in its <code>pgm</code> codeblock.</p>
+<code>geom(.,.,.,.)</code> in its <code>pgm</code>  <a href="#codeblock">codeblock</a> .</p>
 
 
 <table border="1">
@@ -9613,7 +9613,7 @@ predefined k-functions <code>u(.,.,.,.)</code> and/or
     <td> Vertical size of the images, in pixels.</td>
   </tr>
   <tr>
-    <td><code>codeblock</code></td>
+    <td>  <a href="#codeblock">codeblock</a>  </td>
     <td><code>pgm</code></td>
     <td>-</td>
     <td>-</td>
@@ -9674,7 +9674,7 @@ field. Available only in sequential mode.</p>
 parameters, --- although it can (and normally does) use grid data, via
 predefined k-functions <code>u(.,.,.,.)</code> and/or <code>geom(.,.,.,.)</code>
 in its
-<code>pgm</code> codeblock. 
+<code>pgm</code>  <a href="#codeblock">codeblock</a> . 
 In addition to the standard window parameters of a VGA graphics device, this
 takes: </p>
 
@@ -9743,7 +9743,7 @@ takes: </p>
   </tr>
 
   <tr>
-    <td><code>codeblock</code></td>
+    <td> <a href="#codeblock">codeblock</a> </td>
     <td><code>pgm</code></td>
     <td>-</td>
     <td>-</td>
@@ -9823,7 +9823,7 @@ compatibility with legacy scripts.</p>
 parameters, --- although it can (and normally does) use grid data, via
 predefined k-functions <code>u(.,.,.,.)</code> and/or <code>geom(.,.,.,.)</code>
 in its
-<code>pgm</code> codeblock.</p>
+<code>pgm</code>  <a href="#codeblock">codeblock</a> .</p>
 
 
 <h3>Parameters</h3>
@@ -9967,7 +9967,7 @@ in its
   <!-- </tr> -->
 
   <tr>
-    <td><code>codeblock</code></td>
+    <td> <a href="#codeblock">codeblock</a> </td>
     <td><code>pgm</code></td>
     <td>-</td>
     <td>-</td>
@@ -10123,7 +10123,7 @@ device plots a whole curve at each call. Available only in sequential mode.
 <!-- </tr> -->
 
 <tr>
-  <td><code>codeblock</code></td>
+  <td> <a href="#codeblock">codeblock</a> </td>
   <td><code>pgm</code></td>
   <td>-</td>
   <td>-</td>
@@ -10281,7 +10281,7 @@ The device is  <a href="#spaceless">spaceless</a> , as it works only with global
   </tr>
   
   <tr>
-    <td><code>codeblock</code></td>
+    <td> <a href="#codeblock">codeblock</a> </td>
     <td><code>pgm</code></td>
     <td>-</td>
     <td>-</td>
@@ -10303,7 +10303,7 @@ The device is  <a href="#spaceless">spaceless</a> , as it works only with global
       <code>which=0</code> means it will be the component defined by
       the first assignment, <code>which=1</code> means it will be the
       second assignment, etc., and <code>ncode</code> is the number of
-    k-assignment in <code>pgm</code> codeblock. 
+    k-assignment in <code>pgm</code>  <a href="#codeblock">codeblock</a> . 
     </td>
   </tr>
   
@@ -10469,7 +10469,7 @@ The device is  <a href="#spaceless">spaceless</a> , as it works only with global
   </tr>
   
   <tr>
-    <td><code>listblock</code></td>
+    <td> <a href="#listblock">listblock</a> </td>
     <td><code>list</code></td>
     <td>-</td>
     <td>-</td>
@@ -10654,7 +10654,7 @@ bb2s fhn1_load.bbs
 <p>
 Saves grid data to a Matlab readable file ("MAT-file").  The current
 implementation saves data as a 5-dimensional array, with dimensions
-<code>nv*z*y*x*t</code> (in that order, <code>v</code> index changing
+<code>v*z*y*x*t</code> (in that order, <code>v</code> index changing
 the fastest, and <code>t</code> the slowest); any of these dimensions
 may be equal to 1.  The (possibly counter-intuitive) order
 <code>v*z*y*x</code> corresponds to the order in which the grid data
@@ -10726,7 +10726,7 @@ This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
   <td>-</td>
   <td><code>0</code></td>
   <td><code>vmax-1</code></td>
-  <td>Lower bound of the layer range to be output</td>
+  <td>Lowest of the layer range to be output</td>
 </tr>
 
 <tr>
@@ -10735,7 +10735,7 @@ This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
   <td>-</td>
   <td><code>v0</code></td>
   <td><code>vmax-1</code></td>
-  <td>Upper bound of the layer range to be output</td>
+  <td>Highest of the layer range to be output</td>
 </tr>
 
 <tr>
@@ -10961,7 +10961,7 @@ description of the parameters that follows, and
 <td> When used in 3D with the "grid colours" option, defines
   which pair of Cartesian coordinates are used to paint the raster. Valid
   values are "xy", "yx", "xz", "zx", "yz" and "zy". 
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -10976,7 +10976,7 @@ description of the parameters that follows, and
   inclusive, this defines the grid layer that determines the red
   colour componenent. Negative values mean red component will not be
   included. 
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -10988,7 +10988,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or below this will produce zero red
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11000,7 +11000,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or above this will produce maximal red
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11014,7 +11014,7 @@ description of the parameters that follows, and
   inclusive, this defines the grid layer that determines the green
   colour componenent. Negative values mean green component will not be
   included. 
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11026,7 +11026,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or below this will produce zero green
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11038,7 +11038,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or above this will produce maximal green
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11052,7 +11052,7 @@ description of the parameters that follows, and
   inclusive, this defines the grid layer that determines the blue
   colour componenent. Negative values mean blue component will not be
   included. 
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11064,7 +11064,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or below this will produce zero blue
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11076,7 +11076,7 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or above this will produce maximal blue
   colour componenent.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
  
@@ -11088,7 +11088,7 @@ description of the parameters that follows, and
 <td><code>1</code></td>
 <td>red component of the background colour representing
   the void.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
   
@@ -11100,7 +11100,7 @@ description of the parameters that follows, and
 <td><code>1</code></td>
 <td>green component of the background colour representing
   the void.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </tr>
   
 <tr>
@@ -11111,7 +11111,7 @@ description of the parameters that follows, and
 <td><code>1</code></td>
 <td>blue component of the background colour representing
   the void.
-  To be used only without the <code>pgm={...}</code> codeblock. 
+  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </tr>
   
 <tr>
@@ -12214,12 +12214,12 @@ Runge-Kutta 4th order; general pointwise ODE stepper for the rhs modules.
 </tr>
 
 <tr>
-  <td class="left"><code>codeblock</code></td>
+  <td class="left"> <a href="#codeblock">codeblock</a> </td>
   <td class="left"><code>par</code></td>
   <td> </td>
   <td> </td>
   <td> </td>
-  <td class="left">The parameters of the <code>rhs</code> module; their list depends on the module. The codeblock contains k-assignments of the form <code>&lt;parameter&gt;=&lt;k-expression&gt;</code>, separated by blank spaces.</td>
+  <td class="left">The parameters of the <code>rhs</code> module; their list depends on the module. The  <a href="#codeblock">codeblock</a>  contains k-assignments of the form <code>&lt;parameter&gt;=&lt;k-expression&gt;</code>, separated by blank spaces.</td>
 </tr>
 </tbody>
 </table>
@@ -12389,12 +12389,12 @@ definition of ionic modules is found in <i>specification of ionic modules.</i>
 </tr>
 
 <tr>
-  <td><code>codeblock</code></td>
+  <td> <a href="#codeblock">codeblock</a> </td>
   <td><code>par</code></td>
   <td> </td>
   <td> </td>
   <td> </td>
-  <td>model-dependent parameters of ionic module. The parameter is set by a codeblock in a form <code>par={&lt;parameter&gt;=&lt;value&gt;}</code> separated by blank spaces if more than one parameter is specified.</td>
+  <td>model-dependent parameters of ionic module. The parameter is set by a  <a href="#codeblock">codeblock</a>  in a form <code>par={&lt;parameter&gt;=&lt;value&gt;}</code> separated by blank spaces if more than one parameter is specified.</td>
 </tr>
 
 <tr>
