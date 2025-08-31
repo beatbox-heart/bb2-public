@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2016) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -37,7 +37,7 @@ _(alpha		, 2.16659)   	/* (1) */
 /* Extracellular concentrations */
 _(Nao		, 151.0)    	/* (mM) */
 _(Ko		, 5.4)      	/* (mM) */
-/*_(Cao		, 1.8)      (mM) - making this constant allows tabulation of Xr1 */
+_(Cao		, 1.8)      	/* (mM) - making this constant would allo tabulation of Xr1 but we neglect this miniscule advantage */
 
 /* Intracellular concentrations */
 _(Ki		, 150.0)     	/* (mM) */

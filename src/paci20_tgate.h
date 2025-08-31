@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2016) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -30,5 +30,5 @@ _(f2 , 0.999989)
 _(q  , 0.855959)
 _(r  , 0.00520977)
 _(Xs , 0.0290034)
-_(Xr1, 0.0657684) /* this needs Cao to be constant; if parameter, move Xr1 into *_ngate.h */
+/* _(Xr1, 0.0657684) /\* as Cao is parameter not constant; Xr1 moved into *_ngate.h *\/ */
 _(Xr2, 0.441149)

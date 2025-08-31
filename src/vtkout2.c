@@ -210,7 +210,9 @@ DESTROY_HEAD(vtkout2)
 #endif
 DESTROY_TAIL(vtkout2)
 
-CREATE_HEAD(vtkout2) {
+CREATE_HEAD(vtkout2)
+{
+        DEVICE_IS_RECTANGULAR;
 	
 	ACCEPTI(append,0,0,1);
 	ACCEPTQ(file,S->append?"at":"wt",NULL);

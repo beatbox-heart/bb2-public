@@ -745,7 +745,7 @@ at the beginning of the command being the verb.
 <li><code>if</code> - Allows a script command to be conditionally
   read. The keyword is to be followed by an arithmetic expression
   followed by a command with its own keyword. If the arithmetic
-  expression returns a nonzerp value, the command is interpreted,
+  expression returns a nonzero value, the command is interpreted,
   otherwise it is ignored. This does not affect the flow of execution
   as the simulation is run, but operates much like conditional
   compilation.</li>
@@ -2260,7 +2260,7 @@ is executed.
 
 <li>
 <code>phasep, phaseu, p0, p1, ... p&lt;vmax-1&gt; </code> - variables
-used for the phase-distribution method (see the next section). 
+used for the phase distribution method (see the next section). 
 </li>
 <li>
 <code>np, nv</code> - if <code>file</code> parameter is set, these
@@ -10961,7 +10961,6 @@ description of the parameters that follows, and
 <td> When used in 3D with the "grid colours" option, defines
   which pair of Cartesian coordinates are used to paint the raster. Valid
   values are "xy", "yx", "xz", "zx", "yz" and "zy". 
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -10976,7 +10975,6 @@ description of the parameters that follows, and
   inclusive, this defines the grid layer that determines the red
   colour componenent. Negative values mean red component will not be
   included. 
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -10988,7 +10986,6 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or below this will produce zero red
   colour componenent.
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11000,7 +10997,6 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or above this will produce maximal red
   colour componenent.
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11014,7 +11010,6 @@ description of the parameters that follows, and
   inclusive, this defines the grid layer that determines the green
   colour componenent. Negative values mean green component will not be
   included. 
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11026,7 +11021,6 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or below this will produce zero green
   colour componenent.
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11038,7 +11032,6 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or above this will produce maximal green
   colour componenent.
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11052,7 +11045,6 @@ description of the parameters that follows, and
   inclusive, this defines the grid layer that determines the blue
   colour componenent. Negative values mean blue component will not be
   included. 
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11064,7 +11056,6 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or below this will produce zero blue
   colour componenent.
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
 
@@ -11076,7 +11067,6 @@ description of the parameters that follows, and
 <td>-</td>
 <td>Values at or above this will produce maximal blue
   colour componenent.
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
  
@@ -11088,7 +11078,6 @@ description of the parameters that follows, and
 <td><code>1</code></td>
 <td>red component of the background colour representing
   the void.
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </td>
 </tr>
   
@@ -11100,7 +11089,6 @@ description of the parameters that follows, and
 <td><code>1</code></td>
 <td>green component of the background colour representing
   the void.
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </tr>
   
 <tr>
@@ -11111,7 +11099,6 @@ description of the parameters that follows, and
 <td><code>1</code></td>
 <td>blue component of the background colour representing
   the void.
-  To be used only without the <code>pgm={...}</code>  <a href="#codeblock">codeblock</a> . 
 </tr>
   
 <tr>
@@ -11579,10 +11566,13 @@ This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
 </tr>
 </table>
 
+<p> <strong>Caveat:</strong> exact correspondence of the <code>ppm</code> image and the device's
+<code>space</code> rectangel is assumed and no checks are made! </p>
+
 <h3>Typical Syntax</h3>
 
 <p>
-The typical syntax of <code>ppmin</code> device is as follows.
+A possible syntax of <code>ppmin</code> device is as follows.
 </p>
 
 <pre>
@@ -11614,7 +11604,7 @@ Device <code>ppmout</code> produces a
 new, sequentially numbered file every time it is run, or, if <code>append=1</code> opted, the same file is extended, thus creating a multi-image extension of PPM. In
 three-dimensional meshes, <code>ppmout</code> produces non-standard extended PPM files, in
 which multiple <code>z</code>-layers are stacked into a single
-file. For a reading program, the <code>z</code> dimension an be
+file. For a reading program, the <code>z</code> dimension can be
 inferred from the <code>x</code> and <code>y</code> dimensions
 specified in the PPM header and the file size. 
 </p>
@@ -11637,8 +11627,8 @@ This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
   <td> <a href="#sequence">sequence</a> </td>
   <td><code>file</code></td>
   <td>-</td>
-  <td>-</td>
-  <td>-</td>
+  <td> </td>
+  <td> </td>
   <td>Format specifier for the sequence of files produced.</td>
 </tr>
 

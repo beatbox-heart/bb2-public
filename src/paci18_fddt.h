@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2024) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -22,6 +22,8 @@
 
 #define small (1e-10)
 #define TI2AB(g) real alp_##g = g##_inf/tau_##g; real bet_##g = (1.0-g##_inf)/tau_##g;
+/* can't divide by 0 so need to multiply by it in fCa */
+#define EI2AB(g) real alp_##g = g##_inf*eps_##g; real bet_##g = (1.0-g##_inf)*eps_##g;
 
 real E_Na = RTF*log(Nao/Nai);			/* (mV) */
 real E_Ca = 0.5*RTF*log(Cao/Cai);		/* (mV) */
@@ -62,7 +64,8 @@ TI2AB(f1);
 real fCa_inf	= (1.0/(1.0+eighth(Cai/0.0006)) + 0.1/(1.0+exp((Cai-0.0009)/0.0001)) + 0.3/(1.0+exp((Cai-0.00075)/0.0008)))/1.3156;	/* (1) */
 real constfCa	= iif( ((V > -60.0) && (fCa_inf > fCa)) , (0.0) , (1.0) );	/* (1) lit mV */
 real tau_fCa	= 2;						/* (ms) */
-TI2AB(fCa);
+real eps_fCa    = constfCa/tau_fCa; /* can't divide by 0 so need to multiply by it */
+EI2AB(fCa);
 
 real RyRa_inf = RyRa1-RyRa2/(1 + exp((Cai/(1e-3)-(RyRahalf))/0.0082));	/* (1)  */
 real tau_RyRa = 1.0e3;				/* (ms) */

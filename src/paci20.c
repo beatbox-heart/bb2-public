@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2024) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -31,6 +31,8 @@
 
   This code is done by modifying paci18 ionic model, changes identified by SG. 
   NB all essential contents are stoved away into paci20_*.h files. 
+
+  This variant with Cao being parameter rather than constant, at the (miniscule) expense of efficiency. 
 */
 
 #include <assert.h>

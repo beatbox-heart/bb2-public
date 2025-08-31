@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2016) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -24,3 +24,4 @@ _(fCa,0.998434)
 _(RyRa,0.0403037)
 _(RyRo,0.000307854)
 _(RyRc,0.592591)
+_(Xr1,0.0657684) /* this here because Cao is not constant, or it would be in *_tgate.h */

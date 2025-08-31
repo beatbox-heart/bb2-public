@@ -605,7 +605,9 @@ static int diff_connect (STR *S,Space *s)
 #if MPI
 #define DNB(ij,...) (New[APPLY(ind,(_(__VA_ARGS__),d0+DENUM(STC,ij)))]) /* tensor component of neighbour */
 #else /* not MPI */
-  size_t ipgrid[xlen*ylen*zlen];	/* bookkeeping the points */
+  /* size_t ipgrid[xlen*ylen*zlen];	/\* bookkeeping the points *\/ */
+  size_t *ipgrid;
+  CALLOC(ipgrid,xlen*ylen*zlen,sizeof(size_t));	/* bookkeeping the points */
 #define IPNBR(x,y,z) (ipgrid[(z)+zlen*((y)+ylen*(x))])	/* number in the list of point with these coords */
 #define DNB(ij,...) (((real *)(s->p[APPLY(IPNBR,(_(__VA_ARGS__)))].Y))[DENUM(STC,ij)]) /* tensor component of neighbour */
 #endif
