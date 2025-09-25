@@ -39,7 +39,7 @@
 #define R 0
 #define G 1
 #define B 2
-#define BUF(z,y,x,c) (Buf[(c)+3*((x)+local_xsize*((y)+local_ysize*(z)))])
+/* #define BUF(z,y,x,c) (Buf[(c)+3*((x)+local_xsize*((y)+local_ysize*(z)))]) */
 
 typedef struct {
   char file[MAXPATH];		/* input file name or mask */

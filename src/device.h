@@ -141,6 +141,8 @@ typedef struct {
 #endif
 } Device;
 
+extern Device dev[];
+
 /* Function that creates the device given its description in the input file */
 typedef int Create (Device *dev, char *w);
 
@@ -163,7 +165,7 @@ typedef int Create (Device *dev, char *w);
 /* If pointer is NULL then use code, assign any result to name in S and to local */
 /* #define DEVICE_PAR(type,name)   type name=(S->name##ptr)?(S->name=*(type *)(S->name##ptr)):(memcpy(&(S->name),execute(S->name##exe),sizeof(type)),S->name); */
 
-/*! Declaration of a parameter that may be recalculated at any point. */
+/*! Declaration of a parameter that may be recalculated at any time step (device instance call) */
 /* Exec k-code if given, in any case assign to the local the value from the pointer */
 #define DEVICE_PAR(type,name) type name=(S->name=*(type *)((S->name##exe)?((type *)execute(S->name##exe)):(S->name##ptr)));
 

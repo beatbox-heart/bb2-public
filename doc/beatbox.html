@@ -1184,6 +1184,14 @@ of argument <code>a</code> and index 0.
 <code>J1(a)</code> - Returns the Bessel function of the first kind
 of argument <code>a</code> and index 1. 
 
+<li>
+<code>J2(a)</code> - Returns the Bessel function of the first kind
+of argument <code>a</code> and index 2. 
+
+<li>
+<code>J3(a)</code> - Returns the Bessel function of the first kind
+of argument <code>a</code> and index 3. 
+
 </li>
 <li>
 <code>if(test, then, else)</code> - Returns <code>then</code>
@@ -1368,7 +1376,7 @@ type, and assigned to the parameter. A parameter in a device may have
 <p>
 For the string parameters, the <code>value</code> (subject to
 preprocessing) is intepreted as the literal value of the parameter.  A
-string containing blank spaces or one of the special characters
+string containing blank spaces or any of the special characters
 <code>\n</code>, 
 <code>\b</code>, 
 <code>\f</code>, 
@@ -1391,7 +1399,7 @@ curly brackets, <code>{...}</code>. Such block text may span several
 lines of the script and may contain contain its own set of
 <code>&lt;name&gt;=&lt;value&gt;</code> pairs (what we shall call a
 <em> <a href="#codeblock">codeblock</a> </em>) or list of k-expressions
-<em> <a href="#listblock">listblock</a> </em>).
+(<em> <a href="#listblock">listblock</a> </em>).
 There may be defaults for block parameters, but of course not minimal
 or maximal values. 
 </p>
@@ -1423,7 +1431,7 @@ device ring.
 
 <p> The required set of parameters depends on whether geometry file is
   used, which is determined by the string
-  parameter <code>geometry</code>. If this parameter is assigned to a
+  parameter <code>geometry</code>. If this parameter is present and assigned to a
   non-empty string, then it is understood to be the name of the
   geometry file. This case is described in more detail below. 
 </p>
@@ -1432,13 +1440,14 @@ device ring.
 empty string, no geometry file is read, the computations are done in a
 "box" (parallelepiped), and its sizes <code>xmax</code>, <code>ymax</code>
 (compulsory) and <code>zmax</code> (optional, default=1) will be
-checked for. Parameter <code>vmax</code> is still required.
+checked for. 
 </p>
 
 <p>
 The integer coordinates (index) <code>x</code> runs from 0 through to
 <code>xmax-1</code> (so the name <code>xmax</code> is a bit of a
-misnomer, but stuck for historical reasons). 
+misnomer, but stuck for historical reasons), and similarly for <code>y</code>
+and <code>z</code>. 
 
 If <code>zmax&ge;3</code>, the calculations will be three-dimensional
 (3D). Otherwise, if <code>ymax&ge;3</code>, the calculations will be
@@ -1499,15 +1508,18 @@ command, and it should precede any device-defining commands.
 
 <p>
 If you would like to use an anatomically realistic mesh for your
-simulation, you can specify it in the <code>geometry</code> parameter of
+simulation, or indeed any shape that is not a box,
+you can specify it in the <code>geometry</code> parameter of
 the <code>state</code> command. For
 example, <code>geometry=ffr.bbg</code> will select
-the <code>ffr.bbg</code> geometry file. 
+the <code>ffr.bbg</code> geometry file.
+(Note that computations in any case are done on a rectangular grid,
+that is a subset of  <math>R<sup>n</sup>, n &le; 3</math>).
 </p>
 
 <p>
 When using a geometry file, there is no need to specify the dimensions
-of the mesh, in which case Beatbox will find them automatically by analysing the geometry
+of the mesh, as Beatbox will find them automatically by analysing the geometry
 file. The set of points read from geometry files will be padded on all
 sides by <code>padding</code> grid points, which is a parameter defaulting to 1. 
 You do still

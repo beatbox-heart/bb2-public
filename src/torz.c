@@ -47,8 +47,8 @@ RUN_HEAD(torz)
   real *u;
 
   for(x=s.x0;x<=s.x1;x++) for(y=s.y0;y<=s.y1;y++) for(v=v0;v<=v1;v++) {
-    New[ind(x,y,s.z0-1,v)] = New[ind(x,y,s.z1,v)];
-    New[ind(x,y,s.z1+1,v)] = New[ind(x,y,s.z0,v)];
+    New[ind(x,y,s.z0,v)] = New[ind(x,y,s.z1-1,v)];
+    New[ind(x,y,s.z1,v)] = New[ind(x,y,s.z0+1,v)];
   }
 }
 RUN_TAIL(torz)
@@ -56,12 +56,16 @@ RUN_TAIL(torz)
 DESTROY_HEAD(torz)
 DESTROY_TAIL(torz)
 
-CREATE_HEAD(torz) {
+CREATE_HEAD(torz)
+{
+  DEVICE_REQUIRES_SYNC;
+  DEVICE_IS_RECTANGULAR;
+
   ACCEPTI(v0,INONE,0,vmax-1);
   ACCEPTI(v1,INONE,0,vmax-1);
   ASSERT(v1 >= v0);
   Space s=dev->s;
-  ASSERT(s.z0>1)
-  ASSERT(s.z1<zmax-1)
-} CREATE_TAIL(torz,1)
+  ASSERT(s.z0+1<s.z1-1);
+}
+CREATE_TAIL(torz,1)
 

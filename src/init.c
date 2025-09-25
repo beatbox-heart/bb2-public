@@ -57,7 +57,6 @@ static int create (Name name, Create c, Device *d, char *rest)
   if (!accepts("name=",&(d->n[0]),name,rest)) return FAILURE;
   if (!acceptkr("when=",0,"always",&(d->c),when_name,rest)) return FAILURE;  
   if (!accept_space(&(d->s),rest)) return FAILURE;
-  if (strcmp(d->n,name)) if(!def_dev(d)) return FAILURE;
 #if MPI
   d->sync      = 0;
   d->alwaysRun = 0;

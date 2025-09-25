@@ -41,7 +41,7 @@
 #undef OWN
 #include "mpi_io_choice.h"
 
-/*++++++++++++++++++++++++++++++++++++++++*/ extern int idev;
+/*++++++++++++++++++++++++++++++++++++++++*/ /* extern int idev; Device dev[]; */
 
 
                         /***** Initial values of exported variables *****/
@@ -444,37 +444,6 @@ int def_local(char *s, p_tb table){
   } else {
     EXPECTED_ERROR("invalid flag %d",flag);
   }
-  return 1;
-}
-
-/*
- * Defines a device's name as a k_variable.
- */
-int def_dev (Device *d) {
-  char tabname[maxname+2];
-  snprintf(tabname,maxname+2,"%c%s%c",PASTEBEGIN,d->n,PASTEEND);
-  if(tb_find(sys_tab,tabname))          /* is it in system table ? */
-    EXPECTED_ERROR("%s cannot be used as device name: it is reserved",tabname);
-  if (tb_find(deftb,tabname))           /* is it in user table ? */
-    EXPECTED_ERROR("name %s already in use\n",tabname);
-  if (!tb_insert_abstract(deftb, tabname, t_undf, (p_vd)d, 0, f_rs))
-    EXPECTED_ERROR("cannot declare %s:\n%s",tabname,prterr(NULL));
-  return 1;
-}
-
-/*
- * Obtains a reference to a device from its name.
- */
-int get_dev (Name n, Device **d) {
-  char tabname[maxname+2];
-  int i;
-  snprintf(tabname,maxname+2,"%c%s%c",PASTEBEGIN,n,PASTEEND);
-  i = tb_find(deftb,tabname);
-  if (!i)
-    EXPECTED_ERROR("Device name %s was never declared\n",tabname);
-  if (tb_type(deftb,i)!=t_undf || tb_flag(deftb,i)!=f_rs)
-    EXPECTED_ERROR("%s is not a device name",tabname);
-  *d = (Device *)tb_addr(deftb,i);
   return 1;
 }
 
@@ -1288,7 +1257,7 @@ int list_space (Space *S)
     	  SPACE_DEFAULT_X0,SPACE_DEFAULT_X1,
     	  SPACE_DEFAULT_Y0,SPACE_DEFAULT_Y1,
     	  SPACE_DEFAULT_Z0,SPACE_DEFAULT_Z1);
-    /* DEBUG("wherecode=%p\n",wherecode); */
+    /* DEBUG("where='%s' wherecode=%p\n",where,wherecode); */
     if (restricted==1 &&
 	global_x0==SPACE_DEFAULT_X0 && global_x1==SPACE_DEFAULT_X1 &&
 	global_y0==SPACE_DEFAULT_Y0 && global_y1==SPACE_DEFAULT_Y1 &&
@@ -1303,10 +1272,9 @@ int list_space (Space *S)
       /* DEBUG("p=%p [0]->(%ld,%ld,%ld)\n",(*p),(*p)[0].x,(*p)[0].y,(*p)[0].z); */
       
       /* *p=TissuePoints; */
-      Debug("/* default list of %ld points */",(long)*np);
+      DEBUG("default list of %ld points",(long)*np);
       return SUCCESS;
     }
-    DEBUG("*np=%ld\n",(*np));
   }
 
   FREE(*p);
@@ -1331,8 +1299,23 @@ int list_space (Space *S)
       } /* for *z */
     } /* for *y */
   } /* for *x */
-  /* DEBUG("*np=%ld = s->np=%ld\n",(*np),S->np); */
-  REALLOC(*p,(*np)*sizeof(devicePoint));
+  Debug("/* #%d t=%ld device=%d='%s' np=%ld */\n",mpi_rank,t,idev,dev[idev].n,(*np));
+  /* { */
+  /*   int my_mpi_rank=mpi_rank; */
+  /*   long my_t = t; */
+  /*   int my_idev = idev; */
+  /*   Name my_devname; */
+  /*   long my_np = *np; */
+  /*   strncpy(my_devname,dev[idev].n,32); */
+  /*   Debug("/\* #%d t=%ld device=%d='%s' np=%ld *\/\n",my_mpi_rank,my_t,my_idev,my_devname,my_np); */
+  /* } */
+  if (*p) {
+    REALLOC(*p,(*np)*sizeof(devicePoint));
+  } else {
+    URGENT_MESSAGE("/* Warning: unexpected empty point list for device %d '%s' when relisting at t=%ld #%d */\n",
+		   idev,dev[idev],t,mpi_rank);
+    *p=NULL;
+  }
   return SUCCESS;
 } /* list_space */
 
@@ -1540,6 +1523,7 @@ int init_const (void)
   RO(always); 
   RO(never); 
   RO(real_inf);
+  RO(RNONE);
   #undef RO
 
   snprintf(buf,MAXSTRLEN,"int narg=%d",narg);

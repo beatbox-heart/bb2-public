@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2024) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -70,14 +70,17 @@ real Xs_inf	= 1.0/(1.0+exp((-V-20.0)/16.0));		/* (1) */
 real tau_Xs	= 1.0*(1100.0/sqrt(1.0+exp((-10.0-V)/6.0)))*(1.0/(1.0+exp((-60.0+V)/20.0)));	/* (ms) */
 TI2AB(Xs);
 
-real L0		= 0.025;					/* (1) */
-real logL0	= log(L0);					/* (1) */
-real Q		= 2.3;						/* (1) */
-real V_half	= (RTF/Q*(logL0+4*log((1.0+Cao/0.58)/(1.0+Cao/2.6)))-19.0); /* (mV) */ /* NB this demands that Cao is constant rather than parameter */
-real Xr1_inf	= 1.0/(1.0+exp((V_half-V)/4.9));		/* (1) */
-real tau_Xr1	= 1.0*(450.0/(1.0+exp((-45.0-V)/10.0)))*(6.0/(1.0+exp((30.0+V)/11.5)));	/* (ms) */
-TI2AB(Xr1);
+/* real L0		= 0.025;					/\* (1) *\/ */
+/* real logL0	= log(L0);					/\* (1) *\/ */
+/* real Q		= 2.3;						/\* (1) *\/ */
+/* real V_half	= (RTF/Q*(logL0+4*log((1.0+Cao/0.58)/(1.0+Cao/2.6)))-19.0); /\* (mV) *\/ /\* NB this demands that Cao is constant rather than parameter *\/ */
+/* real Xr1_inf	= 1.0/(1.0+exp((V_half-V)/4.9));		/\* (1) *\/ */
+/* real tau_Xr1	= 1.0*(450.0/(1.0+exp((-45.0-V)/10.0)))*(6.0/(1.0+exp((30.0+V)/11.5)));	/\* (ms) *\/ */
+/* TI2AB(Xr1); */
 
 real Xr2_inf	= 1.0/(1.0+exp((V+88.0)/50.0));		/* (1) */
 real tau_Xr2	= 1.0*(3.0/(1.0+exp((-60.0-V)/20.0)))*(1.12/(1.0+exp((-60.0+V)/20.0)));	/* (ms) */
 TI2AB(Xr2);
+
+/* ACh-dependent K current, as per Kneller et al. 2002 CR */
+real g_KACh	= (0.0517 + 0.4561/(1.0 + exp((V+59.53)/17.18))); /* (1/ms) */

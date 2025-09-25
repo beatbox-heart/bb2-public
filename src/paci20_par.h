@@ -37,7 +37,7 @@ _(alpha		, 2.16659)   	/* (1) */
 /* Extracellular concentrations */
 _(Nao		, 151.0)    	/* (mM) */
 _(Ko		, 5.4)      	/* (mM) */
-_(Cao		, 1.8)      	/* (mM) - making this constant would allo tabulation of Xr1 but we neglect this miniscule advantage */
+_(Cao		, 1.8)      	/* (mM) - making this constant would allow tabulation of Xr1 but we neglect this miniscule advantage */
 
 /* Intracellular concentrations */
 _(Ki		, 150.0)     	/* (mM) */
@@ -74,3 +74,7 @@ _(Buf_C		, 0.25)		/* (mM) */
 _(Buf_SR	, 10.0)		/* (mM) */
 _(Kbuf_C	, 0.001)	/* (mM) */
 _(Kbuf_SR	, 0.3)		/* (mM) */
+
+/* ACh-dependen K current, relative to literature definition */
+_(ACh		, 0.0)		/* (uM) */
+_(k_KACh	, 1.0)		/* (1) */

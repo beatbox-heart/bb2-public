@@ -116,12 +116,12 @@ CREATE_HEAD(k_paint)
 
   k_off();
 
-  ACCEPTL(nabs,INONE,2,INONE);
-  ACCEPTR(absmin,0,INONE,INONE);
-  ACCEPTR(absmax,S->nabs-1,INONE,INONE);
-  ACCEPTL(nord,INONE,2,INONE);
-  ACCEPTR(ordmin,0,INONE,INONE);
-  ACCEPTR(ordmax,S->nord-1,INONE,INONE);
+  ACCEPTL(nabs,LNONE,2,LNONE);
+  ACCEPTR(absmin,0,RNONE,RNONE);
+  ACCEPTR(absmax,S->nabs-1,RNONE,RNONE);
+  ACCEPTL(nord,LNONE,2,LNONE);
+  ACCEPTR(ordmin,0,RNONE,RNONE);
+  ACCEPTR(ordmax,S->nord-1,RNONE,RNONE);
 
   /* ACCEPTI(appmin,0,INONE,INONE); */
   /* ACCEPTI(appmax,0,S->appmin,INONE); */

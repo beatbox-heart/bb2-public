@@ -43,11 +43,12 @@
 typedef struct {
   int append;
   sequence file;
+  int echo;
   int r, g, b;		/* layers wherefrom to extract the colour components */
-  int bgr,bgg,bgb;
   real r0,r1;			/* range of values to transfrom node to a byte for the red comp. */
   real g0,g1;			/* -||- red comp. */
   real b0,b1;			/* -||- blue comp. */
+  int bgr,bgg,bgb;
 #if MPI
   MPI_Comm comm;	/* Communicator: the group of all processes active in this device */
   int root;		/* One processor chosen to write the header and to pre-fill */
@@ -67,9 +68,11 @@ typedef struct {
 } STR;
 
 #define MAXCHAR 255
-RUN_HEAD(ppmout) {
+RUN_HEAD(ppmout)
+{
   DEVICE_CONST(int,append);
   DEVICE_VAR(sequence,file);
+  DEVICE_CONST(int,echo);
   DEVICE_CONST(int,r) DEVICE_CONST(real,r0) DEVICE_CONST(real,r1);
   DEVICE_CONST(int,g) DEVICE_CONST(real,g0) DEVICE_CONST(real,g1);
   DEVICE_CONST(int,b) DEVICE_CONST(real,b0) DEVICE_CONST(real,b1);
@@ -173,9 +176,10 @@ RUN_HEAD(ppmout) {
     if (append) FFLUSH(file->f);
   } /*  for z */
 #endif
-  MESSAGE("ppmout to '%s' at t=%ld\n",file->name,t);
+  if (echo) MESSAGE("ppmout to '%s' at t=%ld\n",file->name,t);
   if (!append) nextq(file);
-} RUN_TAIL(ppmout)
+}
+RUN_TAIL(ppmout)
 
 DESTROY_HEAD(ppmout) {
 #if MPI
@@ -206,6 +210,7 @@ CREATE_HEAD(ppmout)
 
   ACCEPTI(append,0,0,1);
   ACCEPTQ(file,S->append?"at":"wt",NULL);
+  ACCEPTI(echo,1,0,1);
 
   ACCEPTI(r,INONE,-1,(int)vmax-1);
   ACCEPTR(r0,RNONE,RNONE,RNONE);

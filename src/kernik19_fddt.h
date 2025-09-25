@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2024) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -102,6 +102,9 @@ real i_Kr = ((((g_Kr*sqrt((Ko/5.4)))*Xr1)*Xr2)*(V - E_K)); /* && (mV/ms) */
 /* IKs */
 real i_Ks = ((g_Ks*sqr(Xs))*(V - E_K)); /* && (mV/ms) */
 
+/* IKACh */
+real i_KACh      = ACh?(k_KACh*10.0/(1.0 + 9.13652/pow(ACh,0.477811))*g_KACh*(V - E_K)):0.0; /* (mV./ms) */
+
 /* Jrel */
 real kCaSR = (MaxSR - ((MaxSR - MinSR)/(1.0+pow((ec50SR/Ca_SR),2.5)))); /* && */
 real kiSRCa = (kiCa*kCaSR); /* && (1/(mM ms)) */
@@ -127,7 +130,7 @@ real Cai_bufc = (1.0/(1.0+((Buf_C*Kbuf_C)/((Cai+Kbuf_C)*(Cai+Kbuf_C))))); /* && 
 real diff_Cai = (Cai_bufc*(((-j_up+j_leak)+j_rel) - ((Cm/((2.0*Vc)*F))*(((((i_CaL_Ca)+i_CaT)+i_b_Ca)+i_PCa) - (2.0*i_NaCa))))); /* && (mM/ms) */
 
 /* Ki */
-real diff_Ki = ((-Cm/(F*Vc))*(((((((i_K1)+i_to)+i_Kr)+i_Ks)+i_fK) - (2.0*i_NaK))+i_CaL_K)); /* && (mM/ms) */
+real diff_Ki = ((-Cm/(F*Vc))*(((i_K1+i_to+i_Kr+i_Ks+i_fK+i_KACh) - (2.0*i_NaK))+i_CaL_K)); /* && (mM/ms) */
 
 /* CaSR */
 real Ca_SR_bufSR = (1.0/(1.0+((Buf_SR*Kbuf_SR)/sqr(Ca_SR+Kbuf_SR)))); /* && */
@@ -135,5 +138,5 @@ real diff_Ca_SR = (((Ca_SR_bufSR*Vc)/V_SR)*((j_up - j_rel) - j_leak)); /* && (mM
 
 
 /* V */
-real diff_V = -(i_K1+i_to+i_Kr+i_Ks+i_CaL+i_CaT+i_NaK+i_Na+i_NaCa+i_PCa+i_f+i_b_Na+i_b_Ca);	/* (mV/ms) */
+real diff_V = -(i_K1+i_to+i_Kr+i_Ks+i_KACh+i_CaL+i_CaT+i_NaK+i_Na+i_NaCa+i_PCa+i_f+i_b_Na+i_b_Ca);	/* (mV/ms) */
 

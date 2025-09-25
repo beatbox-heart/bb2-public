@@ -91,8 +91,13 @@ RUN_HEAD(record)
 
   if (timestamp) {
     char *tbuf;
+    int rc;
     CALLOC(tbuf,timestampwidth+1,1);
-    snprintf(tbuf,timestampwidth,timestampformat, (long)t);
+    rc=snprintf(tbuf,timestampwidth+1,timestampformat, (long)t);
+    if (rc>timestampwidth) MESSAGE(
+      "\n/* Warning: idev=%ld t=%ld actual timestamp width=%d "
+      " is too long for the given %d with format '%s'*/",
+      (long)idev, (long)t, rc, timestampwidth, timestampformat);
     tbuf[timestampwidth]='\0';
     fputs(tbuf,f);
     FREE(tbuf);

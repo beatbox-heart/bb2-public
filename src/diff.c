@@ -620,7 +620,7 @@ static int diff_connect (STR *S,Space *s)
   /* ANISO: anisotropy is on. Must have been defined in 'state'. Implies GEOM. 			*/
   /* MANY: many-point stencil. Incompatible with anisotropy nor with variable diffusivity.	*/
   /* VARIA: space-dependent diffusivities (principal values of the tensor).			*/
-  /* Nota Bene: tensor may be vary due to principal values OR fibre directions!			*/
+  /* Nota Bene: tensor may be variable due to principal values OR fibre directions!		*/
   
   if (Geom==NULL) {			/* Not Geom, so not Aniso */
 #define GEOM 0

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2024) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -22,6 +22,8 @@
 
 #define small (1e-10)
 #define TI2AB(g) real alp_##g = g##_inf/tau_##g; real bet_##g = (1.0-g##_inf)/tau_##g;
+/* can't divide by 0 so need to multiply by it in fCa */
+#define EI2AB(g) real alp_##g = g##_inf*eps_##g; real bet_##g = (1.0-g##_inf)*eps_##g;
 
 real E_Na = RTF*log(Nao/Nai);			/* (mV) */
 real E_Ca = 0.5*RTF*log(Cao/Cai);		/* (mV) */
@@ -49,6 +51,9 @@ real al_K1	= 3.91/(1.0+exp(0.5942*(V-E_K-200.0)));		/* (1) */
 real be_K1	= (-1.509*exp(0.0002*(V-E_K+100.0))+exp(0.5886*(V-E_K-10.0)))/(1.0+exp(0.4547*(V-E_K)));	/* (1) */
 real XK1_inf	= al_K1/(al_K1+be_K1);		/* (1) */
 real i_K1	= g_K1*XK1_inf*(V-E_K)*sqrt(Ko/5.4);	/* (mV/ms)  */
+
+real i_KACh      = ACh?(k_KACh*10.0/(1.0 + 9.13652/pow(ACh,0.477811))*g_KACh*(V - E_K)):0.0; /* (mV./ms) */
+
 real i_NaCa	= kNaCa*
   (exp(gamma*V/RTF)*cub(Nai)*Cao-exp((gamma-1.0)*V/RTF)*cub(Nao)*Cai*alpha)/
   ((cub(KmNai)+cub(Nao))*(KmCa+Cao)*(1.0+Ksat*exp((gamma-1.0)*(V/RTF))));		/* (mV/ms) */
@@ -64,13 +69,14 @@ real j_rel = j_rel_max*RyRSRCass*RyRo*RyRc*(Ca_SR-Cai);	/* (mM/ms) */
 
 real f1_inf	= 1.0/(1.0+exp((V+26.0)/3.0));			/* (1) */
 real constf1	= iif( (f1_inf-f1 > 0.0) , (1.0+1433.0*(Cai-50.0e-6)), (1.0));	/* (1) */
-real tau_f1	= (20.0+1102.5*exp(-sqr(sqr(V+27.0)/15.0))+200.0/(1.0+exp((13.0-V)/10.0))+180.0/(1.0+exp((30.0+V)/10.0)))*constf1;	/* (ms) */
+real tau_f1	= (20.0+1102.5*exp(-sqr((V+27.0)/15.0))+200.0/(1.0+exp((13.0-V)/10.0))+180.0/(1.0+exp((30.0+V)/10.0)))*constf1;	/* (ms) */ /* NB change wrt Paci'18: no inner square! */
 TI2AB(f1);
 
 real fCa_inf	= (1.0/(1.0+eighth(Cai/0.0006)) + 0.1/(1.0+exp((Cai-0.0009)/0.0001)) + 0.3/(1.0+exp((Cai-0.00075)/0.0008)))/1.3156;	/* (1) */
 real constfCa	= iif( ((V > -60.0) && (fCa_inf > fCa)) , (0.0) , (1.0) );	/* (1) lit mV */
 real tau_fCa	= 2;						/* (ms) */
-TI2AB(fCa);
+real eps_fCa    = constfCa/tau_fCa; /* can't divide by 0 so need to multiply by it */
+EI2AB(fCa);
 
 real RyRa_inf = RyRa1-RyRa2/(1 + exp((Cai/(1e-3)-(RyRahalf))/0.0082));	/* (1)  */
 real tau_RyRa = 1.0e3;				/* (ms) */
@@ -84,11 +90,19 @@ real RyRc_inf = (1/(1 + exp((Cai/(1e-3)-(RyRa+RyRchalf))/0.001)));	/* (1)  */
 real tau_RyRc = iif( (RyRc_inf>= RyRc), 2*87.5, 87.5 );			/* (ms)  */
 TI2AB(RyRc)
 
+real L0		= 0.025;					/* (1) */
+real logL0	= log(L0);					/* (1) */
+real Q		= 2.3;						/* (1) */
+real V_half	= (RTF/Q*(logL0+4*log((1.0+Cao/0.58)/(1.0+Cao/2.6)))-19.0); /* (mV) */ /* NB here depends on Cao parameter not constant */
+real Xr1_inf	= 1.0/(1.0+exp((V_half-V)/4.9));		/* (1) */
+real tau_Xr1	= 1.0*(450.0/(1.0+exp((-45.0-V)/10.0)))*(6.0/(1.0+exp((30.0+V)/11.5)));	/* (ms) */
+TI2AB(Xr1);
+
 real Cai_bufc    = 1.0/(1.0+Buf_C*Kbuf_C/sqr(Cai+Kbuf_C));		/* (1) */
 real Ca_SR_bufSR = 1.0/(1.0+Buf_SR*Kbuf_SR/sqr(Ca_SR+Kbuf_SR));		/* (1) */
 
 real diff_Nai    = -CFV*(i_Na+i_NaL+i_b_Na+3.0*i_NaK+3.0*i_NaCa+i_fNa);	/* (mM/ms) */
 real diff_Cai    = Cai_bufc*(j_leak-j_up+j_rel-(i_CaL+i_b_Ca+i_PCa-2.0*i_NaCa)*CFV*0.5);	/* (mM/ms) */
 real diff_Ca_SR  = Ca_SR_bufSR*(Vc/Vsr)*(j_up-(j_rel+j_leak));		/* (mM/ms) */
-real diff_V = -(i_K1+i_to+i_Kr+i_Ks+i_CaL+i_NaK+i_Na+i_NaL+i_NaCa+i_PCa+i_f+i_b_Na+i_b_Ca);	/* (mV/ms) */
+real diff_V = -(i_K1+i_to+i_Kr+i_Ks+i_KACh+i_CaL+i_NaK+i_Na+i_NaL+i_NaCa+i_PCa+i_f+i_b_Na+i_b_Ca);	/* (mV/ms) */
 

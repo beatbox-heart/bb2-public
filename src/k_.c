@@ -84,5 +84,9 @@ int k_expr_depends (char *expr, char *varname)
   if (err == REG_ESPACE) {
     EXPECTED_ERROR("Ran out of memory when evaluating regular expression '%s'.\n",pattern);
   }
-  return (err != 0);
+  /* return (err != 0); */
+  /*    Normally, regexec() returns 0 for success and the non-zero code */
+  /*    REG_NOMATCH for failure.  Other non-zero error codes may be returned in */
+  /*    exceptional situations; see DIAGNOSTICS. */
+  return (err == 0);
 }

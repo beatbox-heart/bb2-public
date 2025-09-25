@@ -32,36 +32,27 @@ common_sources = \
 	hh52.c hh52_other.h hh52_tgate.h hh52_par.h hh52_ftab.h\
 	hh52m.c hh52m_ik.h hh52m_ina.h\
 	br77.c br77_fddt.h br77_ftab.h br77_fun.h br77_ngate.h br77_other.h br77_par.h br77_tgate.h  br77_const.h\
-	byte.c \
-	byte.h \
+	byte.c byte.h \
 	byteout.c \
 	bzoregon.c \
 	bzr.c \
-	cgle.c \
-	cglel.c \
-	cglep.c \
+	cgle.c cglel.c cglep.c \
 	channel.h \
-	chrecruit.c \
-	chrecruitpar.h \
-	chrecruitvar.h \
-	chtb.c \
-	chtbpar.h \
-	chtbvar.h \
+	chrecruit.c chrecruitpar.h chrecruitvar.h \
+	chtb.c chtbpar.h chtbvar.h \
 	clock.c \
 	crn98.c crn98_fun.h  crn98_ngate.h crn98_other.h crn98_par.h crn98_tgate.h crn98_const.h crn98_ftab.h crn98_fddt.h \
 	crn.c crn_par.h crn_step.h crn_var.h \
 	crnach.c crnach_par.h crnach_step.h crnach_var.h \
 	ctlpoint.c ctlpoint.h \
 	d_dt.c \
-	device.c \
-	device.h \
+	device.c device.h \
 	devlist.h \
 	diff.c diff1.h diff2.h diff3.h diff1d.h diff2d.h diff3d.h diff_printweights.h \
 	displayName.h \
 	dump.c \
 	dump_types.h \
-	dynamic.c \
-	dynamic.h \
+	dynamic.c dynamic.h \
 	ecg.c \
 	elliptic.c \
 	error.h \
@@ -70,14 +61,12 @@ common_sources = \
 	fhncub.c \
 	fhnbkl.c \
 	fhncubpar.c \
-	fk.c \
-	fk.h \
-	fkmod.c \
-	fkmod.h \
+	fk.c fk.h \
+	fkmod.c fkmod.h \
+	flip.c \
 	flow2d.c \
 	front.c \
-	geometry.c \
-	geometry.h \
+	geometry.c geometry.h \
 	glerr.h \
 	gpcell.c gpcell.h \
         gpc_var.h \
@@ -127,6 +116,7 @@ common_sources = \
 	ppcpash18.c ppcpash18_fun.h  ppcpash18_ngate.h ppcpash18_other.h ppcpash18_par.h ppcpash18_tgate.h ppcpash18_const.h ppcpash18_ftab.h ppcpash18_fddt.h \
 	paci18.c paci18_fun.h  paci18_ngate.h paci18_other.h paci18_par.h paci18_tgate.h paci18_const.h paci18_ftab.h paci18_fddt.h \
 	paci20.c paci20_fun.h  paci20_ngate.h paci20_other.h paci20_par.h paci20_tgate.h paci20_const.h paci20_ftab.h paci20_fddt.h \
+	pgmout.c \
 	ppmout.c \
 	pw_mult.c \
 	qpp.c qpp.h \
@@ -177,6 +167,7 @@ bb2s_SOURCES = \
 	k_paintgl.c \
 	k_plot.c \
 	matout.c \
+	pgmin.c \
 	ppmin.c \
 	record.c \
 	skrecord.c \

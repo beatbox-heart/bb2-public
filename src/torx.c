@@ -47,8 +47,8 @@ RUN_HEAD(torx)
   real *u;
 
   for(y=s.y0;y<=s.y1;y++) for(z=s.z0;z<=s.z1;z++) for(v=v0;v<=v1;v++) {
-    New[ind(s.x0-1,y,z,v)] = New[ind(s.x1,y,z,v)];
-    New[ind(s.x1+1,y,z,v)] = New[ind(s.x0,y,z,v)];
+    New[ind(s.x0,y,z,v)] = New[ind(s.x1-1,y,z,v)];
+    New[ind(s.x1,y,z,v)] = New[ind(s.x0+1,y,z,v)];
   }
 }
 RUN_TAIL(torx)
@@ -58,12 +58,14 @@ DESTROY_TAIL(torx)
 
 CREATE_HEAD(torx)
 {
+  DEVICE_REQUIRES_SYNC;
+  DEVICE_IS_RECTANGULAR;
+
   ACCEPTI(v0,INONE,0,vmax-1);
   ACCEPTI(v1,INONE,0,vmax-1);
   ASSERT(v1 >= v0);
   Space s=dev->s;
-  ASSERT(s.x0>1)
-  ASSERT(s.x1<xmax-1)
+  ASSERT(s.x0+1<s.x1-1);
 }
 CREATE_TAIL(torx,1)
 

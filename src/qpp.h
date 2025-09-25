@@ -80,19 +80,6 @@ int def (char *s);
  */
 int def_local (char *s, p_tb table);
 
-/*! Define a device name as a global strig macro. 
- *	\param d The device whose name is to be defined.
- * 	\return 1 for success, 0 for failure.
- */
-int def_dev (Device *d);
-
-/*! Obtain a reference to a device from global string macro containing its name.
- *	\param n The name of the device to be found.
- *	\param d Address of the pointer to the named device, if found.
- * 	\return 1 for success, 0 for failure.
- */
-int get_dev (Name n, Device **d);
-
 /*! Find a key in buffer, return to the next char after key or NULL if not 
  *  \param key the string to be found, typically like "name="
  *  \param s string to be searched for thekey
@@ -211,7 +198,7 @@ int acceptre (const char *mask,real *arr,int i,real deflt,real minv,real maxv,ch
  *	\param v Address of the dependent-parameter-describing Var structure.
  *	\param iv Address of the variable indicating the index in v of the 
  *                current dependent parameter.
- *	\param v0 Lower variable bound for the calling device's Space 
+ *	\param v0 Lower variable bound for the calling device'?s Space 
  *                structure. Used to ensure that the v's src fields point to 
  *                variable 0.
  * 	\return 1 for success, 0 for failure.
@@ -579,14 +566,14 @@ EXTERN real macheps;
  */
 #define SEPARATORS " ;\t\r\n!$"
 
-/*! Marks the beginning of a reference to a file. */
+/*! Marks the beginning of a reference to a file */
 #define INCLUDEBEGIN '<'
-/*! Marks the end of a reference to a file. */
+/*! Marks the end of a reference to a file */
 #define INCLUDEEND '>'
 
-/*! Marks the beginning of a reference to a string macro. */
+/*! Marks the beginning of a reference to a string macro */
 #define PASTEBEGIN '['
-/*! Marks the end of a reference to a string macro. */
+/*! Marks the end of a reference to a string macro */
 #define PASTEEND ']'
 
 /* reference to a system command output */
@@ -596,18 +583,18 @@ EXTERN real macheps;
 #define CATCHEND '`'
 
 /* Block of parameters */
-/*! marks the beginning of a block of parameters. */
+/*! marks the beginning of a block of parameters */
 #define BLOCKBEGIN '{'
-/*! marks the end of a block of parameters. */
+/*! marks the end of a block of parameters */
 #define BLOCKEND '}'
 
 /* String with blanks */
-/*! marks the end of a string with blanks. */
+/*! marks the end of a string with blanks */
 #define STRBEGIN '\"'
-/*! marks the end of a string with blanks. */
+/*! marks the end of a string with blanks */
 #define STREND '\"'
 
-/*! Linking parameter to a level of dynamic variables */
+/*! Linking parameter to a layer of the grid */
 #define AT '@'
 
 /* Links device parameter to a k-expression */

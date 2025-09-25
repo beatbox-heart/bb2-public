@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2024) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -213,3 +213,6 @@ real Xs_inf = (al_Xs/(al_Xs+be_Xs)); /* && */
 real tau_Xs = ((1.0/(al_Xs+be_Xs))+tauks_const); /* && (ms) */ 
 TI2AB(Xs)
 /* diff_Xs = ((Xs_inf - Xs)/tau_Xs); */
+
+/* ACh-dependent K current, as per Kneller et al. 2002 CR */
+real g_KACh	= (0.0517 + 0.4561/(1.0 + exp((V+59.53)/17.18))); /* (1/ms) */

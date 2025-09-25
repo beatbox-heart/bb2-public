@@ -67,9 +67,6 @@ static real cropZ(real z,BGIWindow w,int zmin,int zmax) {
 }
 #define Z(z) cropZ(z,w,zmin,zmax)
 
-extern int ndev;		/* num of devices in current run */
-extern Device dev[MAXDEV];	/* the array of devices */
-
 void SetWindow(BGIWindow W) {w=W;}
 
 int SetLimits(real Absmin, real Absmax, real Ordmin, real Ordmax){

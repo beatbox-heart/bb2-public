@@ -101,6 +101,8 @@ RUN_HEAD(load)
     }
   }
 #endif
+  MESSAGE("loaded [%d:%d]x[%d:%d]x[%d:%d]x[%d:%d] from %s at t=%ld\n",
+	  s.x0, s.x1, s.y0, s.y1, s.z0, s.z1, v0, v1, S->filename,t);
 }
 RUN_TAIL(load)
 

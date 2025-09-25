@@ -40,6 +40,8 @@ typedef struct {
   INT t0;		/* earliest loop count */
   INT t1;		/* latest loop count */
   INT dt;		/* interval between */
+  REAL yesvalue;
+  REAL novalue;
   KREAL(result); 	/* k_var to which result will be assigned. */
   NFILE(debug);
   int debugWriter;
@@ -50,15 +52,18 @@ RUN_HEAD(regular)
   DEVICE_CONST(INT,t0);
   DEVICE_CONST(INT,t1);
   DEVICE_CONST(INT,dt);
+  DEVICE_CONST(REAL,yesvalue);
+  DEVICE_CONST(REAL,novalue);
   /* DEVICE_CONST(REAL *,result); */
   DEVICE_KREAL (result);
-  DEVICE_CONST(int, debugWriter)
-  DEVICE_CONST(FILE *,debug)
-  *result
-    = (t<t0)? 0.0
-    : (t>t1)? 0.0
-    : (0==(t-t0)%dt) ? 1.0
-    : 0.0;
+  DEVICE_CONST(int, debugWriter);
+  DEVICE_CONST(FILE *,debug);
+  real newvalue
+    = (t<t0)? novalue
+    : (t>t1)? novalue
+    : (0==(t-t0)%dt) ? yesvalue
+    : novalue;
+  if (newvalue != RNONE) *result=newvalue;
   /* printf("t=%ld [%ld:%ld:%ld] -> %lg\n",(long)t,(long)t0,(long)dt,(long)t1,(double)(*result)); */
   if (debug && debugWriter) {
     fprintf(debug, " t=%ld t0=%ld t1=%ld dt=%ld %s=%lg\n", (long)t, (long)t0, (long)t1, (long)dt, resultname, (double)(*result));
@@ -78,6 +83,8 @@ CREATE_HEAD(regular)
   ACCEPTL(t0,0,0,LNONE);
   ACCEPTL(dt,1,1,LNONE);
   ACCEPTL(t1,LONG_MAX,t0,LNONE);
+  ACCEPTR(yesvalue,1,RNONE,RNONE);
+  ACCEPTR(novalue,0,RNONE,RNONE);
   ACCEPTKR(result,1,NULL);
   ACCEPTF(debug,"wt","");
 #if MPI

@@ -19,9 +19,7 @@
  */
 
 /* 
- * Experimental module, not for distribution. 
  * Periodic boundary conditions along y axis 
- *
  * Only for box geometry, sequential mode.
  */
 #include <assert.h>
@@ -49,8 +47,8 @@ RUN_HEAD(tory)
   real *u;
 
   for(x=s.x0;x<=s.x1;x++) for(z=s.z0;z<=s.z1;z++) for(v=v0;v<=v1;v++) {
-    New[ind(x,s.y0-1,z,v)] = New[ind(x,s.y1,z,v)];
-    New[ind(x,s.y1+1,z,v)] = New[ind(x,s.y0,z,v)];
+    New[ind(x,s.y0,z,v)] = New[ind(x,s.y1-1,z,v)];
+    New[ind(x,s.y1,z,v)] = New[ind(x,s.y0+1,z,v)];
   }
 }
 RUN_TAIL(tory)
@@ -60,12 +58,15 @@ DESTROY_TAIL(tory)
 
 CREATE_HEAD(tory)
 {
+  DEVICE_REQUIRES_SYNC;
+  DEVICE_IS_RECTANGULAR;
+
   ACCEPTI(v0,INONE,0,vmax-1);
   ACCEPTI(v1,INONE,0,vmax-1);
   ASSERT(v1 >= v0);
   Space s=dev->s;
   ASSERT(s.y0>1)
-  ASSERT(s.y1<ymax-1)
+  ASSERT(s.y0+1<s.y1-1);
 }
 CREATE_TAIL(tory,1)
 

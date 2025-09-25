@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2016) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -19,4 +19,7 @@
  */
 
 /* List of tabulated functions of V beyond gate rates */
-/* empty so far */
+
+/* ACh-dependent K current, as per Kneller et al. 2002 CR */
+_(g_KACh)
+/* real g_KACh	= (0.0517 + 0.4561/(1.0 + exp((V+59.53)/17.18))); /\* (1/ms) *\/ */

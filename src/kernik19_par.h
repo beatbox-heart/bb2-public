@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2016) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -71,4 +71,6 @@ _(ks		, 12.5)		/* && (1/ms) ~ magnitude of j_rel */
 _(Kup		, 1.755e-4)	/* && (mM) */
 _(VmaxUp	, 1.105e-4)	/* && (mM/ms) = 0.000425 * 0.26 ~ magnitude of j_up */
 
-
+/* ACh-dependen K current, relative to literature definition */
+_(ACh		, 0.0)		/* (uM) */
+_(k_KACh	, 1.0)		/* (1) */

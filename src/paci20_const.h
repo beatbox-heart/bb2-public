@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2024) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -31,5 +31,5 @@
 #define CFV (Cm/(F*Vc)) /* common subexprresion (mM/mV) */
 
 /* These must be constant to allow tabulation of ... */
-#define Cao (1.8)	/* (mM) ... Xr1 */
+/* #define Cao (1.8) */	/* (mM) ... Xr1 - no this is a parameter now and Xr1 gates are not tabulated */
 #define Vh_hLate (87.61)	/* (mV) ... hL */
