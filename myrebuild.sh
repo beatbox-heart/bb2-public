@@ -26,7 +26,7 @@ export CC=mpicc
 
 # Make the distribution.
 # This will recompile the bits that need recompiling
-make
+make -j
 
 # Install the binaries, in your $HOME/bin directory,
 # or whatever you specified at configure step. 
