@@ -77,6 +77,7 @@ RUN_HEAD(euler)
   }									\
 }
   DO_FOR_ALL_POINTS;
+  
 #undef COMMANDS
 }
 RUN_TAIL(euler);

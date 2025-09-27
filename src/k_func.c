@@ -94,7 +94,7 @@ RUN_HEAD(k_func)
 	for(icode=0;icode<S->ncode;icode++) {
 	  void *code, *result;
 	  if NOT(code=(S->code)[icode]) continue;
-	  result = execute(code); CHK(NULL);
+	  result = execute(code); CHK(Sprintf("t=%ld, idev=%d, icode=%d",(long)t,(int)idev,(int)icode));
 	  if ((!s.nowhere || debugWriter) && debug) {
 	    fprintf(debug," %s=%s",var_name(loctb,(S->data)[icode],n), prt(result, res_type(code)));
 	    fflush(debug);

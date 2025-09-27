@@ -124,14 +124,15 @@ am__objects_1 = bb2p-beatbox.$(OBJEXT) bb2p-activation.$(OBJEXT) \
 	bb2p-crnach.$(OBJEXT) bb2p-ctlpoint.$(OBJEXT) \
 	bb2p-d_dt.$(OBJEXT) bb2p-device.$(OBJEXT) bb2p-diff.$(OBJEXT) \
 	bb2p-dump.$(OBJEXT) bb2p-dynamic.$(OBJEXT) bb2p-ecg.$(OBJEXT) \
-	bb2p-elliptic.$(OBJEXT) bb2p-euler.$(OBJEXT) \
-	bb2p-fhncub.$(OBJEXT) bb2p-fhnbkl.$(OBJEXT) \
-	bb2p-fhncubpar.$(OBJEXT) bb2p-fk.$(OBJEXT) \
-	bb2p-fkmod.$(OBJEXT) bb2p-flip.$(OBJEXT) bb2p-flow2d.$(OBJEXT) \
-	bb2p-front.$(OBJEXT) bb2p-geometry.$(OBJEXT) \
-	bb2p-gpcell.$(OBJEXT) bb2p-grad2d.$(OBJEXT) bb2p-ha.$(OBJEXT) \
-	bb2p-hh.$(OBJEXT) bb2p-init.$(OBJEXT) bb2p-kernik19.$(OBJEXT) \
-	bb2p-k_.$(OBJEXT) bb2p-k_comp.$(OBJEXT) bb2p-k_exec.$(OBJEXT) \
+	bb2p-elliptic.$(OBJEXT) bb2p-error.$(OBJEXT) \
+	bb2p-euler.$(OBJEXT) bb2p-fhncub.$(OBJEXT) \
+	bb2p-fhnbkl.$(OBJEXT) bb2p-fhncubpar.$(OBJEXT) \
+	bb2p-fk.$(OBJEXT) bb2p-fkmod.$(OBJEXT) bb2p-flip.$(OBJEXT) \
+	bb2p-flow2d.$(OBJEXT) bb2p-front.$(OBJEXT) \
+	bb2p-geometry.$(OBJEXT) bb2p-gpcell.$(OBJEXT) \
+	bb2p-grad2d.$(OBJEXT) bb2p-ha.$(OBJEXT) bb2p-hh.$(OBJEXT) \
+	bb2p-init.$(OBJEXT) bb2p-kernik19.$(OBJEXT) bb2p-k_.$(OBJEXT) \
+	bb2p-k_comp.$(OBJEXT) bb2p-k_exec.$(OBJEXT) \
 	bb2p-k_func.$(OBJEXT) bb2p-k_poincare.$(OBJEXT) \
 	bb2p-k_print.$(OBJEXT) bb2p-linear1.$(OBJEXT) \
 	bb2p-linear2.$(OBJEXT) bb2p-load.$(OBJEXT) bb2p-lrd.$(OBJEXT) \
@@ -176,14 +177,15 @@ am__objects_2 = bb2s-beatbox.$(OBJEXT) bb2s-activation.$(OBJEXT) \
 	bb2s-crnach.$(OBJEXT) bb2s-ctlpoint.$(OBJEXT) \
 	bb2s-d_dt.$(OBJEXT) bb2s-device.$(OBJEXT) bb2s-diff.$(OBJEXT) \
 	bb2s-dump.$(OBJEXT) bb2s-dynamic.$(OBJEXT) bb2s-ecg.$(OBJEXT) \
-	bb2s-elliptic.$(OBJEXT) bb2s-euler.$(OBJEXT) \
-	bb2s-fhncub.$(OBJEXT) bb2s-fhnbkl.$(OBJEXT) \
-	bb2s-fhncubpar.$(OBJEXT) bb2s-fk.$(OBJEXT) \
-	bb2s-fkmod.$(OBJEXT) bb2s-flip.$(OBJEXT) bb2s-flow2d.$(OBJEXT) \
-	bb2s-front.$(OBJEXT) bb2s-geometry.$(OBJEXT) \
-	bb2s-gpcell.$(OBJEXT) bb2s-grad2d.$(OBJEXT) bb2s-ha.$(OBJEXT) \
-	bb2s-hh.$(OBJEXT) bb2s-init.$(OBJEXT) bb2s-kernik19.$(OBJEXT) \
-	bb2s-k_.$(OBJEXT) bb2s-k_comp.$(OBJEXT) bb2s-k_exec.$(OBJEXT) \
+	bb2s-elliptic.$(OBJEXT) bb2s-error.$(OBJEXT) \
+	bb2s-euler.$(OBJEXT) bb2s-fhncub.$(OBJEXT) \
+	bb2s-fhnbkl.$(OBJEXT) bb2s-fhncubpar.$(OBJEXT) \
+	bb2s-fk.$(OBJEXT) bb2s-fkmod.$(OBJEXT) bb2s-flip.$(OBJEXT) \
+	bb2s-flow2d.$(OBJEXT) bb2s-front.$(OBJEXT) \
+	bb2s-geometry.$(OBJEXT) bb2s-gpcell.$(OBJEXT) \
+	bb2s-grad2d.$(OBJEXT) bb2s-ha.$(OBJEXT) bb2s-hh.$(OBJEXT) \
+	bb2s-init.$(OBJEXT) bb2s-kernik19.$(OBJEXT) bb2s-k_.$(OBJEXT) \
+	bb2s-k_comp.$(OBJEXT) bb2s-k_exec.$(OBJEXT) \
 	bb2s-k_func.$(OBJEXT) bb2s-k_poincare.$(OBJEXT) \
 	bb2s-k_print.$(OBJEXT) bb2s-linear1.$(OBJEXT) \
 	bb2s-linear2.$(OBJEXT) bb2s-load.$(OBJEXT) bb2s-lrd.$(OBJEXT) \
@@ -263,64 +265,65 @@ am__depfiles_remade = ./$(DEPDIR)/bb2d-bbxd.Po \
 	./$(DEPDIR)/bb2p-diff3dv.Po ./$(DEPDIR)/bb2p-diffold.Po \
 	./$(DEPDIR)/bb2p-diffstep.Po ./$(DEPDIR)/bb2p-dump.Po \
 	./$(DEPDIR)/bb2p-dynamic.Po ./$(DEPDIR)/bb2p-ecg.Po \
-	./$(DEPDIR)/bb2p-elliptic.Po ./$(DEPDIR)/bb2p-euler.Po \
-	./$(DEPDIR)/bb2p-fhnbkl.Po ./$(DEPDIR)/bb2p-fhncub.Po \
-	./$(DEPDIR)/bb2p-fhncubpar.Po ./$(DEPDIR)/bb2p-fk.Po \
-	./$(DEPDIR)/bb2p-fkmod.Po ./$(DEPDIR)/bb2p-flip.Po \
-	./$(DEPDIR)/bb2p-flow2d.Po ./$(DEPDIR)/bb2p-front.Po \
-	./$(DEPDIR)/bb2p-geometry.Po ./$(DEPDIR)/bb2p-gpcell.Po \
-	./$(DEPDIR)/bb2p-grad2d.Po ./$(DEPDIR)/bb2p-ha.Po \
-	./$(DEPDIR)/bb2p-hh.Po ./$(DEPDIR)/bb2p-hh52.Po \
-	./$(DEPDIR)/bb2p-hh52m.Po ./$(DEPDIR)/bb2p-init.Po \
-	./$(DEPDIR)/bb2p-k_.Po ./$(DEPDIR)/bb2p-k_comp.Po \
-	./$(DEPDIR)/bb2p-k_exec.Po ./$(DEPDIR)/bb2p-k_func.Po \
-	./$(DEPDIR)/bb2p-k_poincare.Po ./$(DEPDIR)/bb2p-k_print.Po \
-	./$(DEPDIR)/bb2p-kernik19.Po ./$(DEPDIR)/bb2p-linear1.Po \
-	./$(DEPDIR)/bb2p-linear2.Po ./$(DEPDIR)/bb2p-load.Po \
-	./$(DEPDIR)/bb2p-lrd.Po ./$(DEPDIR)/bb2p-mchtb.Po \
-	./$(DEPDIR)/bb2p-mouse.Po ./$(DEPDIR)/bb2p-mousevent.Po \
-	./$(DEPDIR)/bb2p-mpipaint.Po ./$(DEPDIR)/bb2p-ms.Po \
-	./$(DEPDIR)/bb2p-n62.Po ./$(DEPDIR)/bb2p-neum2d.Po \
-	./$(DEPDIR)/bb2p-neum3d.Po ./$(DEPDIR)/bb2p-noble.Po \
-	./$(DEPDIR)/bb2p-noble2.Po ./$(DEPDIR)/bb2p-noble_gbk.Po \
-	./$(DEPDIR)/bb2p-nobleftn.Po ./$(DEPDIR)/bb2p-noblen.Po \
-	./$(DEPDIR)/bb2p-noblest2.Po ./$(DEPDIR)/bb2p-noblestu.Po \
-	./$(DEPDIR)/bb2p-ord.Po ./$(DEPDIR)/bb2p-p2clib.Po \
-	./$(DEPDIR)/bb2p-paci18.Po ./$(DEPDIR)/bb2p-paci20.Po \
-	./$(DEPDIR)/bb2p-pause.Po ./$(DEPDIR)/bb2p-pgmout.Po \
-	./$(DEPDIR)/bb2p-pipe.Po ./$(DEPDIR)/bb2p-poincare.Po \
-	./$(DEPDIR)/bb2p-ppcpash18.Po ./$(DEPDIR)/bb2p-ppmout.Po \
-	./$(DEPDIR)/bb2p-pw_mult.Po ./$(DEPDIR)/bb2p-qpp.Po \
-	./$(DEPDIR)/bb2p-reduce.Po ./$(DEPDIR)/bb2p-regular.Po \
-	./$(DEPDIR)/bb2p-rk4.Po ./$(DEPDIR)/bb2p-rushlarsen.Po \
-	./$(DEPDIR)/bb2p-sample.Po ./$(DEPDIR)/bb2p-screen.Po \
-	./$(DEPDIR)/bb2p-sequence.Po ./$(DEPDIR)/bb2p-shell.Po \
-	./$(DEPDIR)/bb2p-singz.Po ./$(DEPDIR)/bb2p-state.Po \
-	./$(DEPDIR)/bb2p-stop.Po ./$(DEPDIR)/bb2p-system.Po \
-	./$(DEPDIR)/bb2p-tb.Po ./$(DEPDIR)/bb2p-trivial.Po \
-	./$(DEPDIR)/bb2p-ttnnp04.Po ./$(DEPDIR)/bb2p-ttnp.Po \
-	./$(DEPDIR)/bb2p-ttp06.Po ./$(DEPDIR)/bb2p-ttp2006.Po \
-	./$(DEPDIR)/bb2p-update.Po ./$(DEPDIR)/bb2p-vtkout2.Po \
-	./$(DEPDIR)/bb2p-windraw.Po ./$(DEPDIR)/bb2p-zeeman.Po \
-	./$(DEPDIR)/bb2p-zfk.Po ./$(DEPDIR)/bb2s-activation.Po \
-	./$(DEPDIR)/bb2s-adi1d.Po ./$(DEPDIR)/bb2s-adi2d.Po \
-	./$(DEPDIR)/bb2s-adi3d.Po ./$(DEPDIR)/bb2s-ap.Po \
-	./$(DEPDIR)/bb2s-b02.Po ./$(DEPDIR)/bb2s-beatbox.Po \
-	./$(DEPDIR)/bb2s-bgi.Po ./$(DEPDIR)/bb2s-bikt.Po \
-	./$(DEPDIR)/bb2s-br77.Po ./$(DEPDIR)/bb2s-byte.Po \
-	./$(DEPDIR)/bb2s-bytein.Po ./$(DEPDIR)/bb2s-byteout.Po \
-	./$(DEPDIR)/bb2s-bzoregon.Po ./$(DEPDIR)/bb2s-bzr.Po \
-	./$(DEPDIR)/bb2s-cgle.Po ./$(DEPDIR)/bb2s-cglel.Po \
-	./$(DEPDIR)/bb2s-cglep.Po ./$(DEPDIR)/bb2s-chrecruit.Po \
-	./$(DEPDIR)/bb2s-chtb.Po ./$(DEPDIR)/bb2s-clock.Po \
-	./$(DEPDIR)/bb2s-crn.Po ./$(DEPDIR)/bb2s-crn98.Po \
-	./$(DEPDIR)/bb2s-crnach.Po ./$(DEPDIR)/bb2s-ctlpoint.Po \
-	./$(DEPDIR)/bb2s-d_dt.Po ./$(DEPDIR)/bb2s-device.Po \
-	./$(DEPDIR)/bb2s-diff.Po ./$(DEPDIR)/bb2s-diff2dv.Po \
-	./$(DEPDIR)/bb2s-diff3dv.Po ./$(DEPDIR)/bb2s-diffold.Po \
-	./$(DEPDIR)/bb2s-diffstep.Po ./$(DEPDIR)/bb2s-dump.Po \
-	./$(DEPDIR)/bb2s-dynamic.Po ./$(DEPDIR)/bb2s-ecg.Po \
-	./$(DEPDIR)/bb2s-elliptic.Po ./$(DEPDIR)/bb2s-euler.Po \
+	./$(DEPDIR)/bb2p-elliptic.Po ./$(DEPDIR)/bb2p-error.Po \
+	./$(DEPDIR)/bb2p-euler.Po ./$(DEPDIR)/bb2p-fhnbkl.Po \
+	./$(DEPDIR)/bb2p-fhncub.Po ./$(DEPDIR)/bb2p-fhncubpar.Po \
+	./$(DEPDIR)/bb2p-fk.Po ./$(DEPDIR)/bb2p-fkmod.Po \
+	./$(DEPDIR)/bb2p-flip.Po ./$(DEPDIR)/bb2p-flow2d.Po \
+	./$(DEPDIR)/bb2p-front.Po ./$(DEPDIR)/bb2p-geometry.Po \
+	./$(DEPDIR)/bb2p-gpcell.Po ./$(DEPDIR)/bb2p-grad2d.Po \
+	./$(DEPDIR)/bb2p-ha.Po ./$(DEPDIR)/bb2p-hh.Po \
+	./$(DEPDIR)/bb2p-hh52.Po ./$(DEPDIR)/bb2p-hh52m.Po \
+	./$(DEPDIR)/bb2p-init.Po ./$(DEPDIR)/bb2p-k_.Po \
+	./$(DEPDIR)/bb2p-k_comp.Po ./$(DEPDIR)/bb2p-k_exec.Po \
+	./$(DEPDIR)/bb2p-k_func.Po ./$(DEPDIR)/bb2p-k_poincare.Po \
+	./$(DEPDIR)/bb2p-k_print.Po ./$(DEPDIR)/bb2p-kernik19.Po \
+	./$(DEPDIR)/bb2p-linear1.Po ./$(DEPDIR)/bb2p-linear2.Po \
+	./$(DEPDIR)/bb2p-load.Po ./$(DEPDIR)/bb2p-lrd.Po \
+	./$(DEPDIR)/bb2p-mchtb.Po ./$(DEPDIR)/bb2p-mouse.Po \
+	./$(DEPDIR)/bb2p-mousevent.Po ./$(DEPDIR)/bb2p-mpipaint.Po \
+	./$(DEPDIR)/bb2p-ms.Po ./$(DEPDIR)/bb2p-n62.Po \
+	./$(DEPDIR)/bb2p-neum2d.Po ./$(DEPDIR)/bb2p-neum3d.Po \
+	./$(DEPDIR)/bb2p-noble.Po ./$(DEPDIR)/bb2p-noble2.Po \
+	./$(DEPDIR)/bb2p-noble_gbk.Po ./$(DEPDIR)/bb2p-nobleftn.Po \
+	./$(DEPDIR)/bb2p-noblen.Po ./$(DEPDIR)/bb2p-noblest2.Po \
+	./$(DEPDIR)/bb2p-noblestu.Po ./$(DEPDIR)/bb2p-ord.Po \
+	./$(DEPDIR)/bb2p-p2clib.Po ./$(DEPDIR)/bb2p-paci18.Po \
+	./$(DEPDIR)/bb2p-paci20.Po ./$(DEPDIR)/bb2p-pause.Po \
+	./$(DEPDIR)/bb2p-pgmout.Po ./$(DEPDIR)/bb2p-pipe.Po \
+	./$(DEPDIR)/bb2p-poincare.Po ./$(DEPDIR)/bb2p-ppcpash18.Po \
+	./$(DEPDIR)/bb2p-ppmout.Po ./$(DEPDIR)/bb2p-pw_mult.Po \
+	./$(DEPDIR)/bb2p-qpp.Po ./$(DEPDIR)/bb2p-reduce.Po \
+	./$(DEPDIR)/bb2p-regular.Po ./$(DEPDIR)/bb2p-rk4.Po \
+	./$(DEPDIR)/bb2p-rushlarsen.Po ./$(DEPDIR)/bb2p-sample.Po \
+	./$(DEPDIR)/bb2p-screen.Po ./$(DEPDIR)/bb2p-sequence.Po \
+	./$(DEPDIR)/bb2p-shell.Po ./$(DEPDIR)/bb2p-singz.Po \
+	./$(DEPDIR)/bb2p-state.Po ./$(DEPDIR)/bb2p-stop.Po \
+	./$(DEPDIR)/bb2p-system.Po ./$(DEPDIR)/bb2p-tb.Po \
+	./$(DEPDIR)/bb2p-trivial.Po ./$(DEPDIR)/bb2p-ttnnp04.Po \
+	./$(DEPDIR)/bb2p-ttnp.Po ./$(DEPDIR)/bb2p-ttp06.Po \
+	./$(DEPDIR)/bb2p-ttp2006.Po ./$(DEPDIR)/bb2p-update.Po \
+	./$(DEPDIR)/bb2p-vtkout2.Po ./$(DEPDIR)/bb2p-windraw.Po \
+	./$(DEPDIR)/bb2p-zeeman.Po ./$(DEPDIR)/bb2p-zfk.Po \
+	./$(DEPDIR)/bb2s-activation.Po ./$(DEPDIR)/bb2s-adi1d.Po \
+	./$(DEPDIR)/bb2s-adi2d.Po ./$(DEPDIR)/bb2s-adi3d.Po \
+	./$(DEPDIR)/bb2s-ap.Po ./$(DEPDIR)/bb2s-b02.Po \
+	./$(DEPDIR)/bb2s-beatbox.Po ./$(DEPDIR)/bb2s-bgi.Po \
+	./$(DEPDIR)/bb2s-bikt.Po ./$(DEPDIR)/bb2s-br77.Po \
+	./$(DEPDIR)/bb2s-byte.Po ./$(DEPDIR)/bb2s-bytein.Po \
+	./$(DEPDIR)/bb2s-byteout.Po ./$(DEPDIR)/bb2s-bzoregon.Po \
+	./$(DEPDIR)/bb2s-bzr.Po ./$(DEPDIR)/bb2s-cgle.Po \
+	./$(DEPDIR)/bb2s-cglel.Po ./$(DEPDIR)/bb2s-cglep.Po \
+	./$(DEPDIR)/bb2s-chrecruit.Po ./$(DEPDIR)/bb2s-chtb.Po \
+	./$(DEPDIR)/bb2s-clock.Po ./$(DEPDIR)/bb2s-crn.Po \
+	./$(DEPDIR)/bb2s-crn98.Po ./$(DEPDIR)/bb2s-crnach.Po \
+	./$(DEPDIR)/bb2s-ctlpoint.Po ./$(DEPDIR)/bb2s-d_dt.Po \
+	./$(DEPDIR)/bb2s-device.Po ./$(DEPDIR)/bb2s-diff.Po \
+	./$(DEPDIR)/bb2s-diff2dv.Po ./$(DEPDIR)/bb2s-diff3dv.Po \
+	./$(DEPDIR)/bb2s-diffold.Po ./$(DEPDIR)/bb2s-diffstep.Po \
+	./$(DEPDIR)/bb2s-dump.Po ./$(DEPDIR)/bb2s-dynamic.Po \
+	./$(DEPDIR)/bb2s-ecg.Po ./$(DEPDIR)/bb2s-elliptic.Po \
+	./$(DEPDIR)/bb2s-error.Po ./$(DEPDIR)/bb2s-euler.Po \
 	./$(DEPDIR)/bb2s-ezgraph3d.Po ./$(DEPDIR)/bb2s-ezmarching.Po \
 	./$(DEPDIR)/bb2s-ezpaint.Po ./$(DEPDIR)/bb2s-ezstep.Po \
 	./$(DEPDIR)/bb2s-ezview.Po ./$(DEPDIR)/bb2s-fhnbkl.Po \
@@ -575,7 +578,7 @@ common_sources = beatbox.c beatbox.h activation.c ap.c b02.c bgi.c \
 	d_dt.c device.c device.h devlist.h diff.c diff1.h diff2.h \
 	diff3.h diff1d.h diff2d.h diff3d.h diff_printweights.h \
 	displayName.h dump.c dump_types.h dynamic.c dynamic.h ecg.c \
-	elliptic.c error.h euler.c extern.h fhncub.c fhnbkl.c \
+	elliptic.c error.c error.h euler.c extern.h fhncub.c fhnbkl.c \
 	fhncubpar.c fk.c fk.h fkmod.c fkmod.h flip.c flow2d.c front.c \
 	geometry.c geometry.h glerr.h gpcell.c gpcell.h gpc_var.h \
 	grad2d.c ha.c ha_cur.h ha_par.h ha_un.h ha_var.h hh.c hh.h \
@@ -773,6 +776,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-dynamic.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-ecg.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-elliptic.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-error.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-euler.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-fhnbkl.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-fhncub.Po@am__quote@ # am--include-marker
@@ -887,6 +891,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2s-dynamic.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2s-ecg.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2s-elliptic.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2s-error.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2s-euler.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2s-ezgraph3d.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2s-ezmarching.Po@am__quote@ # am--include-marker
@@ -1440,6 +1445,20 @@ bb2p-elliptic.obj: elliptic.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='elliptic.c' object='bb2p-elliptic.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2p-elliptic.obj `if test -f 'elliptic.c'; then $(CYGPATH_W) 'elliptic.c'; else $(CYGPATH_W) '$(srcdir)/elliptic.c'; fi`
+
+bb2p-error.o: error.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2p-error.o -MD -MP -MF $(DEPDIR)/bb2p-error.Tpo -c -o bb2p-error.o `test -f 'error.c' || echo '$(srcdir)/'`error.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2p-error.Tpo $(DEPDIR)/bb2p-error.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='error.c' object='bb2p-error.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2p-error.o `test -f 'error.c' || echo '$(srcdir)/'`error.c
+
+bb2p-error.obj: error.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2p-error.obj -MD -MP -MF $(DEPDIR)/bb2p-error.Tpo -c -o bb2p-error.obj `if test -f 'error.c'; then $(CYGPATH_W) 'error.c'; else $(CYGPATH_W) '$(srcdir)/error.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2p-error.Tpo $(DEPDIR)/bb2p-error.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='error.c' object='bb2p-error.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2p-error.obj `if test -f 'error.c'; then $(CYGPATH_W) 'error.c'; else $(CYGPATH_W) '$(srcdir)/error.c'; fi`
 
 bb2p-euler.o: euler.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2p-euler.o -MD -MP -MF $(DEPDIR)/bb2p-euler.Tpo -c -o bb2p-euler.o `test -f 'euler.c' || echo '$(srcdir)/'`euler.c
@@ -2994,6 +3013,20 @@ bb2s-elliptic.obj: elliptic.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='elliptic.c' object='bb2s-elliptic.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2s-elliptic.obj `if test -f 'elliptic.c'; then $(CYGPATH_W) 'elliptic.c'; else $(CYGPATH_W) '$(srcdir)/elliptic.c'; fi`
+
+bb2s-error.o: error.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2s-error.o -MD -MP -MF $(DEPDIR)/bb2s-error.Tpo -c -o bb2s-error.o `test -f 'error.c' || echo '$(srcdir)/'`error.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2s-error.Tpo $(DEPDIR)/bb2s-error.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='error.c' object='bb2s-error.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2s-error.o `test -f 'error.c' || echo '$(srcdir)/'`error.c
+
+bb2s-error.obj: error.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2s-error.obj -MD -MP -MF $(DEPDIR)/bb2s-error.Tpo -c -o bb2s-error.obj `if test -f 'error.c'; then $(CYGPATH_W) 'error.c'; else $(CYGPATH_W) '$(srcdir)/error.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2s-error.Tpo $(DEPDIR)/bb2s-error.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='error.c' object='bb2s-error.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2s-error.obj `if test -f 'error.c'; then $(CYGPATH_W) 'error.c'; else $(CYGPATH_W) '$(srcdir)/error.c'; fi`
 
 bb2s-euler.o: euler.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2s-euler.o -MD -MP -MF $(DEPDIR)/bb2s-euler.Tpo -c -o bb2s-euler.o `test -f 'euler.c' || echo '$(srcdir)/'`euler.c
@@ -4698,6 +4731,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/bb2p-dynamic.Po
 	-rm -f ./$(DEPDIR)/bb2p-ecg.Po
 	-rm -f ./$(DEPDIR)/bb2p-elliptic.Po
+	-rm -f ./$(DEPDIR)/bb2p-error.Po
 	-rm -f ./$(DEPDIR)/bb2p-euler.Po
 	-rm -f ./$(DEPDIR)/bb2p-fhnbkl.Po
 	-rm -f ./$(DEPDIR)/bb2p-fhncub.Po
@@ -4812,6 +4846,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/bb2s-dynamic.Po
 	-rm -f ./$(DEPDIR)/bb2s-ecg.Po
 	-rm -f ./$(DEPDIR)/bb2s-elliptic.Po
+	-rm -f ./$(DEPDIR)/bb2s-error.Po
 	-rm -f ./$(DEPDIR)/bb2s-euler.Po
 	-rm -f ./$(DEPDIR)/bb2s-ezgraph3d.Po
 	-rm -f ./$(DEPDIR)/bb2s-ezmarching.Po
@@ -4990,6 +5025,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/bb2p-dynamic.Po
 	-rm -f ./$(DEPDIR)/bb2p-ecg.Po
 	-rm -f ./$(DEPDIR)/bb2p-elliptic.Po
+	-rm -f ./$(DEPDIR)/bb2p-error.Po
 	-rm -f ./$(DEPDIR)/bb2p-euler.Po
 	-rm -f ./$(DEPDIR)/bb2p-fhnbkl.Po
 	-rm -f ./$(DEPDIR)/bb2p-fhncub.Po
@@ -5104,6 +5140,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/bb2s-dynamic.Po
 	-rm -f ./$(DEPDIR)/bb2s-ecg.Po
 	-rm -f ./$(DEPDIR)/bb2s-elliptic.Po
+	-rm -f ./$(DEPDIR)/bb2s-error.Po
 	-rm -f ./$(DEPDIR)/bb2s-euler.Po
 	-rm -f ./$(DEPDIR)/bb2s-ezgraph3d.Po
 	-rm -f ./$(DEPDIR)/bb2s-ezmarching.Po

@@ -819,7 +819,7 @@ RUN_HEAD(rushlarsen)
   int x, y, z;				/* space grid counters */
   real V;				/* transmembrane voltage value */
 /* #define COMMANDS { if NOT(rushlarsen_step(u,nv,S,(*x),(*y),(*z))) return 0; } */
-#define COMMANDS { if NOT(rushlarsen_step(u,nv,S)) return 0; }
+#define COMMANDS { if NOT(rushlarsen_step(u+v0*DV,nv,S)) return 0; }
   DO_FOR_ALL_POINTS;
 #undef COMMANDS
 }

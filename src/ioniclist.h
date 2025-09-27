@@ -28,7 +28,7 @@ D(hh52m)
 D(kernik19)
 D(paci18)	/* same as ppcpash18 */
 D(ppcpash18)	/* same as paci18 */
-D(paci20)	/* same as ppcpash18 */
+D(paci20)	/* with Cao a parameter not a constant */
 D(ttp2006)
 /*------------*/
 

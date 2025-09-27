@@ -25,7 +25,9 @@
 #include      <string.h>
 #include      <stdarg.h>
 
+#include "beatbox.h"
 #include "dynamic.h"
+#include "error.h"
 #define OWN
 #include      "k_.h"
 #undef OWN
@@ -371,15 +373,15 @@ static char *tp_nm(int tc) {
 }
 
 
-#define MAXSTRLEN 8192 		/* also defined in device.h but is different scope */
-static char s[MAXSTRLEN];
-static char *Sprintf(char *fmt, ...) {
-  va_list argptr;
-  va_start(argptr, fmt);
-  vsnprintf(s, MAXSTRLEN, fmt, argptr);
-  va_end(argptr);
-  return(s);
-}
+/* #define MAXSTRLEN 8192 		/\* also defined in device.h but is different scope *\/ */
+/* static char s[MAXSTRLEN]; */
+/* static char *Sprintf(char *fmt, ...) { */
+/*   va_list argptr; */
+/*   va_start(argptr, fmt); */
+/*   vsnprintf(s, MAXSTRLEN, fmt, argptr); */
+/*   va_end(argptr); */
+/*   return(s); */
+/* } */
 
 /* ------------ Code generators  -------------------- */
 
@@ -390,7 +392,7 @@ static char *Sprintf(char *fmt, ...) {
 
 static  void gnr_fn(p_tb tab, int fnum) {
   int n;
-  Sprintf("call_%d",tb_npar(tab, fnum));
+  char *s=Sprintf("call_%d",tb_npar(tab, fnum));
   n = tb_find(sys_tab,s);
   if (n==0) ERRJMP(ILGVI,s);
   CODE(p_vi,tb_addr(sys_tab,n));

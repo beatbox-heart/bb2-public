@@ -25,10 +25,8 @@ common_sources = \
 	activation.c \
 	ap.c \
 	b02.c \
-	bgi.c \
-	bgi.h \
-	bikt.c \
-	bikt.h \
+	bgi.c bgi.h \
+	bikt.c bikt.h \
 	hh52.c hh52_other.h hh52_tgate.h hh52_par.h hh52_ftab.h\
 	hh52m.c hh52m_ik.h hh52m_ina.h\
 	br77.c br77_fddt.h br77_ftab.h br77_fun.h br77_ngate.h br77_other.h br77_par.h br77_tgate.h  br77_const.h\
@@ -55,7 +53,7 @@ common_sources = \
 	dynamic.c dynamic.h \
 	ecg.c \
 	elliptic.c \
-	error.h \
+	error.c error.h \
 	euler.c \
 	extern.h \
 	fhncub.c \
@@ -138,7 +136,7 @@ common_sources = \
 	ttnp.c ttnp_par.h ttnp_step.h ttnp_init.h ttnnp04.c ttnnp04_par.h ttnnp04_var.h ttnnp04_step.h \
 	ttp06.c  ttp06_par.h ttp06_step.h ttp06_var.h\
 	ttp2006.c ttp2006_const.h ttp2006_fddt.h ttp2006_ftab.h ttp2006_fun.h ttp2006_ngate.h ttp2006_other.h ttp2006_par.h ttp2006_tgate.h\
-	trivial.c\
+	trivial.c \
 	update.c \
 	vtkout2.c \
 	windraw.c windraw.h \

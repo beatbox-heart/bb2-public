@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2021) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -18,10 +18,40 @@
  * along with Beatbox.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Generic error reporting routines */
+/* Generic error reporting routines            */
+/* From 2025: extend to all messaging routines */
 
 #ifndef __ERROR_H
 #define __ERROR_H
+
+void ANY_MESSAGE(int urgent,char *fmt,...);
+#define MESSAGE(...) ANY_MESSAGE(0,__VA_ARGS__)
+#define MESSAGE0(s) MESSAGE(s)
+#define MESSAGE1(s,a1) MESSAGE(s,a1)
+#define MESSAGE2(s,a1,a2) MESSAGE(s,a1,a2)
+#define MESSAGE3(s,a1,a2,a3) MESSAGE(s,a1,a2,a3)
+#define MESSAGE4(s,a1,a2,a3,a4) MESSAGE(s,a1,a2,a3,a4)
+#define URGENT_MESSAGE(...) ANY_MESSAGE(1,__VA_ARGS__)
+
+void Debug(char *fmt, ...);
+#if MPI
+#define DEBUG(...)			\
+  if (debug) {				\
+    fprintf(debug,"#%d %s:%d t=%ld idev=%d ",mpi_rank,__FILE__,__LINE__,t,idev);\
+    fprintf(debug, __VA_ARGS__);	\
+    fflush(debug);			\
+  }
+#else
+#define DEBUG(...)			\
+  if (debug) {				\
+    fprintf(debug,"%s:%d t=%ld idev=%d ",__FILE__,__LINE__,t,idev);	\
+    fprintf(debug, __VA_ARGS__);	\
+    fflush(debug);			\
+  }
+#endif
+
+char *Sprintf(char *fmt, ...);
+
 
 /* Most urgent fail: */
 /* Print msg on error and do a long jump to main */

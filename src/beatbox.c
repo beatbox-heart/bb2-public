@@ -52,12 +52,13 @@
 /* Exported variables */
 
 /* options */
-#if MPI
-/*  Adjust for lack of user interaction when running with MPI. */
-  INT Graph=0;                /* don't use graphical output with MPI */
-#else
-  INT Graph=1;                /* use graphical output */
-#endif
+/* #if MPI */
+/* /\*  Adjust for lack of user interaction when running with MPI. *\/ */
+/*   INT Graph=0;                /\* don't use graphical output with MPI *\/ */
+/* #else */
+/*   INT Graph=1;                /\* use graphical output *\/ */
+/* #endif */
+INT Graph=1;                /* use graphical output: presume YES even in MPI for the sake of mpipaint, mpiview, .. */
 int Profile=0;              /* Output timing for each device. */
 int Append=0;               /* append to output file */
 int Verbose=0;              /* verbose messages in output file */
@@ -101,51 +102,6 @@ static double Wtime(void)
 #endif
 }
 
-/* Generic message procedure, writes both to stdout and log file. */
-/* Works from any thread only if expected that only one thread may generate it. */
-/* Outputs to stdout and log file separately if in sequential mode, and all to stdout in MPI mode. */
-void ANY_MESSAGE(int urgent, char *fmt, ...)
-{
-  char s[MAXSTRLEN], *p;
-  va_list argptr;
-  if (mpi_rank==0 || urgent) { /*  Avoid repeated messages on MPI unless urgent */
-    va_start(argptr, fmt);
-    vsnprintf(s, MAXSTRLEN, fmt, argptr);/* form the message */
-    va_end(argptr);
-    p=s;
-    if (s[0]=='\x01') p++;                    /* \x01 - stdout mutes */
-#if MPI
-    fputs(p,stdout);
-    FFLUSH(stdout);
-#else
-    if (res) {				    /* to log file - always */
-      fputs(p,res);
-      FFLUSH(res);
-    } else {
-      fputs(p,stdout);
-      FFLUSH(stdout);
-    }
-    if (p==s && Mute==0) {		    /* to stdout */
-      fputs(p,stdout); 
-      FFLUSH(stdout);
-    }
-#endif
-  }
-}
-
-void Debug(char *fmt, ...)
-{
-  va_list argptr;
-  if NOT(debug) return;
-  va_start(argptr, fmt);
-  vfprintf(debug, fmt, argptr);             /* form the message */
-  va_end(argptr);
-  /* FFLUSH(debug); */ /* debug is about thoroughness, not performance! */
-  fflush(debug);
-}
-
-int nofflush(void *f) {return 0;}
-
 /* Abnormal termination by one process only */
 jmp_buf errjmp;
 void beatbox_abort(char const *fmt, ...)
@@ -175,6 +131,7 @@ void beatbox_abort(char const *fmt, ...)
   ExitAlone=1;
   longjmp(errjmp,1);
 }
+
 
 /* Print a usage message. */
 #define HELPMSG \
