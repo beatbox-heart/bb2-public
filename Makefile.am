@@ -5,11 +5,7 @@
 # To propagate the changes to the Makefile.in files.
 #
 
-# Do not behave necessarily like a GNU package
 AUTOMAKE_OPTIONS = foreign
-
-# Directories that must be recoursed (expect to find a Makefile.am
-# in each directory named in SUBDIRS).
 SUBDIRS   = src
 
 # Define some directories for use below.

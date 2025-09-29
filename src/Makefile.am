@@ -9,17 +9,31 @@ GSL = gsl-1.16.extract
 SUBDIRS = $(GSL)
 
 bin_PROGRAMS = bb2p bb2s bb2d
-bb2p_CPPFLAGS = -D MPI -D NO_TMPFILES ${common_cppflags} -I$(builddir)/$(GSL)
-bb2p_LDADD = ${LDFLAGS}
-bb2p_LDADD +=  $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
 
-bb2s_CPPFLAGS = ${common_cppflags} -I$(builddir)/$(GSL)/
-bb2s_LDFLAGS =  ${common_ldflags}
-bb2s_LDADD = ${bb2p_LDADD}
+# -------------------------------
+# bb2p
+# -------------------------------
+bb2p_CPPFLAGS = -D MPI -D NO_TMPFILES ${common_cppflags} -I$(builddir)/$(GSL) $(GL_CFLAGS)
+bb2p_LDFLAGS = ${common_ldflags}
+bb2p_LDADD = ${LDFLAGS}  $(GL_LIBS) $(X11_LIBS) $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
 
-bb2d_CPPFLAGS = ${common_cppflags} 
-bb2d_LDFLAGS =  ${common_ldflags} 
+# -------------------------------
+# bb2s
+# -------------------------------
+bb2s_CPPFLAGS = ${common_cppflags} -I$(builddir)/$(GSL) $(GL_CFLAGS)
+bb2s_LDFLAGS = ${common_ldflags}
+bb2s_LDADD = ${LDFLAGS}  $(GL_LIBS) $(X11_LIBS) $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
 
+# -------------------------------
+# bb2d
+# -------------------------------
+bb2d_CPPFLAGS = ${common_cppflags}
+bb2d_LDFLAGS = ${common_ldflags}
+bb2d_LDADD = 
+
+# -------------------------------
+# common sources
+# -------------------------------
 common_sources = \
 	beatbox.c beatbox.h \
 	activation.c \

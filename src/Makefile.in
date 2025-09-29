@@ -98,7 +98,8 @@ POST_UNINSTALL = :
 bin_PROGRAMS = bb2p$(EXEEXT) bb2s$(EXEEXT) bb2d$(EXEEXT)
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/pkg.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -110,7 +111,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_bb2d_OBJECTS = bb2d-bbxd.$(OBJEXT)
 bb2d_OBJECTS = $(am_bb2d_OBJECTS)
-bb2d_LDADD = $(LDADD)
+bb2d_DEPENDENCIES =
 bb2d_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(bb2d_LDFLAGS) $(LDFLAGS) \
 	-o $@
 am__objects_1 = bb2p-beatbox.$(OBJEXT) bb2p-activation.$(OBJEXT) \
@@ -164,8 +165,10 @@ am__objects_1 = bb2p-beatbox.$(OBJEXT) bb2p-activation.$(OBJEXT) \
 am_bb2p_OBJECTS = $(am__objects_1) bb2p-decomp.$(OBJEXT)
 bb2p_OBJECTS = $(am_bb2p_OBJECTS)
 am__DEPENDENCIES_1 =
-bb2p_DEPENDENCIES = $(am__DEPENDENCIES_1) $(GSL)/.libs/libgsl.a \
-	$(GSL)/cblas/.libs/libgslcblas.a
+bb2p_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
+bb2p_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(bb2p_LDFLAGS) $(LDFLAGS) \
+	-o $@
 am__objects_2 = bb2s-beatbox.$(OBJEXT) bb2s-activation.$(OBJEXT) \
 	bb2s-ap.$(OBJEXT) bb2s-b02.$(OBJEXT) bb2s-bgi.$(OBJEXT) \
 	bb2s-bikt.$(OBJEXT) bb2s-hh52.$(OBJEXT) bb2s-hh52m.$(OBJEXT) \
@@ -228,9 +231,8 @@ am_bb2s_OBJECTS = $(am__objects_2) bb2s-adi1d.$(OBJEXT) \
 	bb2s-screen_dump.$(OBJEXT) bb2s-torx.$(OBJEXT) \
 	bb2s-tory.$(OBJEXT) bb2s-torz.$(OBJEXT)
 bb2s_OBJECTS = $(am_bb2s_OBJECTS)
-am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) $(GSL)/.libs/libgsl.a \
-	$(GSL)/cblas/.libs/libgslcblas.a
-bb2s_DEPENDENCIES = $(am__DEPENDENCIES_2)
+bb2s_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
 bb2s_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(bb2s_LDFLAGS) $(LDFLAGS) \
 	-o $@
 AM_V_P = $(am__v_P_@AM_V@)
@@ -481,6 +483,8 @@ ECHO_T = @ECHO_T@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 GL_AVAIL = @GL_AVAIL@
+GL_CFLAGS = @GL_CFLAGS@
+GL_LIBS = @GL_LIBS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -501,6 +505,9 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -554,14 +561,31 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 GSL = gsl-1.16.extract
 SUBDIRS = $(GSL)
-bb2p_CPPFLAGS = -D MPI -D NO_TMPFILES ${common_cppflags} -I$(builddir)/$(GSL)
-bb2p_LDADD = ${LDFLAGS} $(GSL)/.libs/libgsl.a \
-	$(GSL)/cblas/.libs/libgslcblas.a
-bb2s_CPPFLAGS = ${common_cppflags} -I$(builddir)/$(GSL)/
+
+# -------------------------------
+# bb2p
+# -------------------------------
+bb2p_CPPFLAGS = -D MPI -D NO_TMPFILES ${common_cppflags} -I$(builddir)/$(GSL) $(GL_CFLAGS)
+bb2p_LDFLAGS = ${common_ldflags}
+bb2p_LDADD = ${LDFLAGS}  $(GL_LIBS) $(X11_LIBS) $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
+
+# -------------------------------
+# bb2s
+# -------------------------------
+bb2s_CPPFLAGS = ${common_cppflags} -I$(builddir)/$(GSL) $(GL_CFLAGS)
 bb2s_LDFLAGS = ${common_ldflags}
-bb2s_LDADD = ${bb2p_LDADD}
-bb2d_CPPFLAGS = ${common_cppflags} 
-bb2d_LDFLAGS = ${common_ldflags} 
+bb2s_LDADD = ${LDFLAGS}  $(GL_LIBS) $(X11_LIBS) $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
+
+# -------------------------------
+# bb2d
+# -------------------------------
+bb2d_CPPFLAGS = ${common_cppflags}
+bb2d_LDFLAGS = ${common_ldflags}
+bb2d_LDADD = 
+
+# -------------------------------
+# common sources
+# -------------------------------
 
 # Obsoleted in 2024, kept for backward compatibility
 common_sources = beatbox.c beatbox.h activation.c ap.c b02.c bgi.c \
@@ -730,7 +754,7 @@ bb2d$(EXEEXT): $(bb2d_OBJECTS) $(bb2d_DEPENDENCIES) $(EXTRA_bb2d_DEPENDENCIES)
 
 bb2p$(EXEEXT): $(bb2p_OBJECTS) $(bb2p_DEPENDENCIES) $(EXTRA_bb2p_DEPENDENCIES) 
 	@rm -f bb2p$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(bb2p_OBJECTS) $(bb2p_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(bb2p_LINK) $(bb2p_OBJECTS) $(bb2p_LDADD) $(LIBS)
 
 bb2s$(EXEEXT): $(bb2s_OBJECTS) $(bb2s_DEPENDENCIES) $(EXTRA_bb2s_DEPENDENCIES) 
 	@rm -f bb2s$(EXEEXT)
