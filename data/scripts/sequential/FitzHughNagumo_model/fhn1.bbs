@@ -160,7 +160,7 @@ def int nfront2 0;  // counter of the fronts at point 2
 // These devices will register arrival of the fronts at points xout1 and xout2.
 // These two different devices have different interface but on this occation
 // do the same job. 
-poincare x0=xout1 cross=umid sign=1 result=front1 timestep=tfront1;
+poincare x0=xout1 v0=0 cross=umid sign=1 result=front1 timestep=tfront1;
 k_poincare nowhere=1 sign=1 pgm={front2=U2-umid;tfront2=t};
 
 // Count the fronts separately, calc arrival times and select Nth front in each sequence
