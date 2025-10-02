@@ -10,7 +10,21 @@ AUTOMAKE_OPTIONS = foreign
 
 # Directories that must be recoursed (expect to find a Makefile.am
 # in each directory named in SUBDIRS).
-SUBDIRS   = src
+SUBDIRS = \
+	src \
+	src/gsl-1.16.extract \
+	src/gsl-1.16.extract/blas \
+	src/gsl-1.16.extract/block \
+	src/gsl-1.16.extract/cblas \
+	src/gsl-1.16.extract/complex \
+	src/gsl-1.16.extract/eigen \
+	src/gsl-1.16.extract/err \
+	src/gsl-1.16.extract/gsl \
+	src/gsl-1.16.extract/linalg \
+	src/gsl-1.16.extract/matrix \
+	src/gsl-1.16.extract/sys \
+	src/gsl-1.16.extract/utils \
+	src/gsl-1.16.extract/vector
 
 # Define some directories for use below.
 datadir   = data

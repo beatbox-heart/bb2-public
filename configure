@@ -6083,6 +6083,7 @@ fi
 
 fi
 
+
 # -------------------------------
 # GLX availability summary (double-check)
 # -------------------------------
@@ -6183,6 +6184,9 @@ LT_INIT
 # -------------------------------
 # Subdirectories and output
 # -------------------------------
+export CC
+export CFLAGS
+export LDFLAGS
 
 
 subdirs="$subdirs src/gsl-1.16.extract"

@@ -169,6 +169,7 @@ else
    AC_MSG_WARN([MPI compiler not found, building without MPI support])
    AM_CONDITIONAL([MPI_AVAILABLE], [false])
 fi
+AC_SUBST([CC])
 
 # -------------------------------
 # GLX availability summary (double-check)
@@ -211,7 +212,10 @@ LT_INIT
 # -------------------------------
 # Subdirectories and output
 # -------------------------------
-AC_CONFIG_SUBDIRS([src/gsl-1.16.extract], [CC="$CC"])
+export CC
+export CFLAGS
+export LDFLAGS
+AC_CONFIG_SUBDIRS([src/gsl-1.16.extract])
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
