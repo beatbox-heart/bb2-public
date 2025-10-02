@@ -89,7 +89,7 @@ AC_CANONICAL_HOST
 
 dnl Checks for programs.
 AC_LANG(C)
-AC_PROG_CC
+dnl AC_PROG_CC - "Let CC be inherited from the top-level configure"
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S

@@ -653,6 +653,12 @@ am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
 subdirs
+MPI_AVAILABLE_FALSE
+MPI_AVAILABLE_TRUE
+MPICC
+GLX_LIBS
+GLX_CFLAGS
+GLX_AVAIL
 GL_LIBS
 GL_CFLAGS
 PKG_CONFIG_LIBDIR
@@ -4520,8 +4526,8 @@ then :
   X11_AVAIL=yes
 
 else $as_nop
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: X11 libraries not found, Beatbox will be built without graphical displays.  If you need graphical displays you will need to configure Beatbox with X11, please contact the Beatbox developers for further information." >&5
-printf "%s\n" "$as_me: WARNING: X11 libraries not found, Beatbox will be built without graphical displays.  If you need graphical displays you will need to configure Beatbox with X11, please contact the Beatbox developers for further information." >&2;}
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: X11 libraries not found, Beatbox will be built without graphical displays." >&5
+printf "%s\n" "$as_me: WARNING: X11 libraries not found, Beatbox will be built without graphical displays." >&2;}
     X11_AVAIL=no
 
 fi
@@ -4789,7 +4795,7 @@ else $as_nop
 printf "%s\n" "$as_me: WARNING: MacOS OpenGL headers not found (install Xcode Command Line Tools)" >&2;}
 fi
 
-	GL_LIBS="-L/opt/X11/lib -lGL -lGLU -lX11"
+        GL_LIBS="-L/opt/X11/lib -lGL -lGLU -lX11"
         GL_AVAIL=yes
 
 
@@ -4884,11 +4890,107 @@ fi
 
 
 # -------------------------------
-# CFLAGS adjustments for X11/GL
+# GLX detection (requires X11 + GL)
+# -------------------------------
+GLX_CFLAGS=""
+GLX_LIBS=""
+
+if test "x$X11_AVAIL" = "xno" || test "x$GL_AVAIL" = "xno"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Skipping GLX check because X11 or GL not available" >&5
+printf "%s\n" "$as_me: WARNING: Skipping GLX check because X11 or GL not available" >&2;}
+  GLX_AVAIL=no
+
+else
+  ac_fn_c_check_header_compile "$LINENO" "GL/glx.h" "ac_cv_header_GL_glx_h" "$ac_includes_default"
+if test "x$ac_cv_header_GL_glx_h" = xyes
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing glXQueryExtension" >&5
+printf %s "checking for library containing glXQueryExtension... " >&6; }
+if test ${ac_cv_search_glXQueryExtension+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char glXQueryExtension ();
+int
+main (void)
+{
+return glXQueryExtension ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' GL GLX
+do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_search_glXQueryExtension=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext
+  if test ${ac_cv_search_glXQueryExtension+y}
+then :
+  break
+fi
+done
+if test ${ac_cv_search_glXQueryExtension+y}
+then :
+
+else $as_nop
+  ac_cv_search_glXQueryExtension=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_glXQueryExtension" >&5
+printf "%s\n" "$ac_cv_search_glXQueryExtension" >&6; }
+ac_res=$ac_cv_search_glXQueryExtension
+if test "$ac_res" != no
+then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  GLX_AVAIL=yes
+
+        GLX_LIBS="-lGL"
+
+printf "%s\n" "#define HAVE_GLX 1" >>confdefs.h
+
+else $as_nop
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: GLX libraries not found, building without GLX support" >&5
+printf "%s\n" "$as_me: WARNING: GLX libraries not found, building without GLX support" >&2;}
+        GLX_AVAIL=no
+
+fi
+
+else $as_nop
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: GLX header (GL/glx.h) not found, building without GLX support" >&5
+printf "%s\n" "$as_me: WARNING: GLX header (GL/glx.h) not found, building without GLX support" >&2;}
+     GLX_AVAIL=no
+
+fi
+
+fi
+
+
+
+
+# -------------------------------
+# CFLAGS adjustments for X11/GL/GLX
 # -------------------------------
 if test "x$X11_AVAIL" = "xno"; then
   echo "***************"
-  echo "Reminder: X11 libraries not found so the graphical part of Beatbox is not being built.  If you want graphical display then please contact the Beatbox developers for help building with X11 libraries."
+  echo "Reminder: X11 libraries not found so the graphical part of Beatbox is not being built."
   echo "***************"
   CFLAGS="$CFLAGS -D NOX11"
 else
@@ -4897,12 +4999,21 @@ fi
 
 if test "$GL_AVAIL" = "no"; then
   echo "***************"
-  echo "Reminder: OpenGL libraries not found, Beatbox will be built without GL graphical extention. If you need graphical displays you will need to configure Beatbox with X11, please contact the Beatbox developers for further information."
+  echo "Reminder: OpenGL libraries not found, Beatbox will be built without GL graphical extension."
   echo "***************"
   CFLAGS="$CFLAGS -D NOGL"
 else
   CFLAGS="$CFLAGS -D GL"
   LIBS="$LIBS $GL_LIBS"
+fi
+
+if test "$GLX_AVAIL" = "no"; then
+  echo "***************"
+  echo "Reminder: GLX not found, Beatbox will be built without GLX support."
+  echo "***************"
+  CFLAGS="$CFLAGS -D NOGLX"
+else
+  CFLAGS="$CFLAGS -D GLX"
 fi
 
 # -------------------------------
@@ -4967,13 +5078,227 @@ then :
 
 fi
 
+
+# -------------------------------
+# Compiler detection
+# -------------------------------
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 if test -n "$ac_tool_prefix"; then
-  for ac_prog in mpicc gcc cl cc
+  # Extract the first word of "${ac_tool_prefix}gcc", so it can be a program name with args.
+set dummy ${ac_tool_prefix}gcc; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_prog_CC+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test -n "$CC"; then
+  ac_cv_prog_CC="$CC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_prog_CC="${ac_tool_prefix}gcc"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+CC=$ac_cv_prog_CC
+if test -n "$CC"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
+printf "%s\n" "$CC" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CC"; then
+  ac_ct_CC=$CC
+  # Extract the first word of "gcc", so it can be a program name with args.
+set dummy gcc; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_prog_ac_ct_CC+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test -n "$ac_ct_CC"; then
+  ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_prog_ac_ct_CC="gcc"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CC=$ac_cv_prog_ac_ct_CC
+if test -n "$ac_ct_CC"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CC" >&5
+printf "%s\n" "$ac_ct_CC" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+  if test "x$ac_ct_CC" = x; then
+    CC=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    CC=$ac_ct_CC
+  fi
+else
+  CC="$ac_cv_prog_CC"
+fi
+
+if test -z "$CC"; then
+          if test -n "$ac_tool_prefix"; then
+    # Extract the first word of "${ac_tool_prefix}cc", so it can be a program name with args.
+set dummy ${ac_tool_prefix}cc; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_prog_CC+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test -n "$CC"; then
+  ac_cv_prog_CC="$CC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_prog_CC="${ac_tool_prefix}cc"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+CC=$ac_cv_prog_CC
+if test -n "$CC"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
+printf "%s\n" "$CC" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+  fi
+fi
+if test -z "$CC"; then
+  # Extract the first word of "cc", so it can be a program name with args.
+set dummy cc; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_prog_CC+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test -n "$CC"; then
+  ac_cv_prog_CC="$CC" # Let the user override the test.
+else
+  ac_prog_rejected=no
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    if test "$as_dir$ac_word$ac_exec_ext" = "/usr/ucb/cc"; then
+       ac_prog_rejected=yes
+       continue
+     fi
+    ac_cv_prog_CC="cc"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+if test $ac_prog_rejected = yes; then
+  # We found a bogon in the path, so make sure we never use it.
+  set dummy $ac_cv_prog_CC
+  shift
+  if test $# != 0; then
+    # We chose a different compiler from the bogus one.
+    # However, it has the same basename, so the bogon will be chosen
+    # first if we set CC to just the basename; use the full file name.
+    shift
+    ac_cv_prog_CC="$as_dir$ac_word${1+' '}$@"
+  fi
+fi
+fi
+fi
+CC=$ac_cv_prog_CC
+if test -n "$CC"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
+printf "%s\n" "$CC" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+fi
+if test -z "$CC"; then
+  if test -n "$ac_tool_prefix"; then
+  for ac_prog in cl.exe
   do
     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
 set dummy $ac_tool_prefix$ac_prog; ac_word=$2
@@ -5022,7 +5347,7 @@ fi
 fi
 if test -z "$CC"; then
   ac_ct_CC=$CC
-  for ac_prog in mpicc gcc cl cc
+  for ac_prog in cl.exe
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -5080,6 +5405,112 @@ ac_tool_warned=yes ;;
 esac
     CC=$ac_ct_CC
   fi
+fi
+
+fi
+if test -z "$CC"; then
+  if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}clang", so it can be a program name with args.
+set dummy ${ac_tool_prefix}clang; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_prog_CC+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test -n "$CC"; then
+  ac_cv_prog_CC="$CC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_prog_CC="${ac_tool_prefix}clang"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+CC=$ac_cv_prog_CC
+if test -n "$CC"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
+printf "%s\n" "$CC" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CC"; then
+  ac_ct_CC=$CC
+  # Extract the first word of "clang", so it can be a program name with args.
+set dummy clang; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_prog_ac_ct_CC+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test -n "$ac_ct_CC"; then
+  ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_prog_ac_ct_CC="clang"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CC=$ac_cv_prog_ac_ct_CC
+if test -n "$ac_ct_CC"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CC" >&5
+printf "%s\n" "$ac_ct_CC" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+  if test "x$ac_ct_CC" = x; then
+    CC=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    CC=$ac_ct_CC
+  fi
+else
+  CC="$ac_cv_prog_CC"
+fi
+
 fi
 
 
@@ -5573,27 +6004,176 @@ fi
 
 
 
-ac_config_headers="$ac_config_headers config.h"
 
+# -------------------------------
+# MPI detection (override CC if mpicc found)
+# -------------------------------
+# Extract the first word of "mpicc", so it can be a program name with args.
+set dummy mpicc; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_MPICC+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  case $MPICC in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_MPICC="$MPICC" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_MPICC="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_path_MPICC" && ac_cv_path_MPICC="no"
+  ;;
+esac
+fi
+MPICC=$ac_cv_path_MPICC
+if test -n "$MPICC"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $MPICC" >&5
+printf "%s\n" "$MPICC" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+
+if test "x$MPICC" != "xno"; then
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: MPI compiler found: $MPICC" >&5
+printf "%s\n" "MPI compiler found: $MPICC" >&6; }
+   CC="$MPICC"
+
+printf "%s\n" "#define HAVE_MPI 1" >>confdefs.h
+
+    if true; then
+  MPI_AVAILABLE_TRUE=
+  MPI_AVAILABLE_FALSE='#'
+else
+  MPI_AVAILABLE_TRUE='#'
+  MPI_AVAILABLE_FALSE=
+fi
+
+else
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: MPI compiler not found, building without MPI support" >&5
+printf "%s\n" "$as_me: WARNING: MPI compiler not found, building without MPI support" >&2;}
+    if false; then
+  MPI_AVAILABLE_TRUE=
+  MPI_AVAILABLE_FALSE='#'
+else
+  MPI_AVAILABLE_TRUE='#'
+  MPI_AVAILABLE_FALSE=
+fi
+
+fi
+
+# -------------------------------
+# GLX availability summary (double-check)
+# -------------------------------
+if test "x$X11_AVAIL" = "xyes" -a "x$GL_AVAIL" = "xyes"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing glXQueryExtension" >&5
+printf %s "checking for library containing glXQueryExtension... " >&6; }
+if test ${ac_cv_search_glXQueryExtension+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_func_search_save_LIBS=$LIBS
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#include "mpi.h"
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char glXQueryExtension ();
 int
 main (void)
 {
-MPI_Init(0, 0);
+return glXQueryExtension ();
   ;
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"
+for ac_lib in '' GL
+do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"
 then :
-  mpi_link="yes"
-else $as_nop
-  mpi_link="no"
+  ac_cv_search_glXQueryExtension=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
+    conftest$ac_exeext
+  if test ${ac_cv_search_glXQueryExtension+y}
+then :
+  break
+fi
+done
+if test ${ac_cv_search_glXQueryExtension+y}
+then :
+
+else $as_nop
+  ac_cv_search_glXQueryExtension=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_glXQueryExtension" >&5
+printf "%s\n" "$ac_cv_search_glXQueryExtension" >&6; }
+ac_res=$ac_cv_search_glXQueryExtension
+if test "$ac_res" != no
+then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  GLX_AVAIL=yes
+else $as_nop
+  GLX_AVAIL=no
+fi
+
+else
+  GLX_AVAIL=no
+fi
+
+
+# -------------------------------
+# Summary
+# -------------------------------
+echo ""
+echo "================= Configuration Summary ================="
+echo " C compiler:       $CC"
+if test "x$MPICC" != "xno"; then
+  echo " MPI support:      enabled ($MPICC)"
+else
+  echo " MPI support:      disabled"
+fi
+echo " X11 support:      $X11_AVAIL"
+echo " OpenGL support:   $GL_AVAIL"
+echo " GLX support:      $GLX_AVAIL"
+echo "========================================================="
+
+# -------------------------------
+# Headers
+# -------------------------------
+ac_config_headers="$ac_config_headers config.h"
+
 
 # -------------------------------
 # Libtool
@@ -5757,6 +6337,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${MPI_AVAILABLE_TRUE}" && test -z "${MPI_AVAILABLE_FALSE}"; then
+  as_fn_error $? "conditional \"MPI_AVAILABLE\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${MPI_AVAILABLE_TRUE}" && test -z "${MPI_AVAILABLE_FALSE}"; then
+  as_fn_error $? "conditional \"MPI_AVAILABLE\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 

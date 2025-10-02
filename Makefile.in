@@ -232,6 +232,9 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
+GLX_AVAIL = @GLX_AVAIL@
+GLX_CFLAGS = @GLX_CFLAGS@
+GLX_LIBS = @GLX_LIBS@
 GL_AVAIL = @GL_AVAIL@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
@@ -246,6 +249,7 @@ LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
+MPICC = @MPICC@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -311,7 +315,12 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+
+# Do not behave necessarily like a GNU package
 AUTOMAKE_OPTIONS = foreign
+
+# Directories that must be recoursed (expect to find a Makefile.am
+# in each directory named in SUBDIRS).
 SUBDIRS = src
 scriptdir = $(datadir)/scripts
 workshopdir = $(scriptdir)/BeatboxWorkshop
