@@ -1,17 +1,21 @@
 AC_INIT([BeatBox],[2.2],[V.N.Biktashev@exeter.ac.uk])
+AM_MAINTAINER_MODE([disable])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([-Wall gnu])
+AC_CONFIG_MACRO_DIRS([m4])
 
 # Initialize pkg-config (needed for PKG_CHECK_MODULES macros)
 m4_pattern_forbid([^PKG_CHECK_MODULES$])
 m4_include([m4/pkg.m4])
 
+# -------------------------------
+# Host-specific tweaks
+# -------------------------------
 myhost=`uname -n`
 case $myhost in
    hector*) 
      LIBS=" -lm -lX11 -lxcb -lxcb-xlib -ldl -lXau";;
-   *) 
-   ;;
+   *) ;;
 esac
 
 myos=`uname`
@@ -20,8 +24,7 @@ case $myos in
      LIBS="-L/opt/X11/lib"
      CFLAGS="$CFLAGS -I/opt/X11/include"
    ;;
-   *)
-   ;;
+   *) ;;
 esac
 
 # -------------------------------
@@ -74,7 +77,6 @@ else
       fi
       ;;
     *)
-      # Linux and others
       AC_SEARCH_LIBS(glXQueryExtension,
         [GL],
         [AC_SUBST(GL_AVAIL,yes) GL_LIBS="-lGL -lGLU"],
@@ -89,7 +91,7 @@ AC_SUBST(GL_CFLAGS)
 AC_SUBST(GL_LIBS)
 
 # -------------------------------
-# GLX detection (requires X11 + GL)
+# GLX detection
 # -------------------------------
 GLX_CFLAGS=""
 GLX_LIBS=""
@@ -114,21 +116,15 @@ AC_SUBST(GLX_CFLAGS)
 AC_SUBST(GLX_LIBS)
 
 # -------------------------------
-# CFLAGS adjustments for X11/GL/GLX
+# CFLAGS adjustments
 # -------------------------------
 if test "x$X11_AVAIL" = "xno"; then
-  echo "***************"
-  echo "Reminder: X11 libraries not found so the graphical part of Beatbox is not being built."
-  echo "***************"
   CFLAGS="$CFLAGS -D NOX11"
 else
   CFLAGS="$CFLAGS -D X11"
 fi
 
 if test "$GL_AVAIL" = "no"; then
-  echo "***************"
-  echo "Reminder: OpenGL libraries not found, Beatbox will be built without GL graphical extension."
-  echo "***************"
   CFLAGS="$CFLAGS -D NOGL"
 else
   CFLAGS="$CFLAGS -D GL"
@@ -136,9 +132,6 @@ else
 fi
 
 if test "$GLX_AVAIL" = "no"; then
-  echo "***************"
-  echo "Reminder: GLX not found, Beatbox will be built without GLX support."
-  echo "***************"
   CFLAGS="$CFLAGS -D NOGLX"
 else
   CFLAGS="$CFLAGS -D GLX"
@@ -169,19 +162,17 @@ else
    AC_MSG_WARN([MPI compiler not found, building without MPI support])
    AM_CONDITIONAL([MPI_AVAILABLE], [false])
 fi
+
+# Ensure overrides propagate to subdirs
 AC_SUBST([CC])
+AC_SUBST([CFLAGS])
+AC_SUBST([LDFLAGS])
+export CC CFLAGS LDFLAGS
 
 # -------------------------------
-# GLX availability summary (double-check)
+# Sub-configures
 # -------------------------------
-if test "x$X11_AVAIL" = "xyes" -a "x$GL_AVAIL" = "xyes"; then
-  AC_SEARCH_LIBS([glXQueryExtension], [GL], 
-    [GLX_AVAIL=yes], 
-    [GLX_AVAIL=no])
-else
-  GLX_AVAIL=no
-fi
-AC_SUBST(GLX_AVAIL)
+AC_CONFIG_SUBDIRS([src/gsl-1.16.extract])
 
 # -------------------------------
 # Summary
@@ -200,22 +191,18 @@ echo " GLX support:      $GLX_AVAIL"
 echo "========================================================="
 
 # -------------------------------
-# Headers
+# Headers and libtool
 # -------------------------------
 AC_CONFIG_HEADERS([config.h])
 
 # -------------------------------
-# Libtool
+# Libtool setup (modern) - from chatgpt 2026/02/12
 # -------------------------------
 LT_INIT
 
 # -------------------------------
-# Subdirectories and output
+# Files
 # -------------------------------
-export CC
-export CFLAGS
-export LDFLAGS
-AC_CONFIG_SUBDIRS([src/gsl-1.16.extract])
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile

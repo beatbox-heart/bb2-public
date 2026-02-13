@@ -5,6 +5,8 @@
 # To propagate the changes to the Makefile.in files.
 #
 
+ACLOCAL_AMFLAGS = -I m4
+
 # Do not behave necessarily like a GNU package
 AUTOMAKE_OPTIONS = foreign
 

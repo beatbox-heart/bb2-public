@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
- 
 <style>
   .separator-row {
     height: 5px;
@@ -22,6 +20,8 @@
     <![endif]-->
 
     <script type="text/javascript" src="ToC.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js">
+  </script>
 
   </head>
   <body>
@@ -209,21 +209,28 @@ number of dependencies to an absolute minimum. You will require:
 </p>
 
 <ul>
-  <li>Certain <code>autotools</code>, notably <code>autoconf</code>
-  and <code>automake</code>, to automatically configure the package
+  <li>Certain <code>autotools</code>, notably <code>autoconf</code>,
+  <code>automake</code> and <code>libtool</code>, to automatically configure the package
   for your computer. Pre-configured and pre-compiled versions will be
   provided in due course, when demand is established.</li>
-  <li>A C compiler, ideally gcc.</li>
+  <li>A C compiler, ideally <code>gcc</code> if only sequential version is
+  needed, or <code>mpicc</code> for sequential+parallel version.</li>
   <li>A suitable MPI library, preferably
   <a href="http://www.mcs.anl.gov/research/projects/mpich2/">mpich2</a>
   if you want to run in parallel.</li>
   <li>The standard X11 libraries if you want to have run-time
-  visualization (currently only available in sequential mode).</li>
+  visualization (some facilities are currently mostl available in sequential mode).</li>
   <li>Some of the examples use utilities from
   <a href="http://netpbm.sourceforge.net/">netpbm</a>
   both for run-time image conversion and for post-processing.</li>
 </ul>
 
+<p>
+CAVEAT for MacOS installations: as of 2026/02/12, typical
+<code>Apple</code>-provided <code>libtool</code>, usually in <code>/usr/bin/libtool</code>, has
+the same name but incompatible interface with GNU version of the
+same. Beatbox configure requires the GNU version.
+</p>
 
 <h2 class="numbered">Getting Beatbox</h2>
 
@@ -298,6 +305,19 @@ the assumption that that directory exists and is in your
 <code>$PATH</code>; modify it as appropriate if you prefer to keep
 your binaries elsewhere.
 </p>
+
+<p> CAVEAT: the <code>autoreconf -fi</code> could (and perhaps should) be
+omitted unless you have made significant changes. For a rule of thumb:
+omit it until and unless you know what it does and you are sure you need it. </p>
+
+<p>
+The standard Beatbox distribution will have scripts <code>myrebuild.sh</code>
+and <code>mydebug.sh</code>. Each will set environment variables, configure,
+make and install Beatbox, respectively the normal, optimized version
+and the non-optimized version suitable for debugging.
+</p>
+
+
 
 <p>
 The options <code>CFLAGS="-g -O0"</code> mean that the code will be
@@ -6046,8 +6066,8 @@ below the table of parameters.
 <tr>
   <td><code>real</code></td>
   <td><code>ht</code></td>
-  <td>-</td>
   <td><code>0</code></td>
+  <td>-</td>
   <td>-</td>
   <td>
     Time step 
@@ -6123,44 +6143,44 @@ below the table of parameters.
 <tr>
   <td><code>int</code></td>
   <td><code>w0</code></td>
-  <td>-</td>
+  <td><code>-1</code></td>
   <td><code>-1</code></td>
   <td><code>vmax-1</code></td>
   <td>
-    Lower bound of the layer range containing stencil weights
+    (if non-negative) Lower bound of the layer range containing stencil weights
   </td>
 </tr>
 
 <tr>
   <td><code>int</code></td>
   <td><code>w1</code></td>
-  <td>-</td>
+  <td><code>-1</code></td>
   <td><code>-1</code></td>
   <td><code>vmax-1</code></td>
   <td>
-    Uper bound of the layer range containing stencil weights
+    (if non-negative) Uper bound of the layer range containing stencil weights
   </td>
 </tr>
 
 <tr>
   <td><code>int</code></td>
   <td><code>d0</code></td>
-  <td>-</td>
+  <td><code>-1</code></td>
   <td><code>-1</code></td>
   <td><code>vmax-1</code></td>
   <td>
-    Lower bound of the layer range containing unique diffusion tensor components
+    (if non-negative) Lower bound of the layer range containing unique diffusion tensor components
   </td>
 </tr>
 
 <tr>
   <td><code>int</code></td>
   <td><code>d1</code></td>
-  <td>-</td>
+  <td><code>-1</code></td>
   <td><code>-1</code></td>
   <td><code>vmax-1</code></td>
   <td>
-    Upper bound of the layer range containing unique diffusion tensor components
+    (if non-negative) Upper bound of the layer range containing unique diffusion tensor components
   </td>
 </tr>
 </table>
@@ -6553,17 +6573,26 @@ outputs, and method of simulation for <code>fhn1.bbs</code> and
 <h3>Overview</h3>
 
 <p> Solves an elliptic problem (Poisson equation) for the
-Laplace-Beltrami operator corresponding to the fiber direction field
-of the current geometry and given diffusion coefficients along and
-across fibers (as in <code>diff</code> device). The primary intended
+Laplace-Beltrami operator, 
+\[ \def\r{\vec{r}}
+  \nabla\left( \hat{D}(\r) \nabla \Phi(\r) \right) = \rho(\r)
+\]
+with tensor \(\hat{D}(\vec{r})\) corresponding to the fiber direction field \(\vec{n}(\vec{r})\),
+\[
+  \hat{D}=(D_{jk}), \qquad D_{jk} = D_{\bot} \delta_{jk} + D_{\|} n_j n_k 
+\]
+of the current geometry and given diffusion coefficients along
+(\(D_{\|}\)) and
+across fibers (\(D_{\bot}\)), as in <code>diff</code> device. The primary intended
 use is calculation of the extracellular (or intracellular) potential
 field for a given transmembrane field in the bidomain model.  The
 method of solution is Full Multigrid with vertex-centered
 restrition/prolongation operators with bi/tri-linear interpolation,
 and (multicoloured) Gauss-Seidel or Jacobi smoother. Can be used
-either for Dirichlet boundary conditions, where boundary values are
-those that are just outside the device box, or Neumann boundary
-conditions. In the latter case, this will require an extra "pinning"
+either for <strong>Dirichlet</strong> boundary conditions, where boundary values are
+those that are just outside the devices space, or <strong>Neumann</strong> boundary
+conditions, when the device's space is identical to the current
+geometry. In the latter case, solving the problem this will require an extra "pinning"
 condition, to select a unique solution out of infinitely many: the
 solution at a given point should have a given value. 
 
@@ -6582,25 +6611,21 @@ solution at a given point should have a given value.
 </tr>
 
 <tr>
-  <td><code>str</code></td>
-  <td><code>debug</code></td>
+  <td><code>int</code></td>
+  <td><code>v0</code></td>
   <td>-</td>
-  <td>-</td>
-  <td>-</td>
-  <td>  Relative pathto output file for debugging purposes. If <code>stdout</code>, will
-    print to screen of the parent shell.</td>    
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td> "Input" layer, containing the source \(\rho(\vec{r})\) in the inhomogeneous Laplace-Beltrami </td>  
 </tr>
 
 <tr>
-  <td><code>str</code></td>
-  <td><code>profile</code></td>
+  <td><code>int</code></td>
+  <td><code>v1</code></td>
   <td>-</td>
-  <td>-</td>
-  <td>-</td>
-  <td>  Relative path  to output profiling information. This will measure separately time spent at
-  each of the levels of the multigrid (and noticeably slow down
-  computations). Now is available only in sequential mode. 
-  If <code>stdout</code>, will print to screen of the parent shell.</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td> "Output" layer, that will contain the solution \(\Phi(\vec{r})\) of the inhomogeneous Laplace-Beltrami </td>  
 </tr>
 
 <tr>
@@ -6609,7 +6634,7 @@ solution at a given point should have a given value.
   <td>-</td>
   <td><code>0</code></td>
   <td>-</td>
-  <td> Diffusivity along the fibres </td>
+  <td> Diffusivity along the fibres (\(D_{\|}\)) </td>
 </tr>
   
 <tr>
@@ -6618,8 +6643,9 @@ solution at a given point should have a given value.
   <td>-</td>
   <td><code>0</code></td>
   <td>-</td>
-  <td> Diffusivity across the fibres </td>
+  <td> Diffusivity across the fibres (\(D_{\bot}\)) </td>
 </tr>
+
 
 <tr>
   <td><code>real</code></td>
@@ -6697,28 +6723,10 @@ solution at a given point should have a given value.
 
 <tr>
   <td><code>int</code></td>
-  <td><code>v0</code></td>
-  <td>-</td>
-  <td><code>0</code></td>
-  <td><code>vmax-1</code></td>
-  <td> "Input" layer, containing the source in the inhomogeneous Laplace-Beltrami </td>  
-</tr>
-
-<tr>
-  <td><code>int</code></td>
-  <td><code>v1</code></td>
-  <td>-</td>
-  <td><code>0</code></td>
-  <td><code>vmax-1</code></td>
-  <td> "Output" layer, that will contain the solution of the inhomogeneous Laplace-Beltrami </td>  
-</tr>
-
-<tr>
-  <td><code>int</code></td>
   <td><code>upper_level</td>
-  <td</code</code>-1</td>
-  <td>>>-1</td>
-  <td>>>xmax</td>
+  <td><code>-1</code></td>
+  <td><code>-1</code></td>
+  <td><code>xmax</code></td>
   <td>
   The maximal number of lavels in multigrid.
   The original (basic) grid is at level 0, and each next level has the
@@ -6758,8 +6766,8 @@ solution at a given point should have a given value.
   <td>-</td>
   <td>-</td>
   <td> The method of transfer of the problem from one level to the
-  other.  Can be either <code>transfer</code> or <code>correct</code>.
-  In case of <code>transfer</code>, all levels compute the same
+  other.  Can be either <code>replace</code> or <code>correct</code>.
+  In case of <code>replace</code>, all levels compute the same
   problem but at different discretization. In case of
   <code>correct</code>, higher levels compute corrections to the
   lower-level solutions.
@@ -6867,9 +6875,30 @@ solution at a given point should have a given value.
     <td>
   parameter <code>postiter</code> can be specified for individual multigrid
   levels 0, 1, ...</td>
-
 </tr>
 
+<tr>
+  <td><code>str</code></td>
+  <td><code>debug</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td>  Relative path to output file for debugging purposes. If <code>stdout</code>, will
+    print to screen of the parent shell.</td>    
+</tr>
+
+<tr>
+  <td><code>str</code></td>
+  <td><code>profile</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td>  Relative path  to output profiling information. This will measure separately time spent at
+  each of the levels of the multigrid (and noticeably slow down
+  computations). Now is available only in sequential mode. 
+  If <code>stdout</code>, will print to screen of the parent shell.</td>
+</tr>
+  
 </table>
 
 <h3>Typical Syntax</h3>
@@ -6882,7 +6911,7 @@ see in the example of use referred to below.
 
 An examples of <code>elliptic</code> device can be found in the following:
 <pre>
-beatbox/data/scripts/sequential/ZFK_model/zfkmod2.bbs
+beatbox/data/scripts/sequential/ZFK_model/zfkbid2.bbs
 </pre>
 It does not require command-line parameters so can be run e.g. by
 <pre>
@@ -14061,8 +14090,8 @@ calculated using rushlarsen formula.
 
 <p>
 The model converts the Hodgking-Huxley (1952) giant squid axon model
-into ionic format. The implmentation is based on the <code>rhs</code> format in
-<code>hh</code>. All the gates are tabulated and can be computed using
+into ionic format. The implmentation is based on the <<rhs</code> format in
+<<hh</code>. All the gates are tabulated and can be computed using
 Rush-Larsen method.
 </p>
 
