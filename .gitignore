@@ -27,3 +27,5 @@ src/bb2p
 src/bb2s
 src/bb2d
 src/*.o
+src/gsl-1.16.extract/*.spec
+src/gsl-1.16.extract/gsl_version.h
