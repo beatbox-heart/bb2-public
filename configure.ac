@@ -3,6 +3,7 @@ AM_MAINTAINER_MODE([disable])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([-Wall gnu])
 AC_CONFIG_MACRO_DIRS([m4])
+AC_PROG_AWK
 
 # Initialize pkg-config (needed for PKG_CHECK_MODULES macros)
 m4_pattern_forbid([^PKG_CHECK_MODULES$])
