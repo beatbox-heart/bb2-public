@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2024) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -202,6 +202,7 @@ real values[NTAB];
 int paci18rhs (real *u, real *du, Par par, Var var, int ln)
 {
   STR *S = (STR *)par;
+  Var tie={0, NULL, NULL};
   int ivar;
   assert(ln==NV);
   if (var.n) for(ivar=0;ivar<var.n;ivar++) *(var.dst[ivar])=u[var.src[ivar]];
@@ -219,7 +220,7 @@ int paci18rhs (real *u, real *du, Par par, Var var, int ln)
 
   /* In: u, nv, ntab, nn, no, values, par, var */
   /* Out: du;  nalp, nbet - potentially, not in this model */
-  if (!fddt_paci18(u,NV,values,NTAB,par,var,du,NO,nalp,nbet,NN)) {
+  if (!fddt_paci18(u,NV,values,NTAB,par,var,tie,du,NO,nalp,nbet,NN)) {
     URGENT_MESSAGE("\nerror calculating fddt(%s) at t=%ld: u=","paci18",t);
     for(iv=0;iv<NV;iv++) URGENT_MESSAGE(" %lg",u[iv]);
     ABORT("\n");

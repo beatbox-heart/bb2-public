@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -37,14 +37,14 @@ void Debug(char *fmt, ...);
 #if MPI
 #define DEBUG(...)			\
   if (debug) {				\
-    fprintf(debug,"#%d %s:%d t=%ld idev=%d ",mpi_rank,__FILE__,__LINE__,t,idev);\
+    fprintf(debug," #%d %s:%d t=%ld idev=%d ",mpi_rank,__FILE__,__LINE__,t,idev);\
     fprintf(debug, __VA_ARGS__);	\
     fflush(debug);			\
   }
 #else
 #define DEBUG(...)			\
   if (debug) {				\
-    fprintf(debug,"%s:%d t=%ld idev=%d ",__FILE__,__LINE__,t,idev);	\
+    fprintf(debug," %s:%d t=%ld idev=%d ",__FILE__,__LINE__,t,idev);	\
     fprintf(debug, __VA_ARGS__);	\
     fflush(debug);			\
   }

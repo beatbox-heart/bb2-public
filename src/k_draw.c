@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -50,13 +50,14 @@ typedef struct {
   real absold, ordold;
   double abs, ord, col;
   real lines;
+  int linewidth;
 } STR;
 
 RUN_HEAD(k_draw)
 {
   DEVICE_CONST(BGIWindow,wnd);
   #include "k_def.h"
-  DEVICE_CONST(real,lines)
+  DEVICE_CONST(real,lines) DEVICE_CONST(int,linewidth) 
   DEVICE_VAR(real,abs) DEVICE_VAR(real,absold) DEVICE_CONST(real,absmin) DEVICE_CONST(real,absmax)
   DEVICE_VAR(real,ord) DEVICE_VAR(real,ordold) DEVICE_CONST(real,ordmin) DEVICE_CONST(real,ordmax)
   DEVICE_VAR(real,col)
@@ -64,6 +65,7 @@ RUN_HEAD(k_draw)
   #include "k_exec.h"
   SetWindow(wnd);
   if NOT(SetLimits(absmin,absmax,ordmin,ordmax)) return 0;
+  setlinewidth(linewidth);
   c=((int)*col)%16;
   if( (*absold!=RNONE) && (*ordold!=RNONE)
   &&  fabsl((*abs-*absold)/(absmax-absmin))<=lines
@@ -72,6 +74,7 @@ RUN_HEAD(k_draw)
   else
     Pixel(*abs,*ord,c);
   *absold=*abs; *ordold=*ord;
+  setlinewidth(1);
 }
 RUN_TAIL(k_draw)
 
@@ -95,6 +98,7 @@ CREATE_HEAD(k_draw)
   if(!used(S->data,S->ncode,&(S->col)))EXPECTED_ERROR("/*WARNING: variable \'col\' never assigned!!*/");
   k_off();					CHK(NULL);
   ACCEPTR(lines,1,0,RNONE);
+  ACCEPTI(linewidth,1,1,INONE);
   ACCEPTR(absmin,0.0,RNONE,RNONE);
   ACCEPTR(absmax,1.0,RNONE,RNONE); ASSERT(S->absmin!=S->absmax);
   ACCEPTR(ordmin,0.0,RNONE,RNONE);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -204,6 +204,8 @@ int acceptre (const char *mask,real *arr,int i,real deflt,real minv,real maxv,ch
  * 	\return 1 for success, 0 for failure.
  */
 int acceptp (const char *name,real *var,real deflt,real minv,real maxv,char *w,Var *v,int *iv,int v0);
+int maketie (const char *name,real *var,char *w,Var *t,int *it,int v0);
+
 #endif
 
 /*! Accepts a string, identified by name, from a given parameter string.
@@ -377,6 +379,7 @@ double _u (double _x, double _y, double _z, double _v);
  *	\param e Maximum value.
  */
 #define ACCEPTIK(b,c,d,e) if (!acceptik(#b"=",&(S->b##ptr),&(S->b),&(S->b##src),&(S->b##exe),deftb,c,d,e,w)) return(0); 
+#define ACCEPTInoK(b,c,d,e) if (!acceptl(#b"=",&(S->b),c,d,e,w)) return(0); S->b##ptr=&(S->b); S->b##src=NULL; S->b##exe=NULL;
 
 /*! Accept an entry of an integer parameter array via acceptie(). 
  * 	No local variable defined: unfeasible. 
@@ -439,6 +442,7 @@ double _u (double _x, double _y, double _z, double _v);
  *	\param e Maximum value.
  */
 #define ACCEPTP(b,c,d,e) if (!acceptp(#b"=",&(S->b),c,d,e,w,var,&ivar,v0)) return(0); real b=S->b;
+#define MAKETIE(b) if (!maketie(#b":",&(S->b),w,tie,&itie,v0)) return(0); 
 #endif
 
 /*! Accept a string via accepts(), and define an eponymous local variable.
@@ -594,8 +598,11 @@ EXTERN real macheps;
 /*! marks the end of a string with blanks */
 #define STREND '\"'
 
-/*! Linking parameter to a layer of the grid */
+/*! Linking a parameter to a layer of the grid */
 #define AT '@'
+
+/*! Tying an intermediate expression to a layer of the grid */
+#define TIE ':'
 
 /* Links device parameter to a k-expression */
 #define LINK '~'

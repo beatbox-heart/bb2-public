@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -565,10 +565,17 @@ DESTROY_HEAD(elliptic) {
   
 CREATE_HEAD(elliptic)
 {
+  Space *s=&(dev->s);
   DEVICE_REQUIRES_SYNC;
   int level=-1;
 
   if (! ANISOTROPY_ON) EXPECTED_ERROR("elliptic is only implemented for the anisotropic case\n");
+  if (s->nowhere) EXPECTED_ERROR("'nowhere' is not allowed\n");
+  if (0==s->listpoints==0) 
+    MESSAGE("/* listpoints=1 is mandatory in this device and enforced */\n");
+  else if (find_key("listpoints=",w))
+    MESSAGE("/* listpoints=1 is mandatory anyway*/\n");
+  s->listpoints=1;
   
   ACCEPTF(debug,"wt","");
   ACCEPTF(profile,"wt","");
@@ -787,7 +794,8 @@ CREATE_TAIL(elliptic,1)
 
 /* Make the list of tissue points with all their connections */
 /* as defined by the anisotropic geometry, */
-/* by the same code as in diff.c */
+/* by the same code as in diff.c. */
+/* UPD 2025/12/15: implement here the "revolution" of July/August 2024 using d.s.p instead of global TissuePoints */
 static int list_points(STR *S,Space s) {
   DEVICE_CONST(real,Dpar)
   DEVICE_CONST(real,Dtrans)
@@ -923,7 +931,10 @@ static int list_points(STR *S,Space s) {
 	      P.K[ppp]=P.K[ppm]=P.K[pmp]=P.K[pmm]=P.K[mpp]=P.K[mpm]=P.K[mmp]=P.K[mmm]=0.0;
 
 	      /* Otherwise it will be division by zero full stop */
-	      if (P.K[ooo]==0) ABORT("P.K[ooo]=0 at x,y,z=%d,%d,%d\n",x,y,z);
+	      if (P.K[ooo]==0) {
+		MESSAGE("P.K[ooo]=0 at x,y,z=%d,%d,%d; dropping this point\n",x,y,z);
+		continue;
+	      }
 
 	      /* Normalization chosen to make u and f of the same scale */
 	      for (nb=0;nb<maxnb;nb++) P.K[nb]/=(4*hx*hx);

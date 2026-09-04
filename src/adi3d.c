@@ -198,11 +198,11 @@ DESTROY_TAIL(adi3d)
 
 CREATE_HEAD(adi3d)
 {
-  ACCEPTR(D,RNONE,0.,RNONE);
-  ACCEPTR(hx,RNONE,RSUCC(0.),RNONE);
-  ACCEPTR(ht,RNONE,0.,RNONE);
   ACCEPTI(v0,INONE,0,vmax-1);
   ACCEPTI(v1,INONE,0,vmax-1);
-  ASSERT (v1 != v0);
+  ASSERT(v1 != v0);
+  ACCEPTR(D,RNONE,RNONE,RNONE); /* could be negative if it is cross-diffusion */
+  ACCEPTR(hx,RNONE,RSUCC(0.),RNONE);
+  ACCEPTR(ht,RNONE,0.,RNONE);
 }
 CREATE_TAIL(adi3d,1)

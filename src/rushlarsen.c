@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -100,7 +100,7 @@ static inline void calcab (real *a,real *b,real ht) {
   (*a)*=(1-(*b));  /* a=alp/(alp+bet)*(1-exp(-(alp+bet)*ht)) */
 }
 
-int
+static int
 memcpy_gsl_matrix_complex_to_real (real *dest, gsl_matrix_complex *src, int n)
 {
   /* 
@@ -134,7 +134,7 @@ memcpy_gsl_matrix_complex_to_real (real *dest, gsl_matrix_complex *src, int n)
   return 1;
 }
 
-int
+static int
 memcpy_gsl_vector_complex_to_real (real *dest, gsl_vector_complex *src, int n)
 {
   /* 
@@ -165,7 +165,7 @@ memcpy_gsl_vector_complex_to_real (real *dest, gsl_vector_complex *src, int n)
 
 /* function to obtain matrix rush larsen by eigenvalue decomposition and exponentiation */
 /* it returns the mrl in Beatbox format -- real */
-int
+static int
 get_matrix_rush_larsen (real *markov_rates, real ht, real *trans_rates, int n)
 {
   unsigned int i, j, k;		/* loop counters */
@@ -343,7 +343,7 @@ get_matrix_rush_larsen (real *markov_rates, real ht, real *trans_rates, int n)
 }
 
 /* print matrix -- for debugging purposes*/
-void
+static void
 print_matrix (real *m, int n)
 {
   /* algorithm to print square matrix m of dimension n */
@@ -360,7 +360,7 @@ print_matrix (real *m, int n)
 }
 
 /* print matrix -- for debugging purposes*/
-void
+static void
 print_complex_matrix (real *m, int n)
 {
   /* algorithm to print square complex matrix m of dimension n */
@@ -435,7 +435,7 @@ print_complex_matrix (real *m, int n)
 /*************************************************************/
 /* OTHER VARIABLES by forward Euler */
 #define DOOTHER \
-  if (!fddt(u,nv,values,ntab,p,var,du,no,nalp,nbet,nn)) {		\
+  if (!fddt(u,nv,values,ntab,p,var,tie,du,no,nalp,nbet,nn)) {		\
     URGENT_MESSAGE("\nerror calculating fddt(%s) at t=%ld point %ld,%ld,%ld: u=",ionic,t,XYZ); \
     for(iv=0;iv<nv;iv++) URGENT_MESSAGE(" %lg",u[iv]);			\
     ABORT("\n");							\
@@ -656,6 +656,7 @@ static inline int rushlarsen_step (real *u,int nv,STR *S)
 {
   IONIC_CONST(Par,p);			/* set of ionic cell parameters */
   IONIC_CONST(Var,var);			/* description of variable parameters */
+  IONIC_CONST(Var,tie);			/* description of tieable expressions */
   IONIC_CONST(IonicFddt *,fddt);	/* the rhs functions except gates */
   IONIC_CONST(IonicFtab *,ftab);	/* the tabulated functions calculator */
   IONIC_CONST(int,no);			/* number of non-gate variables in the state vector */
@@ -768,6 +769,7 @@ static inline int equilibration_step(real *u,int nv,STR *S)
 {
   IONIC_CONST(Par,p);			/* set of ionic cell parameters */
   IONIC_CONST(Var,var);			/* description of variable parameters */
+  IONIC_CONST(Var,tie);			/* description of tieable expressions */
   IONIC_CONST(IonicFddt *,fddt);	/* the rhs functions except gates */
   IONIC_CONST(IonicFtab *,ftab);	/* the tabulated functions calculator */
   IONIC_CONST(int,no);			/* number of non-gate variables in the state vector */
@@ -818,7 +820,6 @@ RUN_HEAD(rushlarsen)
   int nv=v1-v0+1;			/* size of the state vector */
   int x, y, z;				/* space grid counters */
   real V;				/* transmembrane voltage value */
-/* #define COMMANDS { if NOT(rushlarsen_step(u,nv,S,(*x),(*y),(*z))) return 0; } */
 #define COMMANDS { if NOT(rushlarsen_step(u+v0*DV,nv,S)) return 0; }
   DO_FOR_ALL_POINTS;
 #undef COMMANDS
@@ -837,6 +838,10 @@ DESTROY_HEAD(rushlarsen)
   if (S->I.var.n) {
     FREE(S->I.var.src);
     FREE(S->I.var.dst);
+  }
+  if (S->I.tie.n) {
+    FREE(S->I.tie.src);
+    FREE(S->I.tie.dst);
   }
   FREE(S->I.p);
 }
@@ -1017,7 +1022,7 @@ CREATE_HEAD(rushlarsen)
     V=S->u[S->I.V_index];
     values=S->adhoc;
     
-    if (!(S->I.fddt(S->u,nv,values,ntab,S->I.p,S->I.var,S->du,no,S->nalp,S->nbet,nn))) {
+    if (!(S->I.fddt(S->u,nv,values,ntab,S->I.p,S->I.var,S->I.tie,S->du,no,S->nalp,S->nbet,nn))) {
       URGENT_MESSAGE("\nerror calculating fddt(%s) at parse time: u=",ionic);
       for(iv=0;iv<nv;iv++) URGENT_MESSAGE(" %lg",u[iv]);
       ABORT("\n");

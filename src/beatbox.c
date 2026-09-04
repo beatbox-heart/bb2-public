@@ -476,7 +476,7 @@ Exit: /* this the target for the long jump */
 		dev[id].n,
 		tc,
 		ts*100.0/grandtotal,
-		1.e3*ts/(double)t,
+		1.e3*ts/(double)(t+1),
 		1.e3*ts/(tc?tc:1)
 		);
       }	

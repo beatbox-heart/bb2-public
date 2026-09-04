@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -253,8 +253,8 @@ static size_t indfun (size_t x,size_t y,size_t z,int v)
 #define geom_ind(x,y,z,v) ((x)*geom_vmax_zmax_ymax+(y)*geom_vmax_zmax+(z)*geom_vmax+(v))
 
 /* and these definition may help avoid some #if(MPI) clauses: */
-#define mpi_size 1
-#define mpi_rank 0
+#define mpi_size (1)
+#define mpi_rank (0)
 EXTERN long mpi_nx,mpi_ny,mpi_nz;	/* ==1 */
 #define mpi_ix 0L
 #define mpi_iy 0L

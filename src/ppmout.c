@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -196,10 +196,12 @@ DESTROY_HEAD(ppmout) {
     FILE *f;
     /* Using sequential approach */
     f=fopen(S->file.name,"r");
-    fseek(f,0,SEEK_END);
-    filesize=ftell(f);
-    fclose(f);
-    if (filesize==0) unlink(S->file.name);
+    if (f!=NULL) {
+      fseek(f,0,SEEK_END);
+      filesize=ftell(f);
+      fclose(f);
+      if (filesize==0) unlink(S->file.name);
+    }
   }
   S->file.f=NULL;
 } DESTROY_TAIL(ppmout)

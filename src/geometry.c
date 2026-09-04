@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -251,7 +251,7 @@ int populateMesh(FILE *geomFile, const char *geomFileName, int normaliseVectors,
     } /* while (readGeomLine) */
     if (invalidVectors!=0)
       COMMENT("*/\n/* %d invalid fibre vectors encountered. ", invalidVectors);
-    COMMENT(" Total of %ld lines read, %ld tissue/grid points created. */\n",(long)numPoints);
+    COMMENT(" Total of %ld lines read, %ld tissue/grid points created. */\n",line,numPoints);
   } else { /* if geomFile */
     /* Default geometry filling the whole box without halo points. */
     /* This is to be done for brutto box minus outer halos,	   */

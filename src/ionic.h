@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -22,12 +22,13 @@
  * Interface with cardiac cell model description,
  * describing HH-type gates separately. 
  * TS 2016: modified to include Markov Chain models. 
+ * VNB 2025: tieable expressions.
  */
 
 #ifndef _ionic
 #define _ionic
 
-typedef struct {		/* description of dependent parameters */
+typedef struct {		/* description of dependent parameters/tieable expressions */
   int n;
   int *src;
   real **dst;
@@ -58,7 +59,7 @@ IONICFTAB(ftab_##name) {	\
 
 #include "channel.h"
 
-#define IONICFDDT(name) int name(real *u,int nv,real *values,int ntab,Par par,Var var,real *du,int no,real *nalp,real *nbet,int nn)
+#define IONICFDDT(name) int name(real *u,int nv,real *values,int ntab,Par par,Var var,Var tie,real *du,int no,real *nalp,real *nbet,int nn)
 typedef IONICFDDT(IonicFddt);
 
 /* Header of a standard ionic rhs calculator:	*/
@@ -68,7 +69,7 @@ typedef IONICFDDT(IonicFddt);
 #define IONIC_FDDT_HEAD(name,NV,NTAB,NO,NN)	\
 IONICFDDT(fddt_##name) {	\
   STR *S = (STR *)par;		\
-  int ivar;			\
+  int ivar, itie;		\
   ASSERT(nv==NV);		\
   ASSERT(ntab==NTAB);		\
   ASSERT(no==NO);		\
@@ -76,6 +77,7 @@ IONICFDDT(fddt_##name) {	\
   if (var.n) for(ivar=0;ivar<var.n;ivar++) *(var.dst[ivar])=u[var.src[ivar]];
 
 #define IONIC_FDDT_TAIL		\
+  if (tie.n) for(itie=0;itie<tie.n;itie++) u[tie.src[itie]]=*(tie.dst[itie]); /* u starts with rhs base layer */ \
   return 1;             	\
 }
 
@@ -90,8 +92,9 @@ typedef struct {
   int nt;			/* number of tab gate variables */
   int ntab;			/* number of tabulated functions (number of columns in the table) */
   int V_index;			/* index of voltage in the state vector */
-  Par p;			/* vector of model parameters */
+  Par p;			/* vector of model parameters + tieable expressions  */
   Var var;			/* description of dependent parameters */
+  Var tie;			/* description of tied expressions */
   channel_str * channel;	/* definitions of ion channel */
 } ionic_str;
 
@@ -101,16 +104,24 @@ typedef IONICCREATE(IonicCreate);
 #define IONIC_CREATE_HEAD(name)				\
 IONICCREATE(create_##name) {				\
   STR *S = (STR *)Calloc(1,sizeof(STR));        	\
-  char *p=w;                                    	\
+  char *p;                                    		\
   Var *var=&(I->var);					\
   int ivar=0;						\
+  Var *tie=&(I->tie);					\
+  int itie=0;						\
   int ig; 	/* gates counter */			\
   real V0;	/* initial voltage */			\
   if (!S) ABORT("cannot create %s",#name);		\
-  for(var->n=0;*p;var->n+=(*(p++)==AT));		\
+  /* Prealloc arrays for variable pars */		\
+  for(var->n=0,p=w;*p;var->n+=(*(p++)==AT));		\
   if(var->n){CALLOC(var->dst,var->n,sizeof(real *));	\
   CALLOC(var->src,var->n,sizeof(int));}			\
   else {var->src=NULL;(var->dst)=NULL;}			\
+  /* Prealloc arrays for tieable expressions */		\
+  for(tie->n=0,p=w;*p;tie->n+=(*(p++)==TIE));		\
+  if(tie->n){CALLOC(tie->dst,tie->n,sizeof(real *));	\
+  CALLOC(tie->src,tie->n,sizeof(int));}			\
+  else {tie->src=NULL;(tie->dst)=NULL;}			\
   I->V_index=V_index;					\
   /* Accept the non-cell parameter values by the standard macro */	\
   ACCEPTP(IV,0,RNONE,RNONE);		/* By default, no stimulation */\
@@ -126,24 +137,30 @@ IONICCREATE(create_##name) {				\
   for (ii=0; ii <NMC; ii++)				\
     CALLOC(I->channel[ii].subchain, MAX_SUBCHAINS, sizeof(subchain_str));
 
-#define IONIC_CREATE_TAIL		\
-  var->n=ivar;				\
+#define IONIC_CREATE_TAIL				\
+  /* Adjust arrays for de-facto variable pars */ 	\
+  var->n=ivar;						\
   if(ivar){REALLOC(var->dst,1L*ivar*sizeof(real *));	\
   REALLOC(var->src,1L*ivar*sizeof(int));}		\
-  else{FREE(var->dst);FREE(var->src);}	\
-  I->p = S;				\
-  I->no = NO;				\
-  I->nn = NN;				\
-  I->nt = NT;				\
-  I->ntab = NTAB;			\
-  I->nmc = NMC;				\
-  int nmv=0;				\
-  for (ii=0; ii < NMC; ii++){		\
-    nmv += I->channel[ii].dimension;	\
-  }					\
-  I->nmv=nmv;				\
-  ASSERT(NV==NO+NN+NT+nmv);		\
-  return NV;				\
+  else{FREE(var->dst);FREE(var->src);}			\
+  /* Adjust arrays for de-facto tieable exprs */ 	\
+  tie->n=itie;						\
+  if(itie){REALLOC(tie->dst,1L*itie*sizeof(real *));	\
+  REALLOC(tie->src,1L*itie*sizeof(int));}		\
+  else{FREE(tie->dst);FREE(tie->src);}			\
+  I->p = S;						\
+  I->no = NO;						\
+  I->nn = NN;						\
+  I->nt = NT;						\
+  I->ntab = NTAB;					\
+  I->nmc = NMC;						\
+  int nmv=0;						\
+  for (ii=0; ii < NMC; ii++){				\
+    nmv += I->channel[ii].dimension;			\
+  }							\
+  I->nmv=nmv;						\
+  ASSERT(NV==NO+NN+NT+nmv);				\
+  return NV;						\
 }
 
 #define IONIC_CONST(type,name) type name=S->I.name;

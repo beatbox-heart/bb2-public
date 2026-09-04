@@ -48,7 +48,7 @@
 #include "qpp.h"
 #include "geometry.h"
 
-/* Handle tokes for CPP prescan */
+/* Handle tokens for CPP prescan */
 #define JOIN2(a,b) a##b
 #define JOIN3(a,b,c) a##b##c
 #define JOIN4(a,b,c,d) a##b##c##d
@@ -146,6 +146,8 @@ typedef struct {
   real hx;				/* Space step */
   real ht;				/* Time step or 0 */
   int manypoint; 			/* == NINEPOINT, NINETEENPT in ezdiff < ezspiral, ezscroll */
+  int conservative;			/* Whether to use conservative scheme */
+  int harmonic;				/* .. conservative scheme is harmonic rather than arithmetic */
   int v0;				/* Layer for the diffusive field */
   int v1;				/* Layer for the Laplacian */
   int nnb;				/* Num of neighbours in the stencil */
@@ -155,10 +157,24 @@ typedef struct {
   int d0, d1;				/* Layers range to keep the diff tensor; must for var diff in MPI */
   Condition reweight_when;		/* When to recompute the weights: variable address */
   char reweight[maxname];		/* When to recompute the weights: variable name */
+  int check_positivity;			/* Flag to test for "bad" points in anisotropy */
 } STR;
 
 /* (Re-)Compute the weights */
 static int diff_connect (STR *S,Space *s); 
+
+/* Averaging of diffusivities of neighbouring nodes for conservative schemes */
+static real arithmean(real a, real b)
+{
+  return 0.5*(a+b);
+}
+static real harmomean(real a, real b)
+{
+  real ab=a*b;
+  return (ab==0.0)?0.0:(2.0*ab/(a+b));
+}
+#define MEAN(a,b) (harmonic?(harmomean((a),(b))):(arithmean((a),(b))))
+   
 
 /****************/
 RUN_HEAD(diff)
@@ -172,7 +188,7 @@ RUN_HEAD(diff)
   size_t np=s.np;			/* number of points in the device's space */
   int V0=v0*DV;				/* displacement from anchor to source value */
   int V1=v1*DV;				/* displacement from anchor to target value */
-  int ip;				/* points counter */
+  long ip;				/* points counter */
   devicePoint P;			/* point structure */
   real *X;				/* vector of weights */
   real *u, *un;				/* pointers to source and target */
@@ -287,6 +303,7 @@ DESTROY_HEAD(diff)
 DESTROY_TAIL(diff)
 
 #define DB(...) DEBUG(__VA_ARGS__)
+/* #define DB(...)  */
 
 /* Accepting real variable parameter by new name 'b' or its old alias 'a' */
 /* TODO: make the concept of aliases to parameters universal for all devices that might benefit */
@@ -363,6 +380,8 @@ CREATE_HEAD(diff)
   ACCEPTR(hx,RNONE,RSUCC(0.),RNONE);	/* diffusion makes no sense without space step */
   ACCEPTR(ht,0.,0.,RNONE);		/* make forward Euler step if ht>0 */
   ACCEPTI(manypoint,0,0,1);
+  ACCEPTI(conservative,ONE,0,1);	/* default yes in 1D no otherwise */
+  ACCEPTI(harmonic,0,0,1);		/* default is arithmetic, for historical reason  */
 
   ACCEPTS(reweight,"never");		/* global k-var to flag that weights to be recomputed */
   if (0==(reweight_entry=tb_find(deftb,S->reweight)))
@@ -370,6 +389,8 @@ CREATE_HEAD(diff)
   if ((tb_flag(deftb,reweight_entry) & f_vb)==0)
     EXPECTED_ERROR("symbol %s used for 'when' parameter is not a variable",S->reweight);
   S->reweight_when = (Condition)tb_addr(deftb,reweight_entry); 
+
+  ACCEPTI(check_positivity,0,0,1);
   
   /*-----------------------------*/
   /* Variable parameters section */
@@ -441,6 +462,17 @@ CREATE_HEAD(diff)
     }
   } /* if ANISOTROPY_ON else */
 
+  /* At this point we can check the diffusion stability limit if relevant */
+  if (ht>0 && hx!=0) {
+    real Dmax=fmax(S->D,fmax(S->Dl,S->Dt));
+    real alpha=Dmax*ht/(hx*hx);
+    if (alpha>0.5) {
+      MESSAGE("\n/* WARNING: Dmax*ht/hx^2=%g seems too high */\n",alpha);
+    } else {
+      MESSAGE("\x01\n/* Dmax*ht/hx^2=%g */\n",alpha);
+    }
+  }
+  
   /* Determine number of neighbours and diff tensor components */
   if (ANISOTROPY_ON) {
     switch (dim) {
@@ -470,7 +502,11 @@ CREATE_HEAD(diff)
   /* Range of layers to keep stencil weights */
   ACCEPTI(w0,-1,-1,vmax-1);
   ACCEPTI(w1,-1,-1,vmax-1);
-  ASSERT((w0==-1 && w1==-1) || (0<=w0 && w0<=w1 && w1<vmax && w1-w0+1==nnb));
+  if (!((w0==-1 && w1==-1) || (0<=w0 && w0<=w1 && w1<vmax && w1-w0+1==nnb))) {
+    MESSAGE("w0=%d w1=%d vmax=%d nnb=%d\n",w0,w1,vmax,nnb);
+    ASSERT((w0==-1 && w1==-1) || (0<=w0 && w0<=w1 && w1<vmax && w1-w0+1==nnb));
+  }
+ 
 
   /* Range of layers to keep diff tensor components, mandatory if var diff & MPI */
   ACCEPTI(d0,-1,-1,vmax-1);
@@ -546,26 +582,7 @@ CREATE_HEAD(diff)
   } /* if ANISOTROPY_ON else if manypoint==0 else */
   memcpy(S->H,H,nnb*sizeof(ssize_t *));
 
-  /* Create and initialize extra load arrays at all points */
-  for (ip=0;ip<np;ip++) {
-    devicePoint *P=s->p+ip;
-    FREE(P->X);
-    if (w0<0) { /* no weights layers */
-      CALLOC((P->X),nnb*sizeof(real),1); /* NB P->X is (void *) so pointing to size 1 */
-    } else { /* yes weights layers */
-      P->X=(void *)(P->u+w0*DV);
-      memset(P->X, 0, nnb*sizeof(real));
-    }
-    FREE(P->Y);
-    if (d0<0) { /* no tensor layers */
-      CALLOC((P->Y),nD*sizeof(real),1); /* NB P->Y is (void *) so pointing to size 1 */
-    } else { /* yes tensor layers */
-      P->Y=(void *)(P->u+d0*DV);
-      memset(P->Y, 0, nD*sizeof(real));
-    }
-  }
-  
-  /* Now compute and assign connection weights: this is potentially doable at each step */
+  /* Now compute and assign connection weights: this is also potentially doable at each step */
   if (SUCCESS != diff_connect(S,s)) ABORT("could not make the connection weighs");
 }
 CREATE_TAIL(diff,1);
@@ -579,6 +596,8 @@ static int diff_connect (STR *S,Space *s)
 {
   DEVICE_CONST(real,hx);		/* space step */
   DEVICE_CONST(int,manypoint);		/* 0/1 flag for small/large stencil */
+  DEVICE_CONST(int,conservative);	/* 0/1 flag for conservative scheme */
+  DEVICE_CONST(int,harmonic);		/* 0/1 flag for harmonic averaging */
   DEVICE_CONST(int,nnb);		/* number of neighbours in the stencil */
   DEVICE_CONST(int,w0);			/* layers range to keep */
   DEVICE_CONST(int,w1);			/*          the weights */
@@ -594,6 +613,28 @@ static int diff_connect (STR *S,Space *s)
   assert(GEOM_FIBRE_1==1);		/* shorter */	
   assert(GEOM_FIBRE_2==2);		/* if rely */
   assert(GEOM_FIBRE_3==3);		/* on this */
+
+ /* Create and initialize extra load arrays at all points */
+  for (ip=0;ip<np;ip++) {
+    devicePoint *P=s->p+ip;
+    
+    if (w0<0) { /* no weights layers */
+      FREE(P->X);
+      CALLOC((P->X),nnb*sizeof(real),1); /* NB P->X is (void *) so pointing to size 1 */
+    } else { /* yes weights layers */
+      P->X=(void *)(P->u+w0*DV);
+      memset(P->X, 0, nnb*sizeof(real));
+    }
+
+    if (d0<0) { /* no tensor layers */
+      FREE(P->Y);
+      CALLOC((P->Y),nD*sizeof(real),1); /* NB P->Y is (void *) so pointing to size 1 */
+    } else { /* yes tensor layers */
+      P->Y=(void *)(P->u+d0*DV);
+      memset(P->Y, 0, nD*sizeof(real));
+    }
+    
+  } /* for ip */
 
   /* Macros to access option-dependent and stencil-dependent arrays */
 #define XP ((real *)(P.X))		/* array of weights */
@@ -652,6 +693,54 @@ static int diff_connect (STR *S,Space *s)
 #undef G
 #undef ANISO
 #undef GEOM
+    if (S->check_positivity) {
+      for (ip=0;ip<np;ip++) {
+	P=s->p[ip];
+	/* if (XP[0]>0) {} */
+	if (XP[0]>0) {
+	  MESSAGE("\n/* #%d t=%ld idev=%d='%s' bad point %ld:(%ld,%ld,%ld) W=\n" ,
+		  mpi_rank,t,idev,dev[idev].n, ip,P.x,P.y,P.z);
+	  switch (dim) {
+	  case 2:
+	    MESSAGE(
+		    "%g\t%g\t%g\n" 
+		    "%g\t%g\t%g\n" 
+		    "%g\t%g\t%g\n", 
+		    XP[m2mp],XP[m20p],XP[m2pp], 
+		    XP[m2m0],XP[m200],XP[m2p0], 
+		    XP[m2mm],XP[m20m],XP[m2pm]); 
+	    break;
+	  case 3:
+	    MESSAGE(
+		    "%g\t%g\t%g\n" 
+		    "%g\t%g\t%g\n" 
+		    "%g\t%g\t%g\n" 
+		    "-----------\n" 
+		    "%g\t%g\t%g\n" 
+		    "%g\t%g\t%g\n" 
+		    "%g\t%g\t%g\n" 
+		    "-----------\n" 
+		    "%g\t%g\t%g\n" 
+		    "%g\t%g\t%g\n" 
+		    "%g\t%g\t%g\n" 
+		    "===========\n", 
+		    0.0 ,XP[m30pp],0.0, 
+		    XP[m3m0p],XP[m300p],XP[m3p0p], 
+		    0.0 ,XP[m30mp],0.0, 
+		    XP[m3mp0],XP[m30p0],XP[m3pp0], 
+		    XP[m3m00],XP[m3000],XP[m3p00], 
+		    XP[m3mm0],XP[m30m0],XP[m3pm0], 
+		    0.0 ,XP[m30pm],0.0, 
+		    XP[m3m0m],XP[m300m],XP[m3p0m], 
+		    0.0 ,XP[m30mm],0.0 
+		    ); 
+	    break;
+	  default: EXPECTED_ERROR("dimensionality %d is cannot be anisotropic so unexpected here",dim);
+	  } /* switch dim */
+	  MESSAGE(" The central weight is positivie: %lg, which will cause numerical instability. */\n",XP[0]);
+	} /* if XP[0]<0 */
+      } /* for ip */
+    } /* if check_positivity */
   } /* Geom or Aniso? */
   /* End of #include chain */
   

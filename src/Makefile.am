@@ -63,6 +63,8 @@ common_sources = \
 	crnach.c crnach_par.h crnach_step.h crnach_var.h \
 	ctlpoint.c ctlpoint.h \
 	d_dt.c \
+	d_dx.c \
+	d_dy.c \
 	device.c device.h \
 	devlist.h \
 	diff.c diff1.h diff2.h diff3.h diff1d.h diff2d.h diff3d.h diff_printweights.h \
@@ -85,6 +87,7 @@ common_sources = \
 	front.c \
 	geometry.c geometry.h \
 	glerr.h \
+	globalfunc.c \
 	gpcell.c gpcell.h \
         gpc_var.h \
 	grad2d.c \
@@ -106,9 +109,20 @@ common_sources = \
 	k_func.c \
 	k_poincare.c \
 	k_print.c \
-	linear1.c \
-	linear2.c \
+	l_abs.c \
+	l_add.c \
+	l_axpy.c \
+	l_copy.c \
+	l_max.c \
+	l_min.c \
+	l_move.c \
+	l_mult.c \
+	l_prod.c \
+	l_scal.c \
+	l_sum.c \
+	l_swap.c \
 	load.c \
+	localfunc.c \
 	lrd.c lrd_par.h lrd_step.h lrd_var.h \
 	mchtb.c mchtb.h \
 	mchtbpar.h mchtbvar.h \
@@ -153,8 +167,8 @@ common_sources = \
 	system.c system.h \
 	tb.c tbpar.h tbvar.h \
 	ttnp.c ttnp_par.h ttnp_step.h ttnp_init.h ttnnp04.c ttnnp04_par.h ttnnp04_var.h ttnnp04_step.h \
-	ttp06.c  ttp06_par.h ttp06_step.h ttp06_var.h\
-	ttp2006.c ttp2006_const.h ttp2006_fddt.h ttp2006_ftab.h ttp2006_fun.h ttp2006_ngate.h ttp2006_other.h ttp2006_par.h ttp2006_tgate.h\
+	ttp06.c  ttp06_par.h ttp06_step.h ttp06_var.h \
+	ttp2006.c ttp2006_const.h ttp2006_fddt.h ttp2006_ftab.h ttp2006_fun.h ttp2006_ngate.h ttp2006_other.h ttp2006_par.h ttp2006_tgate.h \
 	trivial.c \
 	update.c \
 	vtkout2.c \
@@ -168,7 +182,6 @@ common_sources += \
 	diff3dv.c \
 	diffold.c \
 	diffstep.c
-
 
 bb2s_SOURCES = \
 	${common_sources} \

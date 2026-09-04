@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -33,6 +33,7 @@
   NB all essential contents are stoved away into paci20_*.h files. 
 
   This variant with Cao being parameter rather than constant, at the (miniscule) expense of efficiency. 
+  This variant is with tieable expression.  
 */
 
 #include <assert.h>
@@ -118,6 +119,9 @@ typedef struct {		/* First go the cell parameters as listed in M.C.'s code */
   #include "paci20_par.h"
   #undef _
   real IV; 			/* Then the external current (mV/ms) */
+  #define _(name) real name;
+  #include "paci20_tie.h"	/* Then the tieable expression */
+  #undef _
 } STR;
 
 /* Functions of V to be tabulated, including gates' transition rates */
@@ -144,6 +148,10 @@ IONIC_FDDT_HEAD(paci20,NV,NTAB,NO,NN) {
   #include "paci20_par.h"
   #undef _
   DEVICE_CONST(real,IV);
+  /* Declare the tieable variables as pointers to the componentso of S-par vector */
+  #define _(name) real *name=&(S->name);
+  #include "paci20_tie.h"
+  #undef _
   /* Declare and assign local variables for dynamic variables from state vector */
   /* ..., first for non-gate variables */
   #define _(name,initial) real name=u[var_##name];
@@ -165,14 +173,14 @@ IONIC_FDDT_HEAD(paci20,NV,NTAB,NO,NN) {
   #include "paci20_fddt.h"
   /* Copy the calculated rates into the output array du[].  */
   /* Care is taken that all, and only, non-gating variables are attended here */
-  #define _(name,initial) du[other_##name]=diff_##name;
+  #define _(name,initial) du[other_##name]=(*diff_##name);
   #include "paci20_other.h"
   #undef _
   /* And copy the non-tab transition rates into the output arraysn nalp[] and nbet[] */
   #define _(name,initial) nalp[ngate_##name]=alp_##name; nbet[ngate_##name]=bet_##name; 
   #include "paci20_ngate.h"
   #undef _
-  /* Finally add the "external current" parameter values */
+  /* Finally add the "external current" parameter value */
   du[V_index]+=IV;
 } IONIC_FDDT_TAIL;
 
@@ -197,9 +205,11 @@ IONIC_CREATE_HEAD(paci20) {
   #include "paci20_ngate.h"
   #include "paci20_tgate.h"
   #undef _
+  /* Tie selected variables to grid layers */
+  #define _(name) MAKETIE(name)
+  #include "paci20_tie.h"
+  #undef _
 } IONIC_CREATE_TAIL;
-
-
 
 real nalp[NN];
 real nbet[NN];
@@ -207,6 +217,7 @@ real values[NTAB];
 int paci20rhs (real *u, real *du, Par par, Var var, int ln)
 {
   STR *S = (STR *)par;
+  Var tie={0, NULL, NULL};
   int ivar;
   assert(ln==NV);
   if (var.n) for(ivar=0;ivar<var.n;ivar++) *(var.dst[ivar])=u[var.src[ivar]];
@@ -224,7 +235,7 @@ int paci20rhs (real *u, real *du, Par par, Var var, int ln)
 
   /* In: u, nv, ntab, nn, no, values, par, var */
   /* Out: du;  nalp, nbet - potentially, not in this model */
-  if (!fddt_paci20(u,NV,values,NTAB,par,var,du,NO,nalp,nbet,NN)) {
+  if (!fddt_paci20(u,NV,values,NTAB,par,var,tie,du,NO,nalp,nbet,NN)) {
     URGENT_MESSAGE("\nerror calculating fddt(%s) at t=%ld: u=","paci20",t);
     for(iv=0;iv<NV;iv++) URGENT_MESSAGE(" %lg",u[iv]);
     ABORT("\n");

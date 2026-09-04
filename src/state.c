@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -393,7 +393,6 @@ int state (char *w)
 	    TissuePoints[numTissuePoints].u=New+ind(x,y,z,0);
 	    TissuePoints[numTissuePoints].X=NULL;
 	    TissuePoints[numTissuePoints].Y=NULL;
-	    /* DEBUG("%ld:(%ld,%ld,%ld)\n",numTissuePoints,x,y,z); */
 	    numTissuePoints++;
 	  } /* not GEOM_VOID */
 	} /* for z */

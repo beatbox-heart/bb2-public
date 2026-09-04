@@ -1,3 +1,23 @@
+/**
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * (see ../AUTHORS for the full list of contributors)
+ *
+ * This file is part of Beatbox.
+ *
+ * Beatbox is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Beatbox is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Beatbox.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /***************************************************************/
 /* 1D diffusion                                                */
 /***************************************************************/
@@ -69,22 +89,32 @@ for (ip=0;ip<np;ip++) {
   P=s->p[ip];
   x=P.x;				DB("x=%ld D11=%g\n",x,D(11));
   
-  /* Use the tensor */
+#if VARIA /* no ANISO in 1D */
+  if (conservative) {
+    /* Newer: conservative ("mimetic"?) scheme, 1D reduction from diff2dv variable scalar diffusion module */
+    if (G(0,x+1)) W(p) += MEAN( D(11) , DNB(11,x+1) );
+    if (G(0,x-1)) W(m) += MEAN( D(11) , DNB(11,x-1) );
+  } else {
+    /* Old: 1D reduction of RMcF's 3D formula */
+    /* Use the tensor */
+    if (G(0,x+1)) W(p) += D(11);
+    if (G(0,x-1)) W(m) += D(11);
+  
+    /* Use the diff coeff's derivative */
+    /* TODO: make them right into c1, w/o intermediate dD11 ? */
+    if (G(0,x+1) && G(0,x-1)) {
+      dD11 = DNB(11,x+1) - DNB(11,x-1);
+    } else {
+      dD11 = 0.0;
+    }
+    c1 = dD11;
+    
+    if (G(0,x+1)) W(p)+=0.25*c1;
+    if (G(0,x-1)) W(m)-=0.25*c1;
+  }
+#else	
   if (G(0,x+1)) W(p) += D(11);
   if (G(0,x-1)) W(m) += D(11);
-  
-#if VARIA /* no ANISO in 1D */
-  /* Use the diff coeff's derivative */
-  /* TODO: make them right into c1, w/o intermediate dD11 ? */
-  if (G(0,x+1) && G(0,x-1)) {
-    dD11 = DNB(11,x+1) - DNB(11,x-1);
-  } else {
-    dD11 = 0.0;
-  }
-  c1 = dD11;
-  
-  if (G(0,x+1)) W(p)+=0.25*c1;
-  if (G(0,x-1)) W(m)-=0.25*c1;
 #endif /* VARIA */
  } /* for ip */
 

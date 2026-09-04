@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2020) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -142,7 +142,7 @@ CREATE_HEAD(adi2d)
   ACCEPTI(v1,INONE,0,vmax-1);
   ASSERT(v1 != v0);
   ACCEPTR(D,RNONE,RNONE,RNONE); /* could be negative if it is cross-diffusion */
-  ACCEPTR(hx,RNONE,0.,RNONE);
+  ACCEPTR(hx,RNONE,RSUCC(0.),RNONE);
   ACCEPTR(ht,RNONE,0.,RNONE);
 }
 CREATE_TAIL(adi2d,1)

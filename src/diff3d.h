@@ -1,3 +1,23 @@
+/**
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
+ * (see ../AUTHORS for the full list of contributors)
+ *
+ * This file is part of Beatbox.
+ *
+ * Beatbox is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Beatbox is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Beatbox.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /***************************************************************/
 /* 3D diffusion                                                */
 /***************************************************************/
@@ -112,15 +132,175 @@ haloSwap();			/* make it available for neighbouring subdomains */
 
 /*---------------------------------*/
 /* Second round: periphery weights */
-/* */					DB("second round\n");
+/* */					// DB("second round\n");
 for (ip=0;ip<np;ip++) {
   P=s->p[ip];
   x=P.x;
   y=P.y;
   z=P.z;
   
-  /* Use the tensor */
-#if MANY
+  /*=============================================*/
+#if (!MANY && !ANISO && !VARIA)		/* 000 */
+                                        // DB("000\n");
+  dW=D(11);
+  if (G(0,x+1,y  ,z  )) W(p00) += dW;
+  if (G(0,x-1,y  ,z  )) W(m00) += dW;
+  dW=D(22);
+  if (G(0,x  ,y+1,z  )) W(0p0) += dW;
+  if (G(0,x  ,y-1,z  )) W(0m0) += dW;
+  dW=D(33);
+  if (G(0,x  ,y  ,z+1)) W(00p) += dW;
+  if (G(0,x  ,y  ,z-1)) W(00m) += dW;
+  
+#elif (!MANY && !ANISO && VARIA)	/* 001 */
+                                        // DB("001\n");
+  
+  if (conservative) {
+    /* Newer: conservative ("mimetic"?) scheme, recap of diff2dv variable scalar diffusion module */
+    if (G(0,x+1,y,z)) W(p00) += MEAN( D(11) , DNB(11,x+1,y,z) );
+    if (G(0,x-1,y,z)) W(m00) += MEAN( D(11) , DNB(11,x-1,y,z) );
+    if (G(0,x,y+1,z)) W(0p0) += MEAN( D(22) , DNB(22,x,y+1,z) );
+    if (G(0,x,y-1,z)) W(0m0) += MEAN( D(22) , DNB(22,x,y-1,z) );
+    if (G(0,x,y,z+1)) W(00p) += MEAN( D(33) , DNB(33,x,y,z+1) );
+    if (G(0,x,y,z-1)) W(00m) += MEAN( D(33) , DNB(33,x,y,z-1) );
+  } else {
+    /* Old: 2D reduction of RMcF's 3D formula */
+    /* Use the tensor */
+    dW=D(11);
+    if (G(0,x+1,y  ,z  )) W(p00) += dW;
+    if (G(0,x-1,y  ,z  )) W(m00) += dW;
+    dW=D(22);
+    if (G(0,x  ,y+1,z  )) W(0p0) += dW;
+    if (G(0,x  ,y-1,z  )) W(0m0) += dW;
+    dW=D(33);
+    if (G(0,x  ,y  ,z+1)) W(00p) += dW;
+    if (G(0,x  ,y  ,z-1)) W(00m) += dW;
+    
+    if (G(0,x+1,y,z) && G(0,x-1,y,z)) {
+      dD11 = DNB(11,x+1,y,z) - DNB(11,x-1,y,z);
+    } else {
+      dD11 = 0.0;
+    }
+    if (G(0,x,y+1,z) && G(0,x,y-1,z)) {
+      dD22 = DNB(22,x,y+1,z) - DNB(22,x,y-1,z);
+    } else {
+      dD22 = 0.0;
+    }
+    if (G(0,x,y,z+1) && G(0,x,y,z-1)) {
+      dD33 = DNB(33,x,y,z+1) - DNB(33,x,y,z-1);
+    } else {
+      dD33 = 0.0;
+    }
+    /* Use the diff coeff's derivative */
+    c1 = dD11;
+    c2 = dD22;
+    c3 = dD33;
+    if (G(0,x+1,y  ,z  )) W(p00)+=quarter*c1;
+    if (G(0,x-1,y  ,z  )) W(m00)-=quarter*c1;
+    if (G(0,x  ,y+1,z  )) W(0p0)+=quarter*c2;
+    if (G(0,x  ,y-1,z  )) W(0m0)-=quarter*c2;
+    if (G(0,x  ,y  ,z+1)) W(00p)+=quarter*c3;
+    if (G(0,x  ,y  ,z-1)) W(00m)-=quarter*c3;
+  }
+  
+#elif (!MANY && ANISO)	/* 010 + 011*/
+  // DB("010+011\n");
+  
+  if (conservative) {
+    /* Newer: conservative ("mimetic"?) scheme, recap of diff2dv variable scalar diffusion module */
+    if (G(0,x+1,y,z)) W(p00) += MEAN( D(11) , DNB(11,x+1,y,z) );
+    if (G(0,x-1,y,z)) W(m00) += MEAN( D(11) , DNB(11,x-1,y,z) );
+    if (G(0,x,y+1,z)) W(0p0) += MEAN( D(22) , DNB(22,x,y+1,z) );
+    if (G(0,x,y-1,z)) W(0m0) += MEAN( D(22) , DNB(22,x,y-1,z) );
+    if (G(0,x,y,z+1)) W(00p) += MEAN( D(33) , DNB(33,x,y,z+1) );
+    if (G(0,x,y,z-1)) W(00m) += MEAN( D(33) , DNB(33,x,y,z-1) );
+    
+    if (G(0,x+1,y+1,z)) W(pp0) += half*MEAN( D(12) , DNB(12,x+1,y+1,z) );
+    if (G(0,x-1,y+1,z)) W(mp0) -= half*MEAN( D(12) , DNB(12,x-1,y+1,z) );
+    if (G(0,x+1,y-1,z)) W(pm0) -= half*MEAN( D(12) , DNB(12,x+1,y-1,z) );
+    if (G(0,x-1,y-1,z)) W(mm0) += half*MEAN( D(12) , DNB(12,x-1,y-1,z) );
+    
+    if (G(0,x+1,y,z+1)) W(p0p) += half*MEAN( D(13) , DNB(13,x+1,y,z+1) );
+    if (G(0,x-1,y,z+1)) W(m0p) -= half*MEAN( D(13) , DNB(13,x-1,y,z+1) );
+    if (G(0,x+1,y,z-1)) W(p0m) -= half*MEAN( D(13) , DNB(13,x+1,y,z-1) );
+    if (G(0,x-1,y,z-1)) W(m0m) += half*MEAN( D(13) , DNB(13,x-1,y,z-1) );
+    
+    if (G(0,x,y+1,z+1)) W(0pp) += half*MEAN( D(23) , DNB(23,x,y+1,z+1) );
+    if (G(0,x,y-1,z+1)) W(0mp) -= half*MEAN( D(23) , DNB(23,x,y-1,z+1) );
+    if (G(0,x,y+1,z-1)) W(0pm) -= half*MEAN( D(23) , DNB(23,x,y+1,z-1) );
+    if (G(0,x,y-1,z-1)) W(0mm) += half*MEAN( D(23) , DNB(23,x,y-1,z-1) );
+  } else {
+    /* Old: 1D reduction of RMcF's 3D formula */
+    /* Use the tensor */
+    dW=D(11);
+    if (G(0,x+1,y  ,z  )) W(p00) += dW;
+    if (G(0,x-1,y  ,z  )) W(m00) += dW;
+    dW=D(22);
+    if (G(0,x  ,y+1,z  )) W(0p0) += dW;
+    if (G(0,x  ,y-1,z  )) W(0m0) += dW;
+    dW=D(33);
+    if (G(0,x  ,y  ,z+1)) W(00p) += dW;
+    if (G(0,x  ,y  ,z-1)) W(00m) += dW;
+    
+    dW=half*D(12);
+    if (G(0,x+1,y+1,z  )) W(pp0) += dW;
+    if (G(0,x+1,y-1,z  )) W(pm0) -= dW;
+    if (G(0,x-1,y-1,z  )) W(mm0) += dW;
+    if (G(0,x-1,y+1,z  )) W(mp0) -= dW;
+    dW=half*D(13);
+    if (G(0,x+1,y  ,z+1)) W(p0p) += dW;
+    if (G(0,x+1,y  ,z-1)) W(p0m) -= dW;
+    if (G(0,x-1,y  ,z-1)) W(m0m) += dW;
+    if (G(0,x-1,y  ,z+1)) W(m0p) -= dW;
+    dW=half*D(23);
+    if (G(0,x  ,y+1,z+1)) W(0pp) += dW;
+    if (G(0,x  ,y+1,z-1)) W(0pm) -= dW;
+    if (G(0,x  ,y-1,z-1)) W(0mm) += dW;
+    if (G(0,x  ,y-1,z+1)) W(0mp) -= dW;
+    
+    /* Use the tensor's derivatives */
+    if (G(0,x+1,y,z) && G(0,x-1,y,z)) {
+      dD11 = DNB(11,x+1,y,z) - DNB(11,x-1,y,z);
+      dD12 = DNB(12,x+1,y,z) - DNB(12,x-1,y,z);
+      dD13 = DNB(13,x+1,y,z) - DNB(13,x-1,y,z);
+    } else {
+      dD11 = 0.0;
+      dD12 = 0.0;
+      dD13 = 0.0;
+    }
+    if (G(0,x,y+1,z) && G(0,x,y-1,z)) {
+      dD21 = DNB(21,x,y+1,z) - DNB(21,x,y-1,z);
+      dD22 = DNB(22,x,y+1,z) - DNB(22,x,y-1,z);
+      dD23 = DNB(23,x,y+1,z) - DNB(23,x,y-1,z);
+    } else {
+      dD21 = 0.0;
+      dD22 = 0.0;
+      dD23 = 0.0;
+    }
+    if (G(0,x,y,z+1) && G(0,x,y,z-1)) {
+      dD31 = DNB(31,x,y,z+1) - DNB(31,x,y,z-1);
+      dD32 = DNB(32,x,y,z+1) - DNB(32,x,y,z-1);
+      dD33 = DNB(33,x,y,z+1) - DNB(33,x,y,z-1);
+    } else {
+      dD31 = 0.0;
+      dD32 = 0.0;
+      dD33 = 0.0;
+    }
+    c1 = dD11 + dD21 + dD31;
+    c2 = dD12 + dD22 + dD32;
+    c3 = dD13 + dD23 + dD33;
+    
+    if (G(0,x+1,y  ,z  )) W(p00)+=quarter*c1;
+    if (G(0,x-1,y  ,z  )) W(m00)-=quarter*c1;
+    if (G(0,x  ,y+1,z  )) W(0p0)+=quarter*c2;
+    if (G(0,x  ,y-1,z  )) W(0m0)-=quarter*c2;
+    if (G(0,x  ,y  ,z+1)) W(00p)+=quarter*c3;
+    if (G(0,x  ,y  ,z-1)) W(00m)-=quarter*c3;
+  }
+  
+#elif (MANY && !ANISO && !VARIA)	/* 100 */
+                                        // DB("100\n");
+  
   /* Correct the weights to make stencil more spherical */
   /* as in EZSCROLL */
   dW=twosixths*D(11); /* D(11)==D(22)==D(33) in this case */
@@ -143,107 +323,30 @@ for (ip=0;ip<np;ip++) {
   if (G(0,x  ,y+1,z-1)) W(0pm) += dW;
   if (G(0,x  ,y-1,z-1)) W(0mm) += dW;
   if (G(0,x  ,y-1,z+1)) W(0mp) += dW;
-#else /* not MANY */
-  dW=D(11);
-  if (G(0,x+1,y  ,z  )) W(p00) += dW;
-  if (G(0,x-1,y  ,z  )) W(m00) += dW;
-  dW=D(22);
-  if (G(0,x  ,y+1,z  )) W(0p0) += dW;
-  if (G(0,x  ,y-1,z  )) W(0m0) += dW;
-  dW=D(33);
-  if (G(0,x  ,y  ,z+1)) W(00p) += dW;
-  if (G(0,x  ,y  ,z-1)) W(00m) += dW;
-#endif  /* not MANY */
-
-#if ANISO
-  dW=half*D(12);
-  if (G(0,x+1,y+1,z  )) W(pp0) += dW;
-  if (G(0,x+1,y-1,z  )) W(pm0) -= dW;
-  if (G(0,x-1,y-1,z  )) W(mm0) += dW;
-  if (G(0,x-1,y+1,z  )) W(mp0) -= dW;
-  dW=half*D(13);
-  if (G(0,x+1,y  ,z+1)) W(p0p) += dW;
-  if (G(0,x+1,y  ,z-1)) W(p0m) -= dW;
-  if (G(0,x-1,y  ,z-1)) W(m0m) += dW;
-  if (G(0,x-1,y  ,z+1)) W(m0p) -= dW;
-  dW=half*D(23);
-  if (G(0,x  ,y+1,z+1)) W(0pp) += dW;
-  if (G(0,x  ,y+1,z-1)) W(0pm) -= dW;
-  if (G(0,x  ,y-1,z-1)) W(0mm) += dW;
-  if (G(0,x  ,y-1,z+1)) W(0mp) -= dW;
-#endif /* ANISO */
   
-#if (VARIA || ANISO)
-  /* Use the tensor's derivatives */
-  /* TODO: make them right into cj, w/o intermediate dDij ? */
-  if (G(0,x+1,y,z) && G(0,x-1,y,z)) {
-    dD11 = DNB(11,x+1,y,z) - DNB(11,x-1,y,z);
-#if ANISO
-    dD12 = DNB(12,x+1,y,z) - DNB(12,x-1,y,z);
-    dD13 = DNB(13,x+1,y,z) - DNB(13,x-1,y,z);
-#endif
-  } else {
-    dD11 = 0.0;
-#if ANISO
-    dD12 = 0.0;
-    dD13 = 0.0;
-#endif
-  }
-  if (G(0,x,y+1,z) && G(0,x,y-1,z)) {
-#if ANISO
-    dD21 = DNB(21,x,y+1,z) - DNB(21,x,y-1,z);
-#endif
-    dD22 = DNB(22,x,y+1,z) - DNB(22,x,y-1,z);
-#if ANISO
-    dD23 = DNB(23,x,y+1,z) - DNB(23,x,y-1,z);
-#endif
-  } else {
-#if ANISO
-    dD21 = 0.0;
-#endif
-    dD22 = 0.0;
-#if ANISO
-    dD23 = 0.0;
-#endif
-  }
-  if (G(0,x,y,z+1) && G(0,x,y,z-1)) {
-#if ANISO
-    dD31 = DNB(31,x,y,z+1) - DNB(31,x,y,z-1);
-    dD32 = DNB(32,x,y,z+1) - DNB(32,x,y,z-1);
-#endif
-    dD33 = DNB(33,x,y,z+1) - DNB(33,x,y,z-1);
-  } else {
-#if ANISO
-    dD31 = 0.0;
-    dD32 = 0.0;
-#endif
-    dD33 = 0.0;
-  }
-#if ANISO
-  c1 = dD11 + dD21 + dD31;
-  c2 = dD12 + dD22 + dD32;
-  c3 = dD13 + dD23 + dD33;
-#else
-  c1 = dD11;
-  c2 = dD22;
-  c3 = dD33;
-#endif
+#elif (MANY && !ANISO && VARIA)		/* 101 */
   
-  if (G(0,x+1,y  ,z  )) W(p00)+=quarter*c1;
-  if (G(0,x-1,y  ,z  )) W(m00)-=quarter*c1;
-  if (G(0,x  ,y+1,z  )) W(0p0)+=quarter*c2;
-  if (G(0,x  ,y-1,z  )) W(0m0)-=quarter*c2;
-  if (G(0,x  ,y  ,z+1)) W(00p)+=quarter*c3;
-  if (G(0,x  ,y  ,z-1)) W(00m)-=quarter*c3;
-#endif /* VARIA || ANISO */
+  EXPECTED_ERROR("This should not happen. MANY is incompatiable with VARIA");
+  
+#elif (MANY && ANISO && !VARIA)		/* 110 */
+  
+  EXPECTED_ERROR("This should not happen. MANY is incompatiable with ANISO");
+  
+#elif (MANY && ANISO && VARIA)		/* 111 */
+  
+  EXPECTED_ERROR("This should not happen. MANY is incompatiable with ANISO and VARIA");
+  
+#endif /* MANY? ANISO? VARIA? */
+  /*=============================================*/
+  
  } /* for ip */
 
 /*----------------------------------------------*/
 /* Third round: central weight for conservation */
-/* */						DB("third round\n");
+/* */						// DB("third round\n");
 for (ip=0;ip<np;ip++) {
   P=s->p[ip];
   XP[0]=0;
   for (nb=1;nb<nnb;nb++) XP[0]-=XP[nb];
-  /* */ 					WGTS3;
+  /* */ 					/* WGTS3; */
  } /* for ip */

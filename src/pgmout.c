@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -18,7 +18,7 @@
  * along with Beatbox.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Produce a PPM file */
+/* Produce a PGM file */
 
 #include <assert.h>
 #include <stdio.h>
@@ -43,7 +43,7 @@ typedef struct {
   int echo;
   int g;			/* layer wherefrom to extract the grayscale value */
   real g0,g1;			/* range of values to transfrom node to a byte for the gray value. */
-  int bgb;			/* byte representing void background */
+  int bgg;			/* gray value representing void background */
 #if MPI
   MPI_Comm comm;	/* Communicator: the group of all processes active in this device */
   int root;		/* One processor chosen to write the header and to pre-fill */
@@ -69,7 +69,7 @@ RUN_HEAD(pgmout)
   DEVICE_VAR(sequence,file);
   DEVICE_CONST(int,echo);
   DEVICE_CONST(int,g) DEVICE_CONST(real,g0) DEVICE_CONST(real,g1);
-  DEVICE_CONST(int,bgb);
+  DEVICE_CONST(int,bgg);
 
   int x, y, z;
   int nx = (s.x1-s.x0) + 1;
@@ -137,7 +137,7 @@ RUN_HEAD(pgmout)
 	if (!GEOMETRY_ON || isTissue(s.x0+x,s.y0+y,s.z0+z)) {
 	  BUF(z,y,x) = (unsigned char) Byte(s.x0+x,s.y0+y,s.z0+z,g,g0,g1);
 	} else { /*  Void. Use background colour. */
-	  BUF(z,y,x) = (unsigned char) bgb;
+	  BUF(z,y,x) = (unsigned char) bgg;
 	} /*  else */
       } /*  for x */
     } /*  for y */
@@ -152,7 +152,7 @@ RUN_HEAD(pgmout)
 	if (!GEOMETRY_ON || isTissue(s.x0+x,s.y0+y,s.z0+z)) {
 	  putc(Byte(s.x0+x,s.y0+y,s.z0+z,g,g0,g1),file->f);
 	} else { /*  Void. Use background colour. */
-	  putc((unsigned)bgb,file->f);
+	  putc((unsigned)bgg,file->f);
 	}
       } /*  for x */
     } /*  for y */
@@ -206,9 +206,9 @@ CREATE_HEAD(pgmout)
    *	If provided when geometry is off, the values will be ignored.
    **/
   if (GEOMETRY_ON) {
-    ACCEPTI(bgb, 255, 0, 255);
-  } else if ( find_key("bgr=",w) || find_key("bgg=",w) || find_key("bgb=",w) ) {
-    MESSAGE("Background colour parameters (bgr, bgg, bgb) are only used when geometry is active.\n"
+    ACCEPTI(bgg, 255, 0, 255);
+  } else if ( find_key("bgr=",w) || find_key("bgb=",w) ) {
+    MESSAGE("Background colour parameters (bgr, bgb) are only used when geometry is active.\n"
 	    "\tThe value(s) provided will be ignored.");
   }
 
@@ -275,7 +275,7 @@ CREATE_HEAD(pgmout)
       unsigned char *p;
       MALLOC(prefill,raster_size);
       for (p=prefill;p<prefill+raster_size;p++) {
-	p[0]=(unsigned char) (S->bgb);
+	p[0]=(unsigned char) (S->bgg);
       }
     } else {
       /* Zero pointer signals that this process does not prefill */

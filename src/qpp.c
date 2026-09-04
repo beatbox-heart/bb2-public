@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -94,6 +94,10 @@ static double      never  = 0.0;            /* this one must be zero */
 #define MARK_ERROR return FAILURE;
 
 #define ERR (-2)
+
+
+/* "ad hoc" debug, added temporarily only during code debug */
+/* #define Debug(...) MESSAGE("\n############ %s.%ld:\t",__FILE__,(long)__LINE__); MESSAGE(__VA_ARGS__); */
 
 /* get char from current input file/string macro, count line and pos */
 static int inpgetc(void) {
@@ -688,6 +692,9 @@ int acceptp(
   } else if (SRC>=vmax) {
     MESSAGE("ERROR read value %s%c%d > allowed max=%c%d\n",name,AT,SRC,AT,vmax-1);
     return(0);
+  } else if (SRC<0) {
+    MESSAGE("ERROR read value %s%c%d < allowed min=%c%d\n",name,AT,SRC,AT,0);
+    return(0);
   } else {
     *var=deflt;
     /* DST=var; */
@@ -695,6 +702,46 @@ int acceptp(
     MESSAGE("\x01""\n\t%s@%d%c",name,SRC,SEPARATORS[0]);
     SRC-=v0;	/* source layers are counted relative to the rhs base layer */
     (*iv)++;
+    return 1;
+  }
+  #undef SRC
+  #undef DST
+}
+
+int maketie (
+  const char *name,	/* name of the tieable expression including the : sign */
+  real *var,		/* pointer to this expression in the instances p-vector */
+  char *w,		/* text from the input script */
+  Var *t,		/* description of tied expressions */
+  int *it,		/* number of the tied expression in the p-vector */
+  int v0		/* start layer of the state vector */
+) {
+  #define SRC (t->src[*it])
+  #define DST (t->dst[*it])
+  INT dummy;
+  char *p = find_key(name,w);
+  if (p==NULL) { /* this expression is not tied */
+    return(1); 
+  } else if (!token(&p,p)) {
+    MESSAGE("ERROR parsing %s%s\n",name,p);
+    return(0);    
+  } else if (*it>=t->n) {
+    MESSAGE("# of tieable parameters exeeded allowed max=%ld\n",(long)t->n);
+    return(0);
+  } else if (!calc(&dummy,t_int,p) || (SRC=(int)dummy,SRC!=dummy)) {
+    MESSAGE("ERROR reading %s%s\n",name,p);
+    return(0);
+  } else if (SRC>=vmax) {
+    MESSAGE("ERROR read value %s%c%d > allowed max=%c%d\n",name,TIE,SRC,TIE,vmax-1);
+    return(0);
+  } else if (SRC<0) {
+    MESSAGE("ERROR read value %s%c%d < allowed min=%c%d\n",name,TIE,SRC,TIE,0);
+    return(0);
+  } else {
+    (t->dst[*it])=var;
+    MESSAGE("\x01""\n\t%s%d%c",name,SRC,SEPARATORS[0]);
+    SRC-=v0;	/* source layers are counted relative to the rhs base layer */
+    (*it)++;
     return 1;
   }
   #undef SRC
@@ -1223,7 +1270,7 @@ int accept_space (Space *S, char *w)
 int list_space (Space *S)
 {
   DEVICE_CONST(int,listpoints);
-  /* DEBUG("list_space: listpoints=%d\n",listpoints); */
+  DEBUG("list_space: listpoints=%d\n",listpoints);
   if (!listpoints) return SUCCESS;
   DEVICE_CONST(int,x0);
   DEVICE_CONST(int,x1);
@@ -1250,14 +1297,14 @@ int list_space (Space *S)
   S->relisted=1;
 
   /* If device's space is default then its point list is standard */
-  /* DEBUG("numTissuePoints=%ld, TissuePoints=%p\n",numTissuePoints,TissuePoints); */
+  DEBUG("numTissuePoints=%ld, TissuePoints=%p\n",numTissuePoints,TissuePoints);
   if (TissuePoints) {
     DEBUG("this (%d:%d)x(%d:%d)x(%d:%d) vs dflt (%d:%d)x(%d:%d)x(%d:%d)\n",
     	  global_x0,global_x1,global_y0,global_y1,global_z0,global_z1,
     	  SPACE_DEFAULT_X0,SPACE_DEFAULT_X1,
     	  SPACE_DEFAULT_Y0,SPACE_DEFAULT_Y1,
     	  SPACE_DEFAULT_Z0,SPACE_DEFAULT_Z1);
-    /* DEBUG("where='%s' wherecode=%p\n",where,wherecode); */
+    DEBUG("where='%s' wherecode=%p\n",where,wherecode);
     if (restricted==1 &&
 	global_x0==SPACE_DEFAULT_X0 && global_x1==SPACE_DEFAULT_X1 &&
 	global_y0==SPACE_DEFAULT_Y0 && global_y1==SPACE_DEFAULT_Y1 &&
@@ -1266,10 +1313,10 @@ int list_space (Space *S)
       *np=numTissuePoints;
       CALLOC((*p),numTissuePoints,sizeof(devicePoint));
       memcpy((*p),TissuePoints,numTissuePoints*sizeof(devicePoint));
-      /* DEBUG("TissuePoints(%p) -> *p(%p) [%ld]\n",TissuePoints,*p,numTissuePoints); */
-      /* DEBUG("TissuePoints=%p [0]->(%ld,%ld,%ld)\n", */
-      /* 	    TissuePoints,TissuePoints[0].x,TissuePoints[0].y,TissuePoints[0].z); */
-      /* DEBUG("p=%p [0]->(%ld,%ld,%ld)\n",(*p),(*p)[0].x,(*p)[0].y,(*p)[0].z); */
+      DEBUG("TissuePoints(%p) -> *p(%p) [%ld]\n",TissuePoints,*p,numTissuePoints);
+      DEBUG("TissuePoints=%p [0]->(%ld,%ld,%ld)\n",
+      	    TissuePoints,TissuePoints[0].x,TissuePoints[0].y,TissuePoints[0].z);
+      DEBUG("p=%p [0]->(%ld,%ld,%ld)\n",(*p),(*p)[0].x,(*p)[0].y,(*p)[0].z);
       
       /* *p=TissuePoints; */
       DEBUG("default list of %ld points",(long)*np);
@@ -1280,7 +1327,7 @@ int list_space (Space *S)
   FREE(*p);
   CALLOC(*p,(x1-x0+1)*(y1-y0+1)*(z1-z0+1),sizeof(devicePoint));
   *np=0;
-  /* DEBUG("where='%s' wherecode=%p\n",where,wherecode); */
+  DEBUG("where='%s' wherecode=%p\n",where,wherecode);
   for ((*x)=x0;(*x)<=x1;(*x)++) {
     for ((*y)=y0;(*y)<=y1;(*y)++) {
       for ((*z)=z0;(*z)<=z1;(*z)++) {
@@ -1295,11 +1342,12 @@ int list_space (Space *S)
 	(*p)[*np].z=(*z);
 	(*p)[*np].u=New+ind((*x),(*y),(*z),0);
 	(*p)[*np].X=NULL;
+	(*p)[*np].Y=NULL;
 	(*np)++;
       } /* for *z */
     } /* for *y */
   } /* for *x */
-  Debug("/* #%d t=%ld device=%d='%s' np=%ld */\n",mpi_rank,t,idev,dev[idev].n,(*np));
+  MESSAGE("\n/* list_space #%d t=%ld device=%d='%s' np=%ld */\n",mpi_rank,t,idev,dev[idev].n,(*np));
   /* { */
   /*   int my_mpi_rank=mpi_rank; */
   /*   long my_t = t; */
@@ -1309,11 +1357,11 @@ int list_space (Space *S)
   /*   strncpy(my_devname,dev[idev].n,32); */
   /*   Debug("/\* #%d t=%ld device=%d='%s' np=%ld *\/\n",my_mpi_rank,my_t,my_idev,my_devname,my_np); */
   /* } */
-  if (*p) {
+  if (*np) {
     REALLOC(*p,(*np)*sizeof(devicePoint));
   } else {
     URGENT_MESSAGE("/* Warning: unexpected empty point list for device %d '%s' when relisting at t=%ld #%d */\n",
-		   idev,dev[idev],t,mpi_rank);
+		   (int)idev,dev[idev].n,(long)t,(int)mpi_rank);
     *p=NULL;
   }
   return SUCCESS;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -25,46 +25,46 @@
 /* can't divide by 0 so need to multiply by it in fCa */
 #define EI2AB(g) real alp_##g = g##_inf*eps_##g; real bet_##g = (1.0-g##_inf)*eps_##g;
 
-real E_Na = RTF*log(Nao/Nai);			/* (mV) */
-real E_Ca = 0.5*RTF*log(Cao/Cai);		/* (mV) */
-real E_K  = RTF*log(Ko/Ki);			/* (mV) */
+(*E_Na) = RTF*log(Nao/Nai);			/* (mV) */
+(*E_Ca) = 0.5*RTF*log(Cao/Cai);		/* (mV) */
+(*E_K)  = RTF*log(Ko/Ki);			/* (mV) */
 real PkNa = 0.03;				/* (1) */
-real E_Ks = RTF*log((Ko+PkNa*Nao)/(Ki+PkNa*Nai));	/* (mV) */
+(*E_Ks) = RTF*log((Ko+PkNa*Nao)/(Ki+PkNa*Nai));	/* (mV) */
 
-real i_Na	= g_Na*cub(m)*h*j*(V-E_Na);	/* (mV/ms) */
-real i_NaL	= g_NaL*cub(mL)*hL*(V-E_Na);	/* (mV/ms) */
+(*i_Na)	= g_Na*cub(m)*h*j*(V-(*E_Na));	/* (mV/ms) */
+(*i_NaL)	= g_NaL*cub(mL)*hL*(V-(*E_Na));	/* (mV/ms) */
 /* */
-/* real i_f	= g_f*Xf*(V-E_f);		/\* (mV/ms) *\/ */
-/* i_fNa Na component of If */
+/* (*i_f)	= g_f*Xf*(V-E_f);		/\* (mV/ms) *\/ */
+/* (*i_fNa) Na component of If */
 real f_Na = 0.37;
-real i_fNa = ((f_Na*g_f*Xf*(V-E_Na))); /* (mV/ms) */
-/* i_fK K component of i_f */
+(*i_fNa) = ((f_Na*g_f*Xf*(V-(*E_Na)))); /* (mV/ms) */
+/* (*i_fK) K component of (*i_f) */
 real f_K = 1.0 - f_Na;
-real i_fK = ((f_K*g_f*Xf*(V-E_K))); /* (mV/ms) */
-real i_f = i_fK + i_fNa; /* (mV/ms) */
+(*i_fK) = ((f_K*g_f*Xf*(V-(*E_K)))); /* (mV/ms) */
+(*i_f) = (*i_fK) + (*i_fNa); /* (mV/ms) */
 /* */
-real i_CaL	= g_CaL*4.0*F*V/RTF*(Cai*exp(2.0*V/RTF)-0.341*Cao)/(exp(2.0*V/RTF)-1.0)*d*f1*f2*fCa;	/* (mV/ms) */
-real i_to	= g_to*(V-E_K)*q*r;		/* (mV/ms) */
-real i_Ks	= g_Ks*(V-E_Ks)*sqr(Xs)*(1.0+0.6/(1.0+pow((3.8e-5/Cai),1.4)));/* (mV/ms)  */
-real i_Kr	= (g_Kr*(V-E_K)*Xr1*Xr2*sqrt(Ko/5.4));/* (mV/ms)  */
-real al_K1	= 3.91/(1.0+exp(0.5942*(V-E_K-200.0)));		/* (1) */
-real be_K1	= (-1.509*exp(0.0002*(V-E_K+100.0))+exp(0.5886*(V-E_K-10.0)))/(1.0+exp(0.4547*(V-E_K)));	/* (1) */
+(*i_CaL)	= g_CaL*4.0*F*V/RTF*(Cai*exp(2.0*V/RTF)-0.341*Cao)/(exp(2.0*V/RTF)-1.0)*d*f1*f2*fCa;	/* (mV/ms) */
+(*i_to)	= g_to*(V-(*E_K))*q*r;		/* (mV/ms) */
+(*i_Ks)	= g_Ks*(V-(*E_Ks))*sqr(Xs)*(1.0+0.6/(1.0+pow((3.8e-5/Cai),1.4)));/* (mV/ms)  */
+(*i_Kr)	= (g_Kr*(V-(*E_K))*Xr1*Xr2*sqrt(Ko/5.4));/* (mV/ms)  */
+real al_K1	= 3.91/(1.0+exp(0.5942*(V-(*E_K)-200.0)));		/* (1) */
+real be_K1	= (-1.509*exp(0.0002*(V-(*E_K)+100.0))+exp(0.5886*(V-(*E_K)-10.0)))/(1.0+exp(0.4547*(V-(*E_K))));	/* (1) */
 real XK1_inf	= al_K1/(al_K1+be_K1);		/* (1) */
-real i_K1	= g_K1*XK1_inf*(V-E_K)*sqrt(Ko/5.4);	/* (mV/ms)  */
+(*i_K1)	= g_K1*XK1_inf*(V-(*E_K))*sqrt(Ko/5.4);	/* (mV/ms)  */
 
-real i_KACh      = ACh?(k_KACh*10.0/(1.0 + 9.13652/pow(ACh,0.477811))*g_KACh*(V - E_K)):0.0; /* (mV./ms) */
+(*i_KACh)      = ACh?(k_KACh*10.0/(1.0 + 9.13652/pow(ACh,0.477811))*g_KACh*(V - (*E_K))):0.0; /* (mV./ms) */
 
-real i_NaCa	= kNaCa*
+(*i_NaCa)	= kNaCa*
   (exp(gamma*V/RTF)*cub(Nai)*Cao-exp((gamma-1.0)*V/RTF)*cub(Nao)*Cai*alpha)/
   ((cub(KmNai)+cub(Nao))*(KmCa+Cao)*(1.0+Ksat*exp((gamma-1.0)*(V/RTF))));		/* (mV/ms) */
-real i_NaK = PNaK*Ko/(Ko+Km_K)*Nai/(Nai+Km_Na)/(1.0+0.1245*exp(-0.1*V/RTF)+0.0353*exp(-V/RTF));	/* (mV/ms) */
-real i_PCa = g_PCa*Cai/(Cai+KPCa);		/* (mV/ms) */
-real i_b_Na = g_b_Na*(V-E_Na);			/* (mV/ms) */
-real i_b_Ca = g_b_Ca*(V-E_Ca);			/* (mV/ms) */
-real j_up   = j_up_max/(1.0+sqr(Kup/Cai));	/* (mM/ms) */
-real j_leak = j_leak_max*(Ca_SR-Cai);		/* (mM/ms) */
+(*i_NaK) = PNaK*Ko/(Ko+Km_K)*Nai/(Nai+Km_Na)/(1.0+0.1245*exp(-0.1*V/RTF)+0.0353*exp(-V/RTF));	/* (mV/ms) */
+(*i_PCa) = g_PCa*Cai/(Cai+KPCa);		/* (mV/ms) */
+(*i_b_Na) = g_b_Na*(V-(*E_Na));			/* (mV/ms) */
+(*i_b_Ca) = g_b_Ca*(V-(*E_Ca));			/* (mV/ms) */
+(*j_up)   = j_up_max/(1.0+sqr(Kup/Cai));	/* (mM/ms) */
+(*j_leak) = j_leak_max*(Ca_SR-Cai);		/* (mM/ms) */
 real RyRSRCass = (1 - 1/(1 +  exp((Ca_SR-0.3)/0.1)));	/* (1)  */
-real j_rel = j_rel_max*RyRSRCass*RyRo*RyRc*(Ca_SR-Cai);	/* (mM/ms) */
+(*j_rel) = j_rel_max*RyRSRCass*RyRo*RyRc*(Ca_SR-Cai);	/* (mM/ms) */
 
 
 real f1_inf	= 1.0/(1.0+exp((V+26.0)/3.0));			/* (1) */
@@ -98,11 +98,11 @@ real Xr1_inf	= 1.0/(1.0+exp((V_half-V)/4.9));		/* (1) */
 real tau_Xr1	= 1.0*(450.0/(1.0+exp((-45.0-V)/10.0)))*(6.0/(1.0+exp((30.0+V)/11.5)));	/* (ms) */
 TI2AB(Xr1);
 
-real Cai_bufc    = 1.0/(1.0+Buf_C*Kbuf_C/sqr(Cai+Kbuf_C));		/* (1) */
-real Ca_SR_bufSR = 1.0/(1.0+Buf_SR*Kbuf_SR/sqr(Ca_SR+Kbuf_SR));		/* (1) */
+(*Cai_bufc)    = 1.0/(1.0+Buf_C*Kbuf_C/sqr(Cai+Kbuf_C));		/* (1) */
+(*Ca_SR_bufSR) = 1.0/(1.0+Buf_SR*Kbuf_SR/sqr(Ca_SR+Kbuf_SR));		/* (1) */
 
-real diff_Nai    = -CFV*(i_Na+i_NaL+i_b_Na+3.0*i_NaK+3.0*i_NaCa+i_fNa);	/* (mM/ms) */
-real diff_Cai    = Cai_bufc*(j_leak-j_up+j_rel-(i_CaL+i_b_Ca+i_PCa-2.0*i_NaCa)*CFV*0.5);	/* (mM/ms) */
-real diff_Ca_SR  = Ca_SR_bufSR*(Vc/Vsr)*(j_up-(j_rel+j_leak));		/* (mM/ms) */
-real diff_V = -(i_K1+i_to+i_Kr+i_Ks+i_KACh+i_CaL+i_NaK+i_Na+i_NaL+i_NaCa+i_PCa+i_f+i_b_Na+i_b_Ca);	/* (mV/ms) */
+(*diff_Nai)    = -CFV*((*i_Na)+(*i_NaL)+(*i_b_Na)+3.0*(*i_NaK)+3.0*(*i_NaCa)+(*i_fNa));	/* (mM/ms) */
+(*diff_Cai)    = (*Cai_bufc)*((*j_leak)-(*j_up)+(*j_rel)-((*i_CaL)+(*i_b_Ca)+(*i_PCa)-2.0*(*i_NaCa))*CFV*0.5);	/* (mM/ms) */
+(*diff_Ca_SR)  = (*Ca_SR_bufSR)*(Vc/Vsr)*((*j_up)-((*j_rel)+(*j_leak)));		/* (mM/ms) */
+(*diff_V) = -((*i_K1)+(*i_to)+(*i_Kr)+(*i_Ks)+(*i_KACh)+(*i_CaL)+(*i_NaK)+(*i_Na)+(*i_NaL)+(*i_NaCa)+(*i_PCa)+(*i_f)+(*i_b_Na)+(*i_b_Ca));	/* (mV/ms) */
 

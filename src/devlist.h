@@ -34,17 +34,33 @@ D(byteout)
 D(clock)
 D(ctlpoint)
 D(d_dt)
+D(d_dx)
+D(d_dy)
 D(diff)
 D(dump)
 D(ecg)
 D(elliptic)
 D(euler)
 D(flip)
+D(globalfunc)
 D(grad2d)
 D(k_func)
 D(k_print)
 D(k_poincare)
+D(l_abs)  /* u[v1]=abs(u[v0])    */
+D(l_add)  /* u[v1]=u[v0]+a       */
+D(l_axpy) /* u[v2]=a*u[v0]+u[v1] */
+D(l_copy) /* u[v1]=u[v0]         */
+D(l_max)  /* u[v2]=max(u[v0],u[v1]) */
+D(l_min)  /* u[v2]=max(u[v0],u[v1]) */
+D(l_move) /* move along the grid */
+D(l_mult) /* u[v1]=u[v0]*a       */
+D(l_prod) /* u[v2]=u[v0]*u[v1]   */
+D(l_scal) /* u[v1]=u[v0]*a       */
+D(l_sum)  /* u[v2]=u[v0]+u[v1]   */
+D(l_swap) /* u[v1] <=> u[v0]     */
 D(load)
+D(localfunc)
 D(mpipaint)
 D(neum2d)
 D(neum3d)

@@ -296,10 +296,10 @@ if (!spaceIsBox(w)) {		  \
 
 
 #define DEVICE_MUST_BE_NOWHERE		\
-if (dev->s.nowhere != 1) {		\
-  MESSAGE("/* WARNING: %s requires that nowhere is equal to 1.\nAdd 'nowhere=1' to remove this warning.*/\n",dev->n); \
-  dev->s.nowhere=1; \
-}
+  if (find_key("nowhere=",w)) { \
+  MESSAGE("/* WARNING: %s requires that nowhere=1; this is enforced. Remove nowhere=... to suppress this warning. */\n",dev->n); \
+  } \
+  dev->s.nowhere=1; 
 
 #define DEVICE_OPERATES_ON_A_SINGLE_POINT					\
   if ((!spaceIsBox(w))||(find_key("x1=",w))||(find_key("y1=",w))||(find_key("z1=",w))) {	\
