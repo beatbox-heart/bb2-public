@@ -193,6 +193,7 @@ bb2s_SOURCES = \
 	ezstep.c ezstep.h  ezstep1.h  ezstep2.h ezstep3.h ezstep4.h ezstep0d.h ezstep2d.h ezstep3d.h \
 	ezview.c ezgraph3d.c ezmarching.c ezview.h ezpar.h ezfix.h ezvar.h ezini.h ezarr.h ezgraph3d.h ezmarching.h ezgenerators.h \
 	imgout.c \
+	inner_bc.c \
 	k_clock.c \
 	k_draw.c \
 	k_imgout.c \
