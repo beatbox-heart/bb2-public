@@ -2607,6 +2607,8 @@ following parameters optional with fixed names:
 </ul>
 This method is used e.g. by devices
 <a href="#byteout"><code>byteout</code></a>,
+<a href="#pgmin"><code>pgmin</code></a>,
+<a href="#pgmout"><code>pgmout</code></a>,
 <a href="#ppmin"><code>ppmin</code></a>,
 <a href="#ppmout"><code>ppmout</code></a>,
 <a href="#record"><code>record</code></a>,
@@ -5425,8 +5427,9 @@ boundaries of its space in the <code>x</code>-direction. Further parameters are:
   <td><code>v0</code></td>
   <td><code>0</code> </td>
   <td><code>vmax-1</code> </td>
-  <td> The layer that
-    will contain the diffusive field after the timestep, may coincide
+  <td> The "output" layer, which 
+    will contain the diffusive field after the timestep, may
+    or may not coincide
     with <code>v0</code>. </td>
 </tr>
   
@@ -5443,7 +5446,7 @@ boundaries of its space in the <code>x</code>-direction. Further parameters are:
   <td><code>real</code></td>
   <td><code>hx</code>
   <td>-</td></td>
-  <td><code>0<sup>+</sup</code>></td>
+  <td> <code> 0<sup>+</sup> </code> </td>
   <td>-</td>
   <td> Space step.</td>      
 </tr>
@@ -5476,6 +5479,106 @@ layer used for storing the diffusive field (say the transmembrane
 voltage), and
 <code>D</code>, <code>hx</code> and <code>ht</code> are values
 (possibly k-expressions)
+for the diffusion coefficient, space step and time step. 
+</p>
+
+<h3>Instances in Example Scripts</h3>
+
+<p class="quest"> To do. </p>
+
+
+
+<!-- ======================== --> 
+<h2 class="numbered">adi2d</h2>
+<h3>Overview</h3>
+
+<p> This is a computational device, which performs an
+alternating-direction implicit (ADI) timestep for an isotropic
+diffusion operator with Neumann boundary conditions in box geometry in
+2D.
+</p>
+
+<h3>Parameters</h3>
+
+<p> This is a  <a href="#rectangular">rectangular</a>  device; Neumann conditions are assumed at the
+boundaries of its space. Further parameter are: </p>
+
+<table border="1">
+<thead>
+<tr>
+<th scope="col" class="left">Type</th>
+<th scope="col" class="left">Name</th>
+<th scope="col" class="left">Default</th>
+<th scope="col" class="left">Min</th>
+<th scope="col" class="left">Max</th>
+<th scope="col" class="left">Description</th>
+</tr>
+</thead>
+<tbody>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v0</code></td>
+  <td>-</td>
+  <td><code>0</code> </t>
+  <td><code>vmax-1</code> </td>
+  <td> The layer
+    containing the diffusive field before and after the timestep.</td>   
+</tr>
+
+<tr>    
+  <td><code>int</code></td>
+  <td><code>v1</code></td>
+  <td>-</td>
+  <td><code>0</code> </td>
+  <td><code>vmax-1</code> </td>
+  <td>An auxiliary layer, used for intermediate ADI calculations. Must
+    be different from <code>v0</code></td>    
+</tr>
+  
+<tr>
+  <td><code>real</code>
+  </td><td><code>ht</code>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td>-</td>
+  <td> Time step</td>  
+</tr>
+
+<tr>      
+  <td><code>real</code></td>
+  <td><code>hx</code>
+  <td>-</td></td>
+  <td><code> 0 <sup>+</sup> </code></td>
+  <td>-</td>
+  <td> Space step</td>      
+</tr>
+
+<tr>
+  <td><code>real</code>
+  </td><td><code>D</code>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td>-</td>
+  <td> Diffusion coefficient </td>      
+</tr>
+</tbody>
+</table>
+
+<p>
+All parameters are mandatory.
+</p>
+
+<h3>Typical Syntax</h3>
+
+<pre> adi2d v0=[u] v1=[aux] D=D hx=hx ht=ht; </pre>
+
+<p>
+where string macro <code>[u]</code> contains the number of the
+layer used for storing the diffusive field (say the transmembrane
+voltage),
+<code>[aux]</code> is a layer outside the kinetic model, and
+<code>D</code>, <code>hx</code> and <code>ht</code> are k-variables
 for the diffusion coefficient, space step and time step. 
 </p>
 
@@ -5547,7 +5650,7 @@ boundaries of its space. Further parameter are: </p>
   <td><code>real</code></td>
   <td><code>hx</code>
   <td>-</td></td>
-  <td><code>0<sup>+</sup</code>></td>
+  <td><code>0 <sup>+</sup> </code></td>
   <td>-</td>
   <td> Space step</td>      
 </tr>
@@ -5606,7 +5709,6 @@ you say in that directory:
 </pre>
 <p>
 on the command line. 
-
 
 <!-- ========================= -->
 <h2 class="numbered">bytein</h2>
@@ -5972,7 +6074,7 @@ given location.
   <td><code>real</code></td>
   <td><code>ht</code></td>
   <td>-</td>
-  <td><code>0<sup>+</sup</code>></td>
+  <td><code>0 <sup>+</sup> </code></td>
   <td><code>-</code></td>
   <td> time step</td>
 </tr>
@@ -6071,7 +6173,7 @@ below the table of parameters.
   <td><code>real</code></td>
   <td><code>hx</code></td>
   <td>-</td>
-  <td><code>0<sup>+</sup</code>></td>
+  <td><code>0 <sup>+</sup> </code></td>
   <td>-</td>
   <td>
     Space step
@@ -6139,6 +6241,32 @@ below the table of parameters.
     Flag to use "extra symmetric" 9-point stencil in 2D and 19-point
     stencil in 3D, as in EZSPIRAL and EZSCROLL respectively.
     Only works with isotropic constant diffusivity. 
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>conservative</code></td>
+  <td> see &rightarrow; </td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
+  <td>
+    Flag to use conservative scheme.
+    Only useful for spatially-dependentd
+    diffusivities.
+    Default is <code>1</code> in 1D, <code>0</code> otherwise.
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>harmonic</code></td>
+  <td><code>0</code></td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
+  <td>
+    If conservative scheme is used, the mean diffusivities between nodes are
+    arithmetic if <code>harmonic=0</code> and harmonic if <code>harmonic=1</code>.
   </td>
 </tr>
 
@@ -9060,6 +9188,56 @@ beatbox/data/scripts/sequential/Barkley_model/rabbit.bbs
 </pre>
 
 <!-- ========================= -->
+<h2 class="numbered">flip</h2>
+<h3>Overview</h3>
+
+<p>
+This is a computational device, works like an extreme form of ZFK model, only faster:
+changes the value in layer <code>v0</code> to <code>1</code> if the value in layer <code>v1</code> is positive;
+remains unchanged otherwise. 
+</p>
+
+<h3>Parameters</h3>
+
+<p>This device is  <a href="#rectangular">rectangular</a> . Further parameters are: </p>
+
+<table border="1">
+<thead>
+<tr>
+<th>Type</th>
+<th>Name</th>
+<th>Default</th>
+<th>Min</th>
+<th>Max</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+
+<tr>
+<td><code>int</code></td>
+<td><code>v0</code></td>
+<td>-</td>
+<td><code>0</code></td>
+<td><code>vmax-1</code></td>
+<td>the layer in which the value may be changed depending on the layer <code>v1</code></td>
+</tr>
+
+<tr>
+<td><code>int</code></td>
+<td><code>v1</code></td>
+<td>-</td>
+<td><code>0</code></td>
+<td><code>vmax-1</code></td>
+<td> the layer which controls the chage in layer <code>v0</code>. Must be different from <code>v0</code>.  </td>
+</tr>
+</table>
+
+<h3>Typical Syntax</h3>
+
+<p class="quest"> To do. </p>
+ 
+<!-- ========================= -->
 <h2 class="numbered">grad2d</h2>
 <h3>Overview</h3>
 
@@ -9326,6 +9504,143 @@ beatbox/data/scripts/sequential/ZFK_model/zfkmon2.bbs
 </pre>
 
 <!-- ========================= -->
+<h2 class="numbered">inner_bc</h2>
+
+<h3>Overview</h3>
+
+<p> Modifies the weights in the connectivity matrix used by the
+<code>diff</code> device, to represent inner boundary conditions as described
+in <a
+href="https://doi.org/10.48550/arXiv.2605.01083">https://doi.org/10.48550/arXiv.2605.01083</a>. 
+<strong>Caveat: slope-dependent correction is currently implemented only in 2D.</strong>
+
+<h3>Parameters</h3>
+
+<table border="1">
+<tr>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>advance</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td>If <code>advance=1</code>, recalculation of the weights occurs
+    before the very first step (<code>t=0</code>), i.e. at parse time, right
+    after its creation. This, of course, will work <strong>only
+  if</strong> the non-modified connectiviti weights have already been
+  set, i.e. this device is <strong>after</strong> the corresponding
+  <code>diff</code> device. 
+</tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>v0</code> </td>
+  <td> - </td>
+  <td> <code>0</code> </td>
+  <td> <code>vmax-1</code> </td>
+  <td>The "indicator" layer. The inner boundary is presumed to be between
+  nodes which have specified values <code>c0</code> and <code>c1</code> in this layer. 
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>c0</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td>This value in the indicator layer <code>v0</code> designates the domain on one
+  sides of the inner boundary. 
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>c1</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td>This value in the indicator layer <code>v0</code> designates the domain on the other
+  sides of the inner boundary. Must of course be different
+  from <code>c0</code>. 
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>hx</code></td>
+  <td>-</td>
+  <td><code> 0<sup>+</o> </code></td>
+  <td>-</td>
+  <td>The space step; should be the same as in the corresponding
+    <code>diff</code> device (this is not checked!).
+</tr>
+
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>Sigma</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td>-</td>
+  <td>Conductivity across the boundary (SI: m/s, Beatbox units:
+  mm/ms). NB <code>Sigma=0</code> is full disconnect; makes sense and so is
+  allowed. 
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>manypoint</code></td>
+  <td> <code>1</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td>
+    Flag to use the bigger 9-point (vs 5-point) stencil in 2D and
+    19-point (vs 7-point) stencil in 3D.
+    Does not have to coincide with this flag in the corresponding
+  <code>diff</code> device. 
+  </d>
+</tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>w0</code> </td>
+  <td> - </td>
+  <td> <code>0</code> </td>
+  <td> <code>vmax-1</code> </td>
+  <td>
+    Lower bound of the layer range containing stencil weights.
+    Must be the same as in the corresponding <code>diff</code> device. 
+  </td>
+</tr>
+
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>w1</code> </td>
+  <td> - </td>
+  <td> <code>w0</code> </td>
+  <td> <code>vmax-1</code> </td>
+  <td>
+    Upper bound of the layer range containing stencil weights.
+    Must be the same as in the corresponding <code>diff</code> device. 
+  </td>
+</tr>
+
+</table>
+
+</p>
+
+<h3>Typical Syntax</h3>
+
+<p class="quest"> To do. </p>
+
+<!-- ========================= -->
 <h2 class="numbered">k_clock</h2>
 
 <h3>Overview</h3>
@@ -9395,7 +9710,6 @@ beatbox/data/scripts/sequential/FitzHughNagumo_model/fhn0.bbs
 </pre>
 The inputs, outputs, and methods of running for fhn0.bbs
 have been described in previous sections. 
-
 
 <!-- ========================= -->
 <h2 class="numbered">k_draw</h2>
@@ -9486,6 +9800,16 @@ at each call.
   lines; if in between, interrupt lines when distance between consecutive
   points exceed this distance as a fraction of the device's "window" size</td>
 </tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>linewidth</code></td>
+  <td><code>1</code></td>
+  <td><code>1</code></td>
+  <td>-</td>
+  <td> Width of line, in pixels </td>
+</tr>
+
 </table>
 
 </p>
@@ -10478,7 +10802,7 @@ The device is  <a href="#spaceless">spaceless</a> , as it works only with global
     <td><code>0</code></td>
     <td><code>1</code></td>
     <td>If <code>1</code>, new lines are appended to
-      <code>file</file> if exists, otherwise it is overwritten by this run</td>
+      <code>file</code> if exists, otherwise it is overwritten by this run</td>
   </tr>
   
   <tr>
@@ -11379,6 +11703,214 @@ beatbox/data/scripts/sequential/FitzHughNagumo_model/fhn1.bbs
 </pre>
 
 <!-- ========================= -->
+<h2 class="numbered">pgmin</h2>
+
+<h3>Overview</h3>
+
+<p>
+Reads raw PGM (<a href="https://en.wikipedia.org/wiki/Netpbm#File_formats">Portable Gray Map</a>) images and maps its colour components into grid values; quasi-inverse of the <code>pgmout</code> device described below.
+Makes little sense in actual simulations, but can be used e.g. for post-processing previously computed data recorded via <code>pgmout</code>.
+</p>
+
+<h3>Parameters</h3>
+
+This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
+
+<table border="1">
+<tr>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td> <a href="#sequence">sequence</a> </td>
+  <td><code>file</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td>Format specifier for the sequence of the read files.</td>
+</tr>
+
+<tr>
+  <td><code>int  <a href="#codestring">codestring</a> </code></td>
+  <td><code>filecode</code></td>
+  <td>""</td>
+  <td>-</td>
+  <td>-</td>
+  <td>Integer-valued k-expression used in the filename format specifier</td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>g</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td> The gray value of the input file is mapped to this layer of the computational grid)</td>
+</tr>
+
+<tr> 
+  <td><code>real</code></td>
+  <td><code>g0</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td> Value of the layer <code>g</code> to which 0 of the gray value is mapped </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td> <code>g1</code> </td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td> Value of the layer <code>g</code> to which 255 of the gray value is mapped. </td>
+</tr>
+</table>
+
+<p> <strong>Caveat:</strong> exact correspondence of the <code>pgm</code> image
+size and the device's
+<code>space</code> rectangle is assumed and no checks are made! </p>
+
+<h3>Typical Syntax</h3>
+
+<p>
+A possible syntax of <code>pgmin</code> device is as follows.
+</p>
+
+<pre>
+pgmin when=always
+  file="[in]/%06d.ppm3"			// input files 
+  filecode=t	                        // .. enumerated by the step number
+  g=[v]    g0=vmin g1=vmax		// the value is from layer [v], presumed in limits from vmin to vmax
+;
+</pre>
+
+<h3>Instances of pgmin in Example Scripts</h3>
+
+<p>
+(none for the moment)
+</p>
+
+<!-- ========================= -->
+<h2 class="numbered">pgmout</h2>
+
+<h3>Overview</h3>
+
+<p>
+Produces raw PGM (<a href="https://en.wikipedia.org/wiki/Netpbm#File_formats">Portable Gray Map</a>) images of the <code>space</code>.
+Values from specified layer of the
+simulation medium are mapped to gray value of the image by linear
+interpolation using specified minima and maxima.
+Device <code>pgmout</code> produces a
+new, sequentially numbered file every time it is run, or, if <code>append=1</code> opted, the same file is extended, thus creating a multi-image extension of PGM. In
+three-dimensional meshes, <code>pgmout</code> produces non-standard extended PGM files, in
+which multiple <code>z</code>-layers are stacked into a single
+file. For a reading program, the <code>z</code> dimension can be
+inferred from the <code>x</code> and <code>y</code> dimensions
+specified in the PGM header and the file size. 
+</p>
+
+<h3>Parameters</h3>
+
+ This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
+
+<table border="1">
+<tr>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td> <a href="#sequence">sequence</a> </td>
+  <td><code>file</code></td>
+  <td>-</td>
+  <td> </td>
+  <td> </td>
+  <td>Format specifier for the sequence of files produced.</td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>append</code></td>
+  <td><code>0</code></td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
+  <td>If <code>1</code>, new images are appended to the same <code>file</code>, otherwise to new files in the sequence</td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>g</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td> The gray value of the output file is mapped to this layer of the computational grid</td>
+</tr>
+
+<tr> 
+  <td><code>real</code></td>
+  <td><code>g0</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td> Gray value <code>0</code> of the output corresponds to this value in the layer <code>g</code>. </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td> <code>r1</code> </td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td> Gray value <code>255</code> (maximum) of the output corresponds to this value in the layer <code>g</code>. </td>
+</tr>
+
+<tr>
+  <th colspan="6">Geometry Only</th>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>bgg</code></td>
+  <td><code>255</code></td>
+  <td><code>0</code></td>
+  <td><code>255</code></td>
+  <td> Gray value of the background, to be displayed at void points.</td>
+</tr>
+
+</table>
+
+<h3>Typical Syntax</h3>
+
+<p>
+The typical syntax of <code>pgmout</code> device is as follows.
+</p>
+
+<pre>
+pgmout file="ppm/%04d.ppm" mode="w" g=[u] r0=umin r1=umax;
+</pre>
+
+<p>
+where the red, green, and blue channel are defined by maximum,
+minumum, and mid-point values of user defined dynamical variables.
+</p>
+
+<h3>Instances of pgmout in Example Scripts</h3>
+
+<p>
+(none for the moment)
+</p>
+
+<!-- ========================= -->
 <h2 class="numbered">poincare</h2>
 
 <h3>Overview</h3>
@@ -11622,8 +12154,8 @@ This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
 </tr>
 </table>
 
-<p> <strong>Caveat:</strong> exact correspondence of the <code>ppm</code> image and the device's
-<code>space</code> rectangel is assumed and no checks are made! </p>
+<p> <strong>Caveat:</strong> exact correspondence of the <code>ppm</code> image size and the device's
+<code>space</code> rectangle is assumed and no checks are made! </p>
 
 <h3>Typical Syntax</h3>
 
@@ -14105,7 +14637,7 @@ calculated using rushlarsen formula.
 
 <p>
 The model converts the Hodgking-Huxley (1952) giant squid axon model
-into ionic format. The implmentation is based on the <<rhs</code> format in
+into ionic format. The implmentation is based on the <code>rhs</code> format in
 <<hh</code>. All the gates are tabulated and can be computed using
 Rush-Larsen method.
 </p>
