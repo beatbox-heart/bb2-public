@@ -9508,10 +9508,15 @@ beatbox/data/scripts/sequential/ZFK_model/zfkmon2.bbs
 
 <h3>Overview</h3>
 
-<p> Modifies the weights in the connectivity matrix used by the
+<p> Modifies the weights in the connectivity matrix used by a
 <code>diff</code> device, to represent inner boundary conditions as described
 in <a
-href="https://doi.org/10.48550/arXiv.2605.01083">https://doi.org/10.48550/arXiv.2605.01083</a>. 
+href="https://doi.org/10.48550/arXiv.2605.01083">https://doi.org/10.48550/arXiv.2605.01083</a>.
+The corresponding <code>diff</code> device must allocate its stencil weights in
+a range of
+dedicated layers <code>w0..w1</code> of the computational grid; then
+<code>inner_bc</code> will correct these weights at the boundary between two
+domains as described by the level in the <code>v0</code> "indicator" layer. 
 <strong>Caveat: slope-dependent correction is currently implemented only in 2D.</strong>
 
 <h3>Parameters</h3>
@@ -9534,10 +9539,11 @@ href="https://doi.org/10.48550/arXiv.2605.01083">https://doi.org/10.48550/arXiv.
   <td> <code>1</code> </td>
   <td>If <code>advance=1</code>, recalculation of the weights occurs
     before the very first step (<code>t=0</code>), i.e. at parse time, right
-    after its creation. This, of course, will work <strong>only
+    after the creation of this device instance. This, of course, will work <strong>only
   if</strong> the non-modified connectiviti weights have already been
   set, i.e. this device is <strong>after</strong> the corresponding
-  <code>diff</code> device. 
+  <code>diff</code> device in the device ring, and the <code>diff</code> device fully
+  defines its weights at the creation time. 
 </tr>
 
 <tr>
