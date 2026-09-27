@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2023) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -19,11 +19,19 @@
  */
 
 /* Functional version. Safer programming. */
-unsigned Byte(int x, int y, int z, int v, real u0, real u1);
+unsigned Byte(int x, int y, int z, int v, real u0, real u1); /* MAXCHAR if v<0 */
+unsigned Byte0(int x, int y, int z, int v, real u0, real u1); /* 0 if v=<0 */
 
 /* Macro version of the same. Better optimizing? (marginal speed-up) */
 #define BYTE(x,y,z,v,u0,u1) ( \
   ((v)<0)?MAXCHAR \
+  : (BYTEU=New[ind((x),(y),(z),(v))])<(u0)?0 \
+  : BYTEU>(u1)? MAXCHAR \
+  : MAXCHAR*(BYTEU-(u0))/((u1)-(u0)) \
+)
+
+#define BYTE0(x,y,z,v,u0,u1) ( \
+  ((v)<0)?0 \
   : (BYTEU=New[ind((x),(y),(z),(v))])<(u0)?0 \
   : BYTEU>(u1)? MAXCHAR \
   : MAXCHAR*(BYTEU-(u0))/((u1)-(u0)) \

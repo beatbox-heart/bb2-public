@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -29,6 +29,15 @@
 unsigned Byte(int x, int y, int z, int v, real u0, real u1) {
   real u;
   if (v<0) return MAXCHAR;
+  u=New[ind(x,y,z,v)];
+  if (u<u0) return 0;
+  if (u>u1) return MAXCHAR;
+  return MAXCHAR*(u-u0)/(u1-u0);
+}
+
+unsigned Byte0(int x, int y, int z, int v, real u0, real u1) {
+  real u;
+  if (v<0) return 0;
   u=New[ind(x,y,z,v)];
   if (u<u0) return 0;
   if (u>u1) return MAXCHAR;

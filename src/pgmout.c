@@ -135,7 +135,7 @@ RUN_HEAD(pgmout)
     for(y=0;y<local_ysize;y++) { /* RMF code was back-to-front here, for no apparent reason */
       for(x=0;x<local_xsize;x++) {
 	if (!GEOMETRY_ON || isTissue(s.x0+x,s.y0+y,s.z0+z)) {
-	  BUF(z,y,x) = (unsigned char) Byte(s.x0+x,s.y0+y,s.z0+z,g,g0,g1);
+	  BUF(z,y,x) = (unsigned char) Byte0(s.x0+x,s.y0+y,s.z0+z,g,g0,g1);
 	} else { /*  Void. Use background colour. */
 	  BUF(z,y,x) = (unsigned char) bgg;
 	} /*  else */
@@ -195,7 +195,7 @@ CREATE_HEAD(pgmout)
   ACCEPTQ(file,S->append?"at":"wt",NULL);
   ACCEPTI(echo,1,0,1);
 
-  ACCEPTI(g,INONE,-1,(int)vmax-1);
+  ACCEPTI(g,INONE,0,(int)vmax-1);
   ACCEPTR(g0,RNONE,RNONE,RNONE);
   ACCEPTR(g1,RNONE,RNONE,RNONE);
   ASSERT(S->g0!=S->g1);

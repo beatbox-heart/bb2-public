@@ -144,9 +144,9 @@ RUN_HEAD(ppmout)
     for(y=0;y<local_ysize;y++) { /* RMF code was back-to-front here, for no apparent reason */
       for(x=0;x<local_xsize;x++) {
 	if (!GEOMETRY_ON || isTissue(s.x0+x,s.y0+y,s.z0+z)) {
-	  BUF(z,y,x,R) = (unsigned char) Byte(s.x0+x,s.y0+y,s.z0+z,r,r0,r1);
-	  BUF(z,y,x,G) = (unsigned char) Byte(s.x0+x,s.y0+y,s.z0+z,g,g0,g1);
-	  BUF(z,y,x,B) = (unsigned char) Byte(s.x0+x,s.y0+y,s.z0+z,b,b0,b1);
+	  BUF(z,y,x,R) = (unsigned char) Byte0(s.x0+x,s.y0+y,s.z0+z,r,r0,r1);
+	  BUF(z,y,x,G) = (unsigned char) Byte0(s.x0+x,s.y0+y,s.z0+z,g,g0,g1);
+	  BUF(z,y,x,B) = (unsigned char) Byte0(s.x0+x,s.y0+y,s.z0+z,b,b0,b1);
 	} else { /*  Void. Use background colour. */
 	  BUF(z,y,x,R) = (unsigned char) bgr;
 	  BUF(z,y,x,G) = (unsigned char) bgg;
@@ -163,9 +163,9 @@ RUN_HEAD(ppmout)
     for(y=0;y<ny;y++) { 
       for(x=0;x<nx;x++) {
 	if (!GEOMETRY_ON || isTissue(s.x0+x,s.y0+y,s.z0+z)) {
-	  putc(Byte(s.x0+x,s.y0+y,s.z0+z,r,r0,r1),file->f);
-	  putc(Byte(s.x0+x,s.y0+y,s.z0+z,g,g0,g1),file->f);
-	  putc(Byte(s.x0+x,s.y0+y,s.z0+z,b,b0,b1),file->f);
+	  putc(Byte0(s.x0+x,s.y0+y,s.z0+z,r,r0,r1),file->f);
+	  putc(Byte0(s.x0+x,s.y0+y,s.z0+z,g,g0,g1),file->f);
+	  putc(Byte0(s.x0+x,s.y0+y,s.z0+z,b,b0,b1),file->f);
 	} else { /*  Void. Use background colour. */
 	  putc((unsigned)bgr,file->f);
 	  putc((unsigned)bgg,file->f);

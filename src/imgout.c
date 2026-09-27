@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -100,9 +100,9 @@ RUN_HEAD(imgout)
     for(y=y0;y<=y1;y++) {
       for(x=x0;x<=x1;x++) {
 	if (isTissue(x,y,z)) {
-	  putc(Byte(x,y,z,r,r0,r1),p->f);
-	  putc(Byte(x,y,z,g,g0,g1),p->f);
-	  putc(Byte(x,y,z,b,b0,b1),p->f);
+	  putc(Byte0(x,y,z,r,r0,r1),p->f);
+	  putc(Byte0(x,y,z,g,g0,g1),p->f);
+	  putc(Byte0(x,y,z,b,b0,b1),p->f);
 	} else { /*  Void. Use background colour. */
 	  putc((unsigned) bgr,p->f);
 	  putc((unsigned) bgg,p->f);
