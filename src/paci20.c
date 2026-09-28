@@ -211,9 +211,9 @@ IONIC_CREATE_HEAD(paci20) {
   #undef _
 } IONIC_CREATE_TAIL;
 
-real nalp[NN];
-real nbet[NN];
-real values[NTAB];
+static real nalp[NN];
+static real nbet[NN];
+static real values[NTAB];
 int paci20rhs (real *u, real *du, Par par, Var var, int ln)
 {
   STR *S = (STR *)par;

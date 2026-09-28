@@ -1,5 +1,5 @@
 /**
- * >Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -58,7 +58,9 @@ enum m3_nbrs {m3000, m3p00, m3m00, m30p0, m30m0, m300p, m300m,
 	      m3pp0, m3pm0, m3mp0, m3mm0, m3p0p, m3p0m,
 	      m3m0p, m3m0m, m30pp, m30pm, m30mp, m30mm, m3nnb};
 
-static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2, INT v0, real ca, real cb,int manypoint) {
+/* Currently only 1D and 2D implemented so z1=z2 always */
+static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2, INT v0, real ca, real cb, int manypoint)
+{
   real c1, c2;
   real v1=New[ind(x1,y1,z1,v0)];
   real v2=New[ind(x2,y2,z2,v0)];
@@ -69,6 +71,7 @@ static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2, INT v0, real
   
   ASSERT(dim==2);	/* do 3D later */
   ASSERT(z1==z2);
+  ASSERT((x1!=x2) || (y1!=y2));
   
   if (v1==ca) c1=ca;
   else if (v1==cb) c1=cb;
@@ -112,12 +115,20 @@ static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2, INT v0, real
   account(-1,-1); 
 #undef account
 
-  ASSERT(N!=0);
+  ASSERT(N>0);
   dx=fabs(Sx-X*S/N);
   dy=fabs(Sy-Y*S/N);
   ASSERT(dx!=0 || dy!=0);
-
   alpha=atan2(dy,dx);
+  if (dx==0 && dy==0) { /* fallback to normal as connecting line */
+    MESSAGE("/* (x1,y1)=(%ld,%ld), (x2,y2): (%ld,%ld): zero dipole; fallback to straight line */\n",
+	    (long)x1,(long)y1,(long)x2,(long)y2);
+    dx=1.0*labs(x2-x1);
+    dy=1.0*labs(y2-y1);
+    alpha=atan2(dy,dx);
+  }
+
+  /* alpha=atan2(dy,dx); */
   if (manypoint) {
     p=foursixths;
     q=sixth;
@@ -145,6 +156,7 @@ RUN_HEAD(inner_bc)
   DEVICE_CONST(int,manypoint);
 
   int nn=0;
+  /* Currently only 1D and 2D implemented so dz=0 always */
 #define adjust(dx,dy,dz,qq,wgt)				    \
   if (isTissue(*x+dx,*y+dy,*z+dz)) {                        \
     real val0=New[ind(*x,*y,*z,v0)];                        \

@@ -195,9 +195,9 @@ IONIC_CREATE_HEAD(ppcpash18) {
 
 
 
-real nalp[NN];
-real nbet[NN];
-real values[NTAB];
+static real nalp[NN];
+static real nbet[NN];
+static real values[NTAB];
 int ppcpash18rhs (real *u, real *du, Par par, Var var, int ln)
 {
   STR *S = (STR *)par;
