@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -53,37 +53,38 @@ char IconName[1024];
 #if MPI || defined(NOX11)
 /* make stubs */
 static char NULLSTR[]="SORRY: any graphics package is absent in this version";
-int Opengraph(void) {return 0;}
 int _Cdecl EGAVGA_driver_far[1];
+int Opengraph(void) {return 0;}
+void initgraph(int *gd, int *gm,const char *path) {;}
 char *grapherrormsg(int errorcode) {return(NULLSTR);}
 int graphresult(void) {return(grNotDetected);}
 int registerfarbgidriver(void *driver) {return(0);}
 void closegraph(void) {;}
-void initgraph(int *gd, int *gm,const char *path) {;}
 int getmaxx(void) {return(0);}
 int getmaxy(void) {return(0);}
 int getmaxcolor(void) {return(0);}
 void setcolor(int color) {;}
 void setwritemode(int mode) {;}
-void settextstyle(int font, int direction, int charsize) {;}
-void settextjustify(int horiz, int vert) {;}
-void gettextsettings(struct textsettingstype  *texttypeinfo) {;}
-int textwidth(char *text) {return 0;}
-int textheight(char  *text) {return 0;}
-void outtextxy(int x, int y,char  *textstring) {printf("%s\n", textstring);}
-void putpixel(int x, int y, int color) {;}
 void line(int x0, int y0, int x1, int y1) {;}
+void moveto(int x, int y) {;}
+void lineto(int x, int y) {;}
 void rectangle(int lft, int top, int rgt, int bot) {;}
 void setfillstyle(int pattern, int color) {;}
 void bar(int lft, int top, int rgt, int bot) {;}
 void fillellipse(int x, int y, int xradius, int yradius) {;}
+void putpixel(int x, int y, int color) {;}
+void settextstyle(int font, int direction, int charsize) {;}
+void settextjustify(int horiz, int vert) {;}
+void gettextsettings(struct textsettingstype  *texttypeinfo) {;}
+void outtextxy(int x, int y,char  *textstring) {printf("%s\n", textstring);}
+int textwidth(char *text) {return 0;}
+int textheight(char  *text) {return 0;}
 unsigned imagesize(int left, int top, int right, int bottom) {return(0);}
 void getimage(int left, int top, int right, int bottom,void  *bitmap) {;}
 void putimage(int left, int top, const void  *bitmap, int op) {;}
 void update_graph(void){;}
 void dump_window(char *file, char *fmt){;}
-void moveto(int x, int y) {;}
-void lineto(int x, int y) {;}
+void setlinewidth(int width){;}
 
 #else
 
@@ -432,17 +433,17 @@ void putimage(int lft, int top, const void  *s, int op) {
   XCopyArea(theDisplay,S->m,thePixmap,theGC,0,0,S->w,S->h,lft,top);
   if (online) update_graph();
 }
-void cleardevice(void){
-  if (!graphon) return;
-  int fill=CURRENTFILLPATTERN;
-  int col=CURRENTFILLCOLOR;
-  setfillstyle(SOLID_FILL,BLACK);
-				update_graph();
-				sleep(1);
-  bar(0,0,(int)XMAX,(int)YMAX);
-  setfillstyle(fill,col);
-  if (online) update_graph();
-}
+/* void cleardevice(void){ */
+/*   if (!graphon) return; */
+/*   int fill=CURRENTFILLPATTERN; */
+/*   int col=CURRENTFILLCOLOR; */
+/*   setfillstyle(SOLID_FILL,BLACK); */
+/* 				update_graph(); */
+/* 				sleep(1); */
+/*   bar(0,0,(int)XMAX,(int)YMAX); */
+/*   setfillstyle(fill,col); */
+/*   if (online) update_graph(); */
+/* } */
 void update_graph(void){
   if (!graphon) return;
   XCopyArea(theDisplay,thePixmap,theWindow,theGC,0,0,(int)XMAX+3,(int)YMAX+3,0,0);
