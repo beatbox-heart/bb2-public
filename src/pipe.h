@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2016) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -18,7 +18,6 @@
  * along with Beatbox.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef _PIPE_H
 # define _PIPE_H 1
 #include <stdio.h>
@@ -26,10 +25,11 @@
 typedef struct {
   FILE *f;
   char *n;
+  char *dir;
   int child;
 } PIPE;
 
 PIPE *pipeto(char *cmd);
 int pipeclose(PIPE *p);
 
-#endif /* !_PIPE_h */
+#endif /* !_PIPE_H */

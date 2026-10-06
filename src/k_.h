@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -41,8 +41,8 @@
 typedef INT  *p_int;
 typedef REAL *p_real;
 typedef int  (*p_vi)(void);
-typedef REAL (*p_fn)();
-typedef p_fn *pp_fn;
+typedef char *p_code;
+typedef p_code *pp_fn;
 
 /* define p_vb as a pointer to variable of maximal length */
 #ifdef BORLANDC
@@ -57,14 +57,52 @@ typedef p_fn *pp_fn;
 
 /* define p_vd as a pointer to anything of maximal length */
 #ifdef BORLANDC
-  #if sizeof(p_fn) >= sizeof(p_vb)
-    typedef p_fn p_vd;
-  #else
-    typedef p_vb p_vd;
-  #endif
+  typedef p_vb p_vd;
 #else
   typedef p_vb p_vd;
 #endif
+
+typedef REAL (*p_kfn0)(void);
+typedef REAL (*p_kfn1)(REAL);
+typedef REAL (*p_kfn2)(REAL,REAL);
+typedef REAL (*p_kfn3)(REAL,REAL,REAL);
+typedef REAL (*p_kfn4)(REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn5)(REAL,REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn6)(REAL,REAL,REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn7)(REAL,REAL,REAL,REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn8)(REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn9)(REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn10)(REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn11)(REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn12)(REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn13)(REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn14)(REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL);
+typedef REAL (*p_kfn15)(REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL);
+
+typedef union {
+  p_kfn0 f0;
+  p_kfn1 f1;
+  p_kfn2 f2;
+  p_kfn3 f3;
+  p_kfn4 f4;
+  p_kfn5 f5;
+  p_kfn6 f6;
+  p_kfn7 f7;
+  p_kfn8 f8;
+  p_kfn9 f9;
+  p_kfn10 f10;
+  p_kfn11 f11;
+  p_kfn12 f12;
+  p_kfn13 f13;
+  p_kfn14 f14;
+  p_kfn15 f15;
+} k_fn;
+
+typedef union {
+  p_vd object;
+  p_vi instruction;
+  k_fn function;
+} k_addr;
 
 typedef char *STRING;
 
@@ -114,7 +152,7 @@ typedef struct{
    char nm[maxname];     /* name of the fun/var */
    unsigned char  tp;    /* type code */
    unsigned char  np;    /* # of parameters, for functions */
-   p_vd           ad;    /* address */
+   k_addr         ad;    /* address, stored according to its kind */
    int  rf;    /* # of the next record for a name starting */
 			 /* 	with the same letter */
 } t_ln;
@@ -151,8 +189,30 @@ int tb_insert_int_ro  (p_tb table,char name[],p_int  addr);
 int tb_insert_real (p_tb table,char name[],p_real addr);
 int tb_insert_real_ro (p_tb table,char name[],p_real addr);
 int tb_insert_str  (p_tb table,char name[],char * addr);
-int tb_insert_fun  (p_tb table,char name[],p_fn   addr,int npar);
+int tb_insert_instruction(p_tb table,char name[],p_vi addr);
+int tb_insert_fun_union(p_tb table,char name[],k_fn addr,int npar);
 int tb_insert_abstract(p_tb table,char name[],int type,p_vd addr,int npar,int flagg);
+
+#define K_FN_INIT_0(fn)  ((k_fn){.f0 = (fn)})
+#define K_FN_INIT_1(fn)  ((k_fn){.f1 = (fn)})
+#define K_FN_INIT_2(fn)  ((k_fn){.f2 = (fn)})
+#define K_FN_INIT_3(fn)  ((k_fn){.f3 = (fn)})
+#define K_FN_INIT_4(fn)  ((k_fn){.f4 = (fn)})
+#define K_FN_INIT_5(fn)  ((k_fn){.f5 = (fn)})
+#define K_FN_INIT_6(fn)  ((k_fn){.f6 = (fn)})
+#define K_FN_INIT_7(fn)  ((k_fn){.f7 = (fn)})
+#define K_FN_INIT_8(fn)  ((k_fn){.f8 = (fn)})
+#define K_FN_INIT_9(fn)  ((k_fn){.f9 = (fn)})
+#define K_FN_INIT_10(fn) ((k_fn){.f10 = (fn)})
+#define K_FN_INIT_11(fn) ((k_fn){.f11 = (fn)})
+#define K_FN_INIT_12(fn) ((k_fn){.f12 = (fn)})
+#define K_FN_INIT_13(fn) ((k_fn){.f13 = (fn)})
+#define K_FN_INIT_14(fn) ((k_fn){.f14 = (fn)})
+#define K_FN_INIT_15(fn) ((k_fn){.f15 = (fn)})
+#define K_FN_INIT_SELECT_(n) K_FN_INIT_##n
+#define K_FN_INIT_SELECT(n) K_FN_INIT_SELECT_(n)
+#define tb_insert_fun(table,name,addr,npar) \
+  tb_insert_fun_union((table),(name),K_FN_INIT_SELECT(npar)(addr),(npar))
 
 /* ----------------- */
 /* */
@@ -161,7 +221,9 @@ int tb_delete(p_tb table, char name[]);
 #define tb_type(tb,n) ((tb)->array[(n)-1].tp & ~_mask)
 #define tb_flag(tb,n) ((tb)->array[(n)-1].tp &  _mask)
 #define tb_npar(tb,n) ((tb)->array[(n)-1].np)
-#define tb_addr(tb,n) ((tb)->array[(n)-1].ad)
+#define tb_addr(tb,n) ((tb)->array[(n)-1].ad.object)
+#define tb_instruction(tb,n) ((tb)->array[(n)-1].ad.instruction)
+#define tb_function(tb,n) ((tb)->array[(n)-1].ad.function)
 #define tb_name(tb,n) ((tb)->array[(n)-1].nm)
 #define var_name(tb,a,n) ((n=tb_findaddr(tb,a))?tb_name(tb,n):"(unknown)")
 
@@ -261,4 +323,3 @@ p_vb is_variable (char *expr, p_tb tab, k_type type);
 int k_expr_depends (char *expr, char *varname);
 
 #endif
-

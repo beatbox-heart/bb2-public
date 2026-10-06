@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -52,7 +52,7 @@ p_vb is_variable (char *expr, p_tb tab, k_type type)
     if ( (entry.tp & ~_mask) != type) continue;		/* wrong type */
     if ( (entry.tp & _mask) & ~(f_vb|f_ro)) continue;	/* must be r/o or plain var */
     if (strncmp(expr,entry.nm,maxname) != 0) continue;	/* wrong name */
-    return entry.ad;
+    return entry.ad.object;
   }
   return NULL;
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -338,9 +338,10 @@ EXTERN int 		error_length;
 int deviceCommunicator (int runHere, MPI_Comm *new_comm);
 int deviceCommunicatorWithFirstRank (int runHere, MPI_Comm *new_comm, int *first);
 
+#endif /*  MPI */
+
 /*  	Exchange internal boundaries. */
 int haloSwap(void);
 
-#endif /*  MPI */
 #undef EXTERN
 #endif /* end of include guard: _DEVICE_H_ */

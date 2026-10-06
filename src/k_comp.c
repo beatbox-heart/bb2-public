@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -90,7 +90,7 @@ int tb_findaddr(p_tb table, p_vd addr) {
   int i;
   if (!table) ERROR(UTABAB,"tb_findaddr");
   for (i=1;i<=maxtab;i++){
-	if(ARR(i).ad==addr) return i;
+	if (!(ARR(i).tp & (f_fn|f_vi)) && ARR(i).ad.object==addr) return i;
 	}
   return 0;
 }
@@ -102,13 +102,38 @@ static int tb_insert(
 	p_tb	table,		/* the table */
 	char	name[],		/* the name */
 	int		type,		/* its type tp_undf..tp_dbl */
-	p_vd	addr,		/* its address */
+	k_addr	addr,		/* its address */
 	int		npar,		/* # of pars for fun-s or 0 */
 	int		flagg		/* attribute (fun, virt.instr, var or RO) */
 ) {
   int new, last;
   if (!table) ERROR(UTABAB,"tb_insert");
-  if (!addr) ERROR(ZEROAD,"tb_insert");
+  if (flagg & f_fn) {
+    int has_address = 0;
+    switch (npar) {
+      case 0: has_address = (addr.function.f0 != NULL); break;
+      case 1: has_address = (addr.function.f1 != NULL); break;
+      case 2: has_address = (addr.function.f2 != NULL); break;
+      case 3: has_address = (addr.function.f3 != NULL); break;
+      case 4: has_address = (addr.function.f4 != NULL); break;
+      case 5: has_address = (addr.function.f5 != NULL); break;
+      case 6: has_address = (addr.function.f6 != NULL); break;
+      case 7: has_address = (addr.function.f7 != NULL); break;
+      case 8: has_address = (addr.function.f8 != NULL); break;
+      case 9: has_address = (addr.function.f9 != NULL); break;
+      case 10: has_address = (addr.function.f10 != NULL); break;
+      case 11: has_address = (addr.function.f11 != NULL); break;
+      case 12: has_address = (addr.function.f12 != NULL); break;
+      case 13: has_address = (addr.function.f13 != NULL); break;
+      case 14: has_address = (addr.function.f14 != NULL); break;
+      case 15: has_address = (addr.function.f15 != NULL); break;
+    }
+    if (!has_address) ERROR(ZEROAD,"tb_insert");
+  } else if (flagg & f_vi) {
+    if (!addr.instruction) ERROR(ZEROAD,"tb_insert");
+  } else if (!addr.object) {
+    ERROR(ZEROAD,"tb_insert");
+  }
   if ((new = getline2(table)) == 0) ERROR(TABOVR,"tb_insert");
   if ((last = LINDEX(*name)) == 0) {
     LINDEX(*name) = new;
@@ -130,34 +155,38 @@ static int tb_insert(
 }
 
 int tb_insert_abstract(p_tb table,char name[],int type,p_vd addr,int npar,int flagg) {
-  return tb_insert(table,name,type,addr,npar,flagg);
+  return tb_insert(table,name,type,(k_addr){.object=addr},npar,flagg);
+}
+
+int tb_insert_instruction(p_tb table,char name[],p_vi addr) {
+  return tb_insert(table,name,t_undf,(k_addr){.instruction=addr},0,f_vi);
 }
 
 int tb_insert_int  (p_tb table,char name[],p_int  addr) {
-  return tb_insert(table,name,t_int,(p_vd)addr,0,f_vb);
+  return tb_insert(table,name,t_int,(k_addr){.object=(p_vd)addr},0,f_vb);
 }
 
 int tb_insert_int_ro  (p_tb table,char name[],p_int  addr) {
-  return tb_insert(table,name,t_int,(p_vd)addr,0,f_ro);
+  return tb_insert(table,name,t_int,(k_addr){.object=(p_vd)addr},0,f_ro);
 }
 
 int tb_insert_real (p_tb table,char name[],p_real addr) {
-  return tb_insert(table,name,t_real,(p_vd)addr,0,f_vb);
+  return tb_insert(table,name,t_real,(k_addr){.object=(p_vd)addr},0,f_vb);
 }
 
 int tb_insert_real_ro (p_tb table,char name[],p_real addr) {
-  return tb_insert(table,name,t_real,(p_vd)addr,0,f_ro);
+  return tb_insert(table,name,t_real,(k_addr){.object=(p_vd)addr},0,f_ro);
 }
 
 int numerator=0; int denominator=0;
 int tb_insert_str  (p_tb table,char name[],char * addr) {
   fprintf(stderr,"tb_insert_str(%s)\n",name);
   numerator=numerator/denominator;
-  return tb_insert(table,name,t_str,(p_vd)addr,0,f_vb);
+  return tb_insert(table,name,t_str,(k_addr){.object=(p_vd)addr},0,f_vb);
 }
 
-int tb_insert_fun  (p_tb table,char name[],p_fn   addr,int npar) {
-  return tb_insert(table,name,t_real,(p_vd)addr,npar,f_fn);   
+int tb_insert_fun_union(p_tb table,char name[],k_fn addr,int npar) {
+  return tb_insert(table,name,t_real,(k_addr){.function=addr},npar,f_fn);
 }
 
 /* ---------------------*/
@@ -392,22 +421,41 @@ static char *tp_nm(int tc) {
 
 static  void gnr_fn(p_tb tab, int fnum) {
   int n;
-  char *s=Sprintf("call_%d",tb_npar(tab, fnum));
+  int npar=tb_npar(tab,fnum);
+  char *s=Sprintf("call_%d",npar);
   n = tb_find(sys_tab,s);
   if (n==0) ERRJMP(ILGVI,s);
-  CODE(p_vi,tb_addr(sys_tab,n));
-  CODE(p_fn,tb_addr(tab,fnum));
+  CODE(p_vi,tb_instruction(sys_tab,n));
+  switch (npar) {
+    case 0: CODE(p_kfn0,tb_function(tab,fnum).f0); break;
+    case 1: CODE(p_kfn1,tb_function(tab,fnum).f1); break;
+    case 2: CODE(p_kfn2,tb_function(tab,fnum).f2); break;
+    case 3: CODE(p_kfn3,tb_function(tab,fnum).f3); break;
+    case 4: CODE(p_kfn4,tb_function(tab,fnum).f4); break;
+    case 5: CODE(p_kfn5,tb_function(tab,fnum).f5); break;
+    case 6: CODE(p_kfn6,tb_function(tab,fnum).f6); break;
+    case 7: CODE(p_kfn7,tb_function(tab,fnum).f7); break;
+    case 8: CODE(p_kfn8,tb_function(tab,fnum).f8); break;
+    case 9: CODE(p_kfn9,tb_function(tab,fnum).f9); break;
+    case 10: CODE(p_kfn10,tb_function(tab,fnum).f10); break;
+    case 11: CODE(p_kfn11,tb_function(tab,fnum).f11); break;
+    case 12: CODE(p_kfn12,tb_function(tab,fnum).f12); break;
+    case 13: CODE(p_kfn13,tb_function(tab,fnum).f13); break;
+    case 14: CODE(p_kfn14,tb_function(tab,fnum).f14); break;
+    case 15: CODE(p_kfn15,tb_function(tab,fnum).f15); break;
+    default: ERRJMP(INFCAL,s);
+  }
   return;
 }
 
 static void gnr0(char *name) {
   int n = tb_find(user_tab, name);
   if ((n != 0) && (f_vi&tb_flag(user_tab,n))!=0) {
-    CODE(p_vi,tb_addr(user_tab,n));
+    CODE(p_vi,tb_instruction(user_tab,n));
   } else {
     n = tb_find(sys_tab, name);
     if ((n==0) || (f_vi&tb_flag(sys_tab,n))==0) ERRJMP(ILGVI,name);
-    CODE(p_vi,tb_addr(sys_tab,n));
+    CODE(p_vi,tb_instruction(sys_tab,n));
   }  /*    of else  */
   return;
 }
@@ -415,12 +463,12 @@ static void gnr0(char *name) {
 static void gnr1 (char *name, int par) {
   int n = tb_find(user_tab, name);
   if ((n != 0) && f_vi&tb_flag(user_tab, n)) {
-    CODE(p_vi,tb_addr(user_tab,n));
+    CODE(p_vi,tb_instruction(user_tab,n));
     CODE(p_real,tb_addr(user_tab,par));
   } else {
     n=tb_find(sys_tab, name);
     if ((n == 0) || (f_vi&tb_flag(sys_tab, n))==0) ERRJMP(ILGVI,name);
-    CODE(p_vi,tb_addr(sys_tab,n));
+    CODE(p_vi,tb_instruction(sys_tab,n));
     CODE(p_real,tb_addr(user_tab, par));
   }
   return;
@@ -429,12 +477,12 @@ static void gnr1 (char *name, int par) {
 static void gnr1_ic(INT ic_val) {
   int n = tb_find(user_tab, "push_ic");
   if ((n != 0) && f_vi&tb_flag(user_tab, n)) {
-    CODE(p_vi,tb_addr(user_tab,n));
+    CODE(p_vi,tb_instruction(user_tab,n));
     CODE(INT,ic_val);
   } else {
     n=tb_find(sys_tab,"push_ic");
     if ((n == 0) || (f_vi&tb_flag(sys_tab, n))==0) ERRJMP(ILGVI,"push_ic");
-    CODE(p_vi,tb_addr(sys_tab,n));
+    CODE(p_vi,tb_instruction(sys_tab,n));
     CODE(INT,ic_val);
   }
   return;
@@ -443,12 +491,12 @@ static void gnr1_ic(INT ic_val) {
 static void gnr1_rc(REAL rc_val) {
   int n = tb_find(user_tab, "push_rc");
   if ((n != 0) && f_vi&tb_flag(user_tab, n)) {
-    CODE(p_vi,tb_addr(user_tab, n));
+    CODE(p_vi,tb_instruction(user_tab, n));
     CODE(REAL,rc_val);
   } else {
     n=tb_find(sys_tab,"push_rc");
     if ((n == 0) || (f_vi&tb_flag(sys_tab, n))==0) ERRJMP(ILGVI,"push_rc");
-    CODE(p_vi,tb_addr(sys_tab,n));
+    CODE(p_vi,tb_instruction(sys_tab,n));
     CODE(REAL,rc_val);
   }
   return;
@@ -467,25 +515,25 @@ static  t_stack stk_opc;
 static  t_stack stk_type;
 
 /* ---------------------------- */
-void clear(t_stack *stack) {
+static void clear(t_stack *stack) {
   stack->ptr=stack->body+maxstk;
   return;
 }
 
 /* ---------------------------- */
-int first(t_stack *stack) {
+static int first(t_stack *stack) {
   if (stack->ptr == stack->body+maxstk) ERRJMP(STKUDR,"COMPILE/first");
   return(*stack->ptr);
 }
 
 /* ---------------------------- */
-int pop(t_stack *stack) {
+static int pop(t_stack *stack) {
   if (stack->ptr == stack->body+maxstk) ERRJMP(STKUDR,"COMPILE/pop");
   return(*stack->ptr ++);
 }
 
 /* ---------------------------- */
-void push(int e, t_stack *stack) {
+static void push(int e, t_stack *stack) {
   if (stack->ptr == stack->body) ERRJMP(STKOVR,"COMPILE");
   *(-- stack->ptr) = e;
   return;
@@ -825,6 +873,4 @@ char *prt(void *var, int type) {  /* write the variable of type type */
 				/*if (debug) fprintf(debug,"%s\n",s);*/
   return &(s[0]);
 }
-
-
 

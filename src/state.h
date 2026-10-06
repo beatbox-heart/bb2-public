@@ -205,6 +205,7 @@ int getRankContainingPoint(int x,int y,int z);
 #define zind(ind) (((ind)%(vmax_zmax))+local_zmin-TRI)
 #define vind(ind) ((ind)%(vmax))
 
+/* Should do the same as macro ind(); not used yet */
 static size_t indfun (size_t x,size_t y,size_t z,int v)
 {
   return ((x + ONE) - local_xmin)*vmax_zmax_ymax +	

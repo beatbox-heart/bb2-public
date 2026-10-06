@@ -31,9 +31,9 @@
 #include "system.h"
 #include "beatbox.h"
 #include "bikt.h"
+#include "k_.h"
 #include "state.h"
 #include "device.h"
-#include "k_.h"
 #include "rhs.h"
 #include "bgi.h"
 #define OWN
@@ -308,7 +308,7 @@ int read_command (char *s, int strlen)
   return((int)(p-s));
 }
 
-int calc_with_table (void *resaddr, int restype, char *expr, p_tb table)
+static int calc_with_table (void *resaddr, int restype, char *expr, p_tb table)
 {
   void *p;
   pp_fn code;
@@ -332,7 +332,7 @@ int calc (void *resaddr, int restype, char *expr)
 /*
  * Check if a given name is a valid name for a k_variable
  */
-int valid_name (char *s)
+static int valid_name (char *s)
 {
   char *p;
   for (p=s;*p;p++) {
@@ -1396,27 +1396,29 @@ real RPRED (real val)
   else		    return (-FLT_MIN);
 }
 
-static double _if   (double a, double b, double c) {if (a   ) return(b); else return(c);}
-static double _ifne0(double a, double b, double c) {if (a!=0) return(b); else return(c);}
-static double _ifeq0(double a, double b, double c) {if (a==0) return(b); else return(c);}
-static double _ifgt0(double a, double b, double c) {if (a >0) return(b); else return(c);}
-static double _ifge0(double a, double b, double c) {if (a>=0) return(b); else return(c);}
-static double _iflt0(double a, double b, double c) {if (a <0) return(b); else return(c);}
-static double _ifle0(double a, double b, double c) {if (a<=0) return(b); else return(c);}
-static double _ifsign(double a, double b, double c, double d) {if (a<0) return b;else if (a>0) return d;else return c;}
-static double _gt(double a, double b) {return (double)(a> b);}
-static double _ge(double a, double b) {return (double)(a>=b);}
-static double _lt(double a, double b) {return (double)(a< b);}
-static double _le(double a, double b) {return (double)(a<=b);}
-static double _eq(double a, double b) {return (double)(a==b);}
-static double _ne(double a, double b) {return (double)(a!=b);}
-static double _mod(double a, double b) {return fmod(a,b);}
-static double _max(double a, double b) {return (a>b)?a:b;}
-static double _min(double a, double b) {return (a<b)?a:b;}
-static double _crop(double a, double b, double c) {return (a<b)?b:(a>c)?c:a;}
-static double _crop01(double a, double b, double c) {return (a<b)?0:(a>c)?1:(a-b)/(c-b);}
-static double j2(double x) {return jn(2,x);}
-static double j3(double x) {return jn(3,x);}
+static REAL _if   (REAL a, REAL b, REAL c) {if (a   ) return(b); else return(c);}
+static REAL _ifne0(REAL a, REAL b, REAL c) {if (a!=0) return(b); else return(c);}
+static REAL _ifeq0(REAL a, REAL b, REAL c) {if (a==0) return(b); else return(c);}
+static REAL _ifgt0(REAL a, REAL b, REAL c) {if (a >0) return(b); else return(c);}
+static REAL _ifge0(REAL a, REAL b, REAL c) {if (a>=0) return(b); else return(c);}
+static REAL _iflt0(REAL a, REAL b, REAL c) {if (a <0) return(b); else return(c);}
+static REAL _ifle0(REAL a, REAL b, REAL c) {if (a<=0) return(b); else return(c);}
+static REAL _ifsign(REAL a, REAL b, REAL c, REAL d) {if (a<0) return b;else if (a>0) return d;else return c;}
+static REAL _gt(REAL a, REAL b) {return (REAL)(a> b);}
+static REAL _ge(REAL a, REAL b) {return (REAL)(a>=b);}
+static REAL _lt(REAL a, REAL b) {return (REAL)(a< b);}
+static REAL _le(REAL a, REAL b) {return (REAL)(a<=b);}
+static REAL _eq(REAL a, REAL b) {return (REAL)(a==b);}
+static REAL _ne(REAL a, REAL b) {return (REAL)(a!=b);}
+static REAL _mod(REAL a, REAL b) {return fmod(a,b);}
+static REAL _max(REAL a, REAL b) {return (a>b)?a:b;}
+static REAL _min(REAL a, REAL b) {return (a<b)?a:b;}
+static REAL _crop(REAL a, REAL b, REAL c) {return (a<b)?b:(a>c)?c:a;}
+static REAL _crop01(REAL a, REAL b, REAL c) {return (a<b)?0:(a>c)?1:(a-b)/(c-b);}
+static REAL j2(REAL x) {return jn(2,x);}
+static REAL j3(REAL x) {return jn(3,x);}
+static REAL Int(REAL a) {return rint(a);}
+
 /* A long way to define a function giving value at a certain point */
 static double _U(int x,int y,int z,int v) {
   #if MPI
@@ -1512,19 +1514,22 @@ int init_const (void)
   deftb = tb_new();                                             CHK("deftb");
   loctb = tb_new();                                             CHK("loctb");
 
-  tb_insert_fun(deftb,"atan2",atan2,2);                         CHK("atan2");
+  /* Beatbox-specific extension functions, not registered in k_exec.c */
+  /* tb_insert_fun(deftb,"atan2",atan2,2);                         CHK("atan2"); - already registrered in k_exec.c */
   tb_insert_fun(deftb,"erf",erf,1);                             CHK("erf");
-  tb_insert_fun(deftb,"hypot",hypot,2);                         CHK("hypot");
+  /* tb_insert_fun(deftb,"hypot",hypot,2);                         CHK("hypot"); - already registrered in k_exec.c */
   tb_insert_fun(deftb,"J0",j0,1);                               CHK("j0");
   tb_insert_fun(deftb,"J1",j1,1);                               CHK("j1");
   tb_insert_fun(deftb,"J2",j2,1);                               CHK("j2");
   tb_insert_fun(deftb,"J3",j3,1);                               CHK("j3");
   tb_insert_fun(deftb,"tanh",tanh,1);                           CHK("tanh");
+  tb_insert_fun(sys_tab,"int",Int,1);				CHK("Int");
 #define FU(name, args) tb_insert_fun(deftb,#name,_##name,args);       CHK(#name);
   FU(ifsign,4); FU(if,3); 
   FU(ifeq0,3); FU(ifne0,3); FU(ifgt0,3); FU(ifge0,3); FU(iflt0,3); FU(ifle0,3);
   FU(eq,2); FU(ne,2); FU(gt,2); FU(ge,2); FU(lt,2); FU(le,2);
   FU(mod,2); FU(max,2); FU(min,2); FU(crop,3); FU(crop01,3); FU(u,4); FU(geom,4);
+
 
   #if MPI
   #else

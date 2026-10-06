@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -25,6 +25,8 @@
 
 #include <errno.h>
 #include <limits.h>
+#include <math.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -48,8 +50,8 @@
 #define miUINT32 (6)  /* 32-bit, unsigned */
 #define miSINGLE (7)  /* IEEE 754 single format */
 #define miDOUBLE (9)  /* IEEE 754 double format */
-#define miINT64  (12) /* 32-bit signed */
-#define miUINT64 (13) /* 32-bit, unsigned */
+#define miINT64  (12) /* 64-bit signed */
+#define miUINT64 (13) /* 64-bit, unsigned */
 #define miMATRIX (14) /* MATLAB array */
 
 #define FWRITE(ptr,size,nitems,...) \
@@ -87,6 +89,48 @@ typedef struct {
 /* #define DEBUG(...) if (debug) {fprintf(debug, __VA_ARGS__); FFLUSH(debug);} */
 
 static int measure_size(STR *S, int nt);
+
+static long double matout_fraction(real u, real u0, real u1)
+{
+  long double value=(long double)u;
+  long double lower=(long double)u0;
+  long double upper=(long double)u1;
+
+  if (lower < 0.0L && upper > 0.0L) {
+    long double scale=(-lower > upper) ? -lower : upper;
+    return (value/scale-lower/scale)/(upper/scale-lower/scale);
+  }
+  return (value-lower)/(upper-lower);
+}
+
+static int64_t matout_int64(real u, real u0, real u1)
+{
+  /* These powers of two are exclusive conversion limits, not maxima. */
+  const long double limit=(long double)(UINT64_C(1) << 63);
+  long double value;
+
+  if (u <= u0) return INT64_MIN;
+  if (u >= u1) return INT64_MAX;
+
+  value=-limit+matout_fraction(u,u0,u1)*(2.0L*limit);
+  if (value <= -limit) return INT64_MIN;
+  if (value >= limit) return INT64_MAX;
+  return (int64_t)value;
+}
+
+static uint64_t matout_uint64(real u, real u0, real u1)
+{
+  const long double limit=(long double)(UINT64_C(1) << 63)*2.0L;
+  long double value;
+
+  if (u <= u0) return 0;
+  if (u >= u1) return UINT64_MAX;
+
+  value=matout_fraction(u,u0,u1)*limit;
+  if (value <= 0.0L) return 0;
+  if (value >= limit) return UINT64_MAX;
+  return (uint64_t)value;
+}
 
 /*  ----------------------------------------------------------------// */
 RUN_HEAD(matout)
@@ -141,6 +185,23 @@ RUN_HEAD(matout)
 	  } /* for z */							\
 	} /* for y */							\
       } /* for x */
+    #define DISC64LOOP(TYPE,CONVERT)					\
+      if (!isfinite(u0) || !isfinite(u1))				\
+	EXPECTED_ERROR("64-bit integer output requires finite limits\n");	\
+      for (x=s.x0; x<=s.x1; x+=dx) {					\
+      for (y=s.y0; y<=s.y1; y+=dy) {				\
+	for (z=s.z0; z<=s.z1; z+=dz) {				\
+	  for (v=v0; v<=v1; v+=dv) {				\
+	    TYPE mapped;						\
+	    u=New[ind(x,y,z,v)];					\
+	    if (isnan(u)) EXPECTED_ERROR("cannot convert NaN to a 64-bit integer\n"); \
+	    mapped=CONVERT(u,u0,u1);					\
+	    memcpy(buffer,&mapped,sizeof mapped);			\
+	    FWRITE(buffer,TypeLength,1);				\
+	  } /* for v */						\
+	} /* for z */							\
+      } /* for y */							\
+      } /* for x */
     switch (ArrayType) {
     case miINT8:   DISCLOOP(char,SCHAR_MIN,SCHAR_MAX); break;
     case miUINT8:  DISCLOOP(unsigned char,0,UCHAR_MAX); break;
@@ -148,12 +209,15 @@ RUN_HEAD(matout)
     case miUINT16: DISCLOOP(unsigned short,0,USHRT_MAX); break;
     case miINT32:  DISCLOOP(int,INT_MIN,INT_MAX); break;
     case miUINT32: DISCLOOP(unsigned int,0,UINT_MAX); break;
-    case miINT64:  DISCLOOP(long,LONG_MIN,LONG_MAX); break;
-    case miUINT64: DISCLOOP(unsigned long,0,ULONG_MAX); break;
+    case miINT64:  DISC64LOOP(int64_t,matout_int64); break;
+    case miUINT64: DISC64LOOP(uint64_t,matout_uint64); break;
     case miSINGLE: CONTLOOP(float); break;
     case miDOUBLE: CONTLOOP(double); break;
     default: EXPECTED_ERROR("illegal ArrayType=%d\n");
     } /* switch ArrayType */
+    #undef DISC64LOOP
+    #undef CONTLOOP
+    #undef DISCLOOP
   } /* if intact else */
   (*nt)++;
   if NOT(measure_size(S,*nt)) return 0;
@@ -356,4 +420,3 @@ static int measure_size(STR *S, int nt)
 	t,S->current_pos,S->current_pos,nt,datasize,arraysize,remainder?(8-remainder):0);
   return 1;
 }
-

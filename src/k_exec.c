@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2018) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -516,16 +516,11 @@ static inline int  call_15(void){
   return(0);
 }
 
-/* for explicit type cast */
-/* INT Int(REAL a) { return (INT)rint((REAL)a);} */
-/* quick fix: linux does not like the orthodoxal version */
-REAL Int(REAL a) {return rint(a);}
-/* REAL Real(REAL a) {return (REAL) a;} - silly function; bring it back when sure it's needed */
-
 /*,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,*/
 int k_init(void) {
   if (NULL==(sys_tab=(p_tb)tb_new())) return 0;
-  #define VI(name) if (!tb_insert_abstract(sys_tab,#name,t_undf,(p_vd)name,0,f_vi)) return 0
+  /* arith operations */
+  #define VI(name) if (!tb_insert_instruction(sys_tab,#name,name)) return 0
   VI(push_ic);VI(push_rc);
   VI(push_int);VI(push_real);VI(push_adr);
   VI(add_int);VI(add_real);
@@ -541,6 +536,7 @@ int k_init(void) {
   VI(call_8);VI(call_9);VI(call_10);VI(call_11);
   VI(call_12);VI(call_13);VI(call_14);VI(call_15);
   #undef VI
+  /* standard C math lib funcions */
   #define FU(name,args) if (!tb_insert_fun(sys_tab,#name,name,args)) return 0
   FU(fabs,1);FU(ceil,1);FU(floor,1);FU(fmod,2);
   FU(sqrt,1);FU(hypot,2);FU(pow,2);
@@ -548,9 +544,6 @@ int k_init(void) {
   FU(sin,1);FU(cos,1);FU(tan,1);
   FU(asin,1);FU(acos,1);FU(atan,1);FU(atan2,2);
   #undef FU
-  /* if (!tb_insert_abstract(sys_tab,"int",t_int,(p_vd)Int,1,f_fn)) return 0;   */
-  if (!tb_insert_abstract(sys_tab,"int",t_real,(p_vd)Int,1,f_fn)) return 0;  
-   /* if (!tb_insert_fun(sys_tab,"real",Real,1)) return 0; - weird, bring it back when sure  */
   return 1;
 }
 
@@ -594,5 +587,3 @@ void *execute(void *v_ptr) {
 int res_type(void *v_ptr){
   return(*(int *) v_ptr);
 }
-
-
