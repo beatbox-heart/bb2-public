@@ -200,6 +200,7 @@ bb2s_SOURCES = \
 	k_paint.c \
 	k_paintgl.c \
 	k_plot.c \
+	localprint.c \
 	matout.c \
 	pgmin.c \
 	ppmin.c \
