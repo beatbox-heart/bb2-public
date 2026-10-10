@@ -2,6 +2,9 @@
 
 # AUTOMAKE_OPTIONS = readme-alpha
 
+# libtoolize: Consider adding '-I m4' to ACLOCAL_AMFLAGS in Makefile.am.
+ACLOCAL_AMFLAGS = -I m4
+
 # SUBDIRS = gsl utils sys test err const complex cheb block vector matrix permutation combination multiset sort ieee-utils cblas blas linalg eigen specfunc dht qrng rng randist fft poly fit multifit statistics siman sum integration interpolation histogram ode-initval ode-initval2 roots multiroots min multimin monte ntuple diff deriv cdf wavelet bspline doc
 SUBDIRS = gsl utils sys err complex block vector matrix cblas blas linalg eigen 
 
@@ -23,7 +26,6 @@ EXTRA_DIST = autogen.sh gsl-config.in gsl.pc.in configure.ac THANKS BUGS gsl.spe
 noinst_LTLIBRARIES = libgsl.la
 libgsl_la_SOURCES = version.c
 libgsl_la_LIBADD = $(SUBLIBS)
-libgsl_la_LDFLAGS = -version-info $(GSL_LT_VERSION)
 # noinst_HEADERS = gsl_math.h templates_on.h templates_off.h build.h
 noinst_HEADERS += gsl_math.h templates_on.h templates_off.h build.h permutation/gsl_permutation.h
 
@@ -73,4 +75,3 @@ gsl-config gsl.pc: Makefile
 
 gsl-config: $(srcdir)/gsl-config.in
 gsl.pc: $(srcdir)/gsl.pc.in
-
