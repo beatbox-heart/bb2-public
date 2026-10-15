@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -89,7 +89,7 @@ RUN_HEAD(k_func)
 	touchPoint = !s.nowhere && (restricted==0 || isTissue(ix,iy,iz));
 	/* No need to maintain local values if running nowhere. */
 	if(touchPoint) memcpy(S->u,New+ind(ix,iy,iz,0),vmax*sizeof(real));
-	if(geom_vmax) memcpy(S->geom,Geom+geom_ind(ix,iy,iz,0),geom_vmax*sizeof(real));
+	if(!s.nowhere && geom_vmax) memcpy(S->geom,Geom+geom_ind(ix,iy,iz,0),geom_vmax*sizeof(real));
 		
 	for(icode=0;icode<S->ncode;icode++) {
 	  void *code, *result;
@@ -135,7 +135,7 @@ RUN_HEAD(k_func)
 	}
 	
 	if(touchPoint) memcpy(New+ind(ix,iy,iz,0),S->u,vmax*sizeof(real));
-	if(geom_vmax) memcpy(Geom+geom_ind(ix,iy,iz,0),S->geom,geom_vmax*sizeof(real));
+	if(!s.nowhere && geom_vmax) memcpy(Geom+geom_ind(ix,iy,iz,0),S->geom,geom_vmax*sizeof(real));
       } /* for ix */
     } /* for iy */
   } /* for iz */
@@ -284,4 +284,3 @@ CREATE_HEAD(k_func)
   
 }
 CREATE_TAIL(k_func,1)
-

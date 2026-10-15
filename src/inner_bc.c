@@ -118,13 +118,14 @@ static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2, INT v0, real
   ASSERT(N>0);
   dx=fabs(Sx-X*S/N);
   dy=fabs(Sy-Y*S/N);
-  ASSERT(dx!=0 || dy!=0);
-  alpha=atan2(dy,dx);
-  if (dx==0 && dy==0) { /* fallback to normal as connecting line */
+  /* ASSERT(dx!=0 || dy!=0); */
+  if (dx==0 && dy==0) { /* fallback to the normal as the connecting line */
     MESSAGE("/* (x1,y1)=(%ld,%ld), (x2,y2): (%ld,%ld): zero dipole; fallback to straight line */\n",
 	    (long)x1,(long)y1,(long)x2,(long)y2);
     dx=1.0*labs(x2-x1);
     dy=1.0*labs(y2-y1);
+    alpha=atan2(dy,dx);
+  } else {
     alpha=atan2(dy,dx);
   }
 

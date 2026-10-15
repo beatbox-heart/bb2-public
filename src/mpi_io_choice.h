@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2016) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -23,7 +23,7 @@
         1 for contiguous. 
    In our case, contiguous is the one that gives scaling.
 */
-#define blocking_or_contiguous 1 
+#define blocking_or_contiguous 1
 
 #if (blocking_or_contiguous==0) 
 #define MPI_FILE_WRITE MPI_File_write

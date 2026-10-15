@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -34,11 +34,13 @@
 #include "qpp.h"
 #include "bikt.h"
 #include "k_.h"
+#include "sequence.h"
 #include "mpi_io_choice.h"
 
 typedef struct {
   NFILE(file);			/* output file  		*/
-  int append;			/* 1 if append to the file	*/
+  int append;			/* ..., appended if 1; rewritten if 0 */
+  sequence filesequence;	/* sequence of files, as an alternative to one output file */
   char filehead[4096];		/* beginning of the file	*/
   char headformat[1024];	/* beginning of the record	*/
   char headcode[1024];		/* ..may contain numerical part */
@@ -61,13 +63,14 @@ typedef struct {
 #define SEPARATORS ";"
 #define FORMATCHAR '%'
 
-#define output(...) {fprintf(file,__VA_ARGS__);}
-#define outputs(s) {fputs(s,file);}
+#define output(...) {fprintf(f,__VA_ARGS__);}
+#define outputs(s) {fputs(s,f);}
 
 /***************/
 RUN_HEAD(localprint)
 {
   DEVICE_CONST(FILE *,file);
+  DEVICE_VAR(sequence,filesequence);  
   DEVICE_ARRAY(char,filehead);
   DEVICE_ARRAY(char,headformat);
   DEVICE_CONST(pp_fn,headcompiled);
@@ -84,7 +87,17 @@ RUN_HEAD(localprint)
   int icode, size;
   char *p;
   int iout=0;
-
+  
+  FILE *f=NULL;
+  if (filesequence->mask[0]) {
+    thisq(filesequence);
+    f=filesequence->f;
+    if (*filehead) fputs(filehead,f);
+  } else if (file) {
+    f=file;
+  }
+  if (!f) return 1;
+  
   k_on();
   if (headformat) {
     if (headcompiled) {
@@ -153,6 +166,11 @@ RUN_HEAD(localprint)
   
   k_off();
   output("%s", recordsep);
+  
+  if (filesequence->mask[0]) 
+    nextq(filesequence);
+  else if (file)
+    fflush(f);
 }
 RUN_TAIL(localprint)
 
@@ -164,6 +182,7 @@ DESTROY_HEAD(localprint)
   FREE(S->code);
   FREE(S->headcompiled);
   SAFE_CLOSE(S->file);
+  SAFE_CLOSE(S->filesequence.f);
 }
 DESTROY_TAIL(localprint)
 
@@ -173,11 +192,23 @@ CREATE_HEAD(localprint)
   CALLOC(S->u,vmax,sizeof(real));
   if (geom_vmax) CALLOC(S->geom,geom_vmax,sizeof(real));
   
-  ACCEPTF(file,"wt","");
+  ACCEPTI(append,1,0,1);
+  ACCEPTF(file,append?"at":"wt","");
+  ACCEPTQ(filesequence,"wt","");
+  if (filesequence->mask[0]=='\0' && file==NULL)
+    EXPECTED_ERROR("Must specify 'file' or 'filesequence' in '%s' device.\n",dev->n);
+  if (filesequence->mask[0]!='\0' && file!=NULL)
+    EXPECTED_ERROR("Must specify only one of 'file' or 'filesequence' in '%s' device.\n",dev->n);
+  if (filesequence->mask[0]!='\0' && find_key("append=",w)) {
+    MESSAGE("Parameter 'append' is not used with 'filesequence' in '%s' device. This parameter will be ignored.\n",dev->n);
+  }
   ACCEPTS(filehead,"");
-
+  /* Add newline to filehead if it is nonempty and does not have one already */
+  if (filehead[0]!='\0' && filehead[strlen(filehead)-1]!='\n') {
+    strcat(filehead,"\n");
+  }	
   if (file && *filehead) {
-    output("%s",filehead);
+    fputs(filehead,file);
     FFLUSH(file);	
   }
  

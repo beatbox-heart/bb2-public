@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -42,36 +42,35 @@
 
 #define RECORD_SEPARATOR_LENGTH 2
 typedef struct {
-  int v0, v1;
-  char filehead[1024];
-  int timestamp;
-  char timestampformat[1024];
-  int timestampwidth;
-  sequence filesequence;
-  FILE *file;
-  char filename[MAXPATH];
-  int append;
-  char format[1024];
-  int formatwidth;
-  char vsep[RECORD_SEPARATOR_LENGTH +1];
-  char zsep[RECORD_SEPARATOR_LENGTH +1];
-  char ysep[RECORD_SEPARATOR_LENGTH +1];
-  char xsep[RECORD_SEPARATOR_LENGTH +1];
-  char recordsep[RECORD_SEPARATOR_LENGTH +1];
+  NFILE(file);			/* output file  		*/
+  int append;			/* ..., appended if 1; rewritten if 0 */
+  sequence filesequence;	/* sequence of files, as an alternative to one output file */
+  char filehead[4096];		/* beginning of the file	*/ 
+  int timestamp;		/* flag if each output to be "time-stamped" */
+  char timestampformat[1024];	/* ..., format thereof */
+  int timestampwidth;		/* ..., ..., width thereof */
+  char format[1024];		/* format of each record */
+  int formatwidth;		/* ..., width thereof */
+  int v0, v1;			/* range of layers to output, inclusive */
+  char vsep[RECORD_SEPARATOR_LENGTH +1];	/* separator between v values */
+  char zsep[RECORD_SEPARATOR_LENGTH +1];	/* separator between z values */
+  char ysep[RECORD_SEPARATOR_LENGTH +1];	/* separator between y values */
+  char xsep[RECORD_SEPARATOR_LENGTH +1];	/* separator between x values */
+  char recordsep[RECORD_SEPARATOR_LENGTH +1];	/* separator between records */
 } STR;
 
 RUN_HEAD(record)
 {
-  DEVICE_CONST(int, v0);
-  DEVICE_CONST(int, v1);
+  DEVICE_CONST(FILE *,file);
+  DEVICE_VAR(sequence,filesequence);  
   DEVICE_ARRAY(char,filehead);
   DEVICE_CONST(int,timestamp);
   DEVICE_ARRAY(char,timestampformat);
   DEVICE_CONST(int,timestampwidth);
-  DEVICE_VAR(sequence,filesequence);  
-  DEVICE_CONST(FILE *,file);
   DEVICE_ARRAY(char,format);
   DEVICE_CONST(int,formatwidth);
+  DEVICE_CONST(int, v0);
+  DEVICE_CONST(int, v1);
   DEVICE_ARRAY(char,vsep);
   DEVICE_ARRAY(char,zsep);
   DEVICE_ARRAY(char,ysep);
@@ -146,11 +145,27 @@ CREATE_HEAD(record)
   ACCEPTI(v0,INONE,0,vmax-1);
   ACCEPTI(v1,INONE,0,vmax-1);
   ASSERT(v1 >= v0);
+
+  ACCEPTI(append,1,0,1);
+  ACCEPTF(file,append?"at":"wt","");
+  ACCEPTQ(filesequence,"wt","");
+  if (filesequence->mask[0]=='\0' && file==NULL)
+    EXPECTED_ERROR("Must specify 'file' or 'filesequence' in '%s' device.\n",dev->n);
+  if (filesequence->mask[0]!='\0' && file!=NULL)
+    EXPECTED_ERROR("Must specify only one of 'file' or 'filesequence' in '%s' device.\n",dev->n);
+  if (filesequence->mask[0]!='\0' && find_key("append=",w)) {
+    MESSAGE("Parameter 'append' is not used with 'filesequence' in '%s' device. This parameter will be ignored.\n",dev->n);
+  }
   ACCEPTS(filehead,"");
   /* Add newline to filehead if it is nonempty and does not have one already */
   if (filehead[0]!='\0' && filehead[strlen(filehead)-1]!='\n') {
     strcat(filehead,"\n");
   }	
+  if (file && *filehead) {
+    fputs(filehead,file);
+    FFLUSH(file);	
+  }
+
   ACCEPTI(timestamp,0,0,1);
   ACCEPTS(timestampformat,"%-6ld\t");
   ACCEPTI(timestampwidth,8,1,INONE);
@@ -192,22 +207,6 @@ CREATE_HEAD(record)
       /* 	MESSAGE("/\* "REALF" [%s] -> '%s' [%ld] *\/\n",testvalue[i],format,s,l); */
       /* } */
     }
-  }
-  
-  /*  Sequential version */
-  ACCEPTI(append,1,0,1);
-  ACCEPTF(file,append?"at":"wt","");
-  ACCEPTQ(filesequence,"wt","");
-  if (filesequence->mask[0]=='\0' && file==NULL)
-    EXPECTED_ERROR("Must specify 'file' or 'filesequence' in '%s' device.\n",dev->n);
-  if (filesequence->mask[0]!='\0' && file!=NULL)
-    EXPECTED_ERROR("Must specify only one of 'file' or 'filesequence' in '%s' device.\n",dev->n);
-  if (filesequence->mask[0]!='\0' && find_key("append=",w)) {
-    MESSAGE("Parameter 'append' is not used with 'filesequence' in '%s' device. This parameter will be ignored.\n",dev->n);
-  }
-  if (file && *filehead) {
-    fputs(filehead,file);
-    FFLUSH(file);	
   }
 }
 CREATE_TAIL(record,0)
