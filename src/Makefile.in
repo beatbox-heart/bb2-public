@@ -151,14 +151,14 @@ am__bb2p_SOURCES_DIST = beatbox.c beatbox.h activation.c ap.c b02.c \
 	ionic.h ioniclist.h kernik19.c kernik19_const.h \
 	kernik19_fddt.h kernik19_ftab.h kernik19_fun.h \
 	kernik19_ngate.h kernik19_other.h kernik19_par.h \
-	kernik19_tgate.h k_.c k_.h k_calc.h k_code.h k_comp.c k_comp.h \
-	k_def.h k_errors.h k_exec.c k_exec.h k_expr.h k_free.h \
-	k_func.c k_poincare.c k_print.c l_abs.c l_add.c l_axpy.c \
-	l_copy.c l_max.c l_min.c l_move.c l_mult.c l_prod.c l_scal.c \
-	l_sum.c l_swap.c load.c localfunc.c lrd.c lrd_par.h lrd_step.h \
-	lrd_var.h mchtb.c mchtb.h mchtbpar.h mchtbvar.h mouse.c \
-	mouse_init.h mouse_par.h mouse_step.h mousevent.c \
-	mousevent_init.h mousevent_par.h mousevent_step.h \
+	kernik19_tgate.h kernik19_tie.h k_.c k_.h k_calc.h k_code.h \
+	k_comp.c k_comp.h k_def.h k_errors.h k_exec.c k_exec.h \
+	k_expr.h k_free.h k_func.c k_poincare.c k_print.c l_abs.c \
+	l_add.c l_axpy.c l_copy.c l_max.c l_min.c l_move.c l_mult.c \
+	l_prod.c l_scal.c l_sum.c l_swap.c load.c localfunc.c lrd.c \
+	lrd_par.h lrd_step.h lrd_var.h mchtb.c mchtb.h mchtbpar.h \
+	mchtbvar.h mouse.c mouse_init.h mouse_par.h mouse_step.h \
+	mousevent.c mousevent_init.h mousevent_par.h mousevent_step.h \
 	mpi_io_choice.h mpipaint.c mpipaint.h ms.c n62.c n62.h \
 	neum2d.c neum3d.c noble.c noble.h noblecns.h nobleft1.h \
 	nobleft2.h nobleft3.h nobleftn.c nobleftn.h nobleglb.h \
@@ -172,18 +172,18 @@ am__bb2p_SOURCES_DIST = beatbox.c beatbox.h activation.c ap.c b02.c \
 	paci18_other.h paci18_par.h paci18_tgate.h paci18_const.h \
 	paci18_ftab.h paci18_fddt.h paci20.c paci20_fun.h \
 	paci20_ngate.h paci20_other.h paci20_par.h paci20_tgate.h \
-	paci20_const.h paci20_ftab.h paci20_fddt.h pgmout.c ppmout.c \
-	pw_mult.c qpp.c qpp.h reduce.c regular.c rhs.h rhslist.h rk4.c \
-	rushlarsen.c sample.c scr.h screen.c screen.h singz.c \
-	sequence.c sequence.h shell.c state.c state.h stop.c system.c \
-	system.h tb.c tbpar.h tbvar.h ttnp.c ttnp_par.h ttnp_step.h \
-	ttnp_init.h ttnnp04.c ttnnp04_par.h ttnnp04_var.h \
-	ttnnp04_step.h ttp06.c ttp06_par.h ttp06_step.h ttp06_var.h \
-	ttp2006.c ttp2006_const.h ttp2006_fddt.h ttp2006_ftab.h \
-	ttp2006_fun.h ttp2006_ngate.h ttp2006_other.h ttp2006_par.h \
-	ttp2006_tgate.h trivial.c update.c vtkout2.c windraw.c \
-	windraw.h zeeman.c zfk.c diff2dv.c diff3dv.c diffold.c \
-	diffstep.c decomp.c decomp.h
+	paci20_const.h paci20_ftab.h paci20_fddt.h paci20_tie.h \
+	pgmout.c ppmout.c pw_mult.c qpp.c qpp.h reduce.c regular.c \
+	rhs.h rhslist.h rk4.c rushlarsen.c sample.c scr.h screen.c \
+	screen.h singz.c sequence.c sequence.h shell.c state.c state.h \
+	stop.c system.c system.h tb.c tbpar.h tbvar.h ttnp.c \
+	ttnp_par.h ttnp_step.h ttnp_init.h ttnnp04.c ttnnp04_par.h \
+	ttnnp04_var.h ttnnp04_step.h ttp06.c ttp06_par.h ttp06_step.h \
+	ttp06_var.h ttp2006.c ttp2006_const.h ttp2006_fddt.h \
+	ttp2006_ftab.h ttp2006_fun.h ttp2006_ngate.h ttp2006_other.h \
+	ttp2006_par.h ttp2006_tgate.h trivial.c update.c vtkout2.c \
+	windraw.c windraw.h zeeman.c zfk.c diff2dv.c diff3dv.c \
+	diffold.c diffstep.c decomp.c decomp.h
 am__objects_1 = bb2p-beatbox.$(OBJEXT) bb2p-activation.$(OBJEXT) \
 	bb2p-ap.$(OBJEXT) bb2p-b02.$(OBJEXT) bb2p-bgi.$(OBJEXT) \
 	bb2p-bikt.$(OBJEXT) bb2p-hh52.$(OBJEXT) bb2p-hh52m.$(OBJEXT) \
@@ -242,12 +242,7 @@ am__objects_1 = bb2p-beatbox.$(OBJEXT) bb2p-activation.$(OBJEXT) \
 @MPI_AVAILABLE_TRUE@am_bb2p_OBJECTS = $(am__objects_1) \
 @MPI_AVAILABLE_TRUE@	bb2p-decomp.$(OBJEXT)
 bb2p_OBJECTS = $(am_bb2p_OBJECTS)
-am__DEPENDENCIES_1 =
-@MPI_AVAILABLE_TRUE@bb2p_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-@MPI_AVAILABLE_TRUE@	$(am__DEPENDENCIES_1) \
-@MPI_AVAILABLE_TRUE@	$(am__DEPENDENCIES_1) \
-@MPI_AVAILABLE_TRUE@	$(GSL)/.libs/libgsl.a \
-@MPI_AVAILABLE_TRUE@	$(GSL)/cblas/.libs/libgslcblas.a
+@MPI_AVAILABLE_TRUE@bb2p_DEPENDENCIES = $(common_ldadd)
 bb2p_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(bb2p_LDFLAGS) $(LDFLAGS) -o $@
@@ -321,9 +316,7 @@ am_bb2s_OBJECTS = $(am__objects_2) bb2s-adi1d.$(OBJEXT) \
 	bb2s-screen_dump.$(OBJEXT) bb2s-torx.$(OBJEXT) \
 	bb2s-tory.$(OBJEXT) bb2s-torz.$(OBJEXT)
 bb2s_OBJECTS = $(am_bb2s_OBJECTS)
-bb2s_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(GSL)/.libs/libgsl.a \
-	$(GSL)/cblas/.libs/libgslcblas.a
+bb2s_DEPENDENCIES = $(common_ldadd)
 bb2s_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(bb2s_LDFLAGS) $(LDFLAGS) -o $@
@@ -599,12 +592,9 @@ ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 FILECMD = @FILECMD@
-GLX_AVAIL = @GLX_AVAIL@
-GLX_CFLAGS = @GLX_CFLAGS@
-GLX_LIBS = @GLX_LIBS@
-GL_AVAIL = @GL_AVAIL@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
+GRAPHICS_CPPFLAGS = @GRAPHICS_CPPFLAGS@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -624,7 +614,6 @@ MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
-MPICC = @MPICC@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
@@ -648,7 +637,6 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
-X11_AVAIL = @X11_AVAIL@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -707,20 +695,21 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 GSL = gsl-1.16.extract
 SUBDIRS = $(GSL)
-@MPI_AVAILABLE_TRUE@bb2p_CPPFLAGS = -D MPI -D NO_TMPFILES ${common_cppflags} -I$(builddir)/$(GSL) $(GL_CFLAGS) $(GLX_CFLAGS)
-@MPI_AVAILABLE_TRUE@bb2p_LDFLAGS = ${common_ldflags}
-@MPI_AVAILABLE_TRUE@bb2p_LDADD = ${LDFLAGS} $(GL_LIBS) $(GLX_LIBS) $(X11_LIBS) \
-@MPI_AVAILABLE_TRUE@                 $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
 
+# -D X11/NOX11 -D GL/NOGL, as determined by configure
+# (X11 and GL libraries are added to LIBS by configure)
+common_cppflags = $(GRAPHICS_CPPFLAGS)
+common_ldadd = $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
+@MPI_AVAILABLE_TRUE@bb2p_CPPFLAGS = -D MPI -D NO_TMPFILES ${common_cppflags} -I$(builddir)/$(GSL)
+@MPI_AVAILABLE_TRUE@bb2p_LDFLAGS = ${common_ldflags}
+@MPI_AVAILABLE_TRUE@bb2p_LDADD = ${common_ldadd}
 
 # -------------------------------
 # bb2s
 # -------------------------------
-bb2s_CPPFLAGS = ${common_cppflags} -I$(builddir)/$(GSL) $(GL_CFLAGS) $(GLX_CFLAGS)
+bb2s_CPPFLAGS = ${common_cppflags} -I$(builddir)/$(GSL)
 bb2s_LDFLAGS = ${common_ldflags}
-bb2s_LDADD = ${LDFLAGS} $(GL_LIBS) $(GLX_LIBS) $(X11_LIBS) \
-                 $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
-
+bb2s_LDADD = ${common_ldadd}
 
 # -------------------------------
 # bb2d
@@ -756,14 +745,14 @@ common_sources = beatbox.c beatbox.h activation.c ap.c b02.c bgi.c \
 	ionic.h ioniclist.h kernik19.c kernik19_const.h \
 	kernik19_fddt.h kernik19_ftab.h kernik19_fun.h \
 	kernik19_ngate.h kernik19_other.h kernik19_par.h \
-	kernik19_tgate.h k_.c k_.h k_calc.h k_code.h k_comp.c k_comp.h \
-	k_def.h k_errors.h k_exec.c k_exec.h k_expr.h k_free.h \
-	k_func.c k_poincare.c k_print.c l_abs.c l_add.c l_axpy.c \
-	l_copy.c l_max.c l_min.c l_move.c l_mult.c l_prod.c l_scal.c \
-	l_sum.c l_swap.c load.c localfunc.c lrd.c lrd_par.h lrd_step.h \
-	lrd_var.h mchtb.c mchtb.h mchtbpar.h mchtbvar.h mouse.c \
-	mouse_init.h mouse_par.h mouse_step.h mousevent.c \
-	mousevent_init.h mousevent_par.h mousevent_step.h \
+	kernik19_tgate.h kernik19_tie.h k_.c k_.h k_calc.h k_code.h \
+	k_comp.c k_comp.h k_def.h k_errors.h k_exec.c k_exec.h \
+	k_expr.h k_free.h k_func.c k_poincare.c k_print.c l_abs.c \
+	l_add.c l_axpy.c l_copy.c l_max.c l_min.c l_move.c l_mult.c \
+	l_prod.c l_scal.c l_sum.c l_swap.c load.c localfunc.c lrd.c \
+	lrd_par.h lrd_step.h lrd_var.h mchtb.c mchtb.h mchtbpar.h \
+	mchtbvar.h mouse.c mouse_init.h mouse_par.h mouse_step.h \
+	mousevent.c mousevent_init.h mousevent_par.h mousevent_step.h \
 	mpi_io_choice.h mpipaint.c mpipaint.h ms.c n62.c n62.h \
 	neum2d.c neum3d.c noble.c noble.h noblecns.h nobleft1.h \
 	nobleft2.h nobleft3.h nobleftn.c nobleftn.h nobleglb.h \
@@ -777,18 +766,18 @@ common_sources = beatbox.c beatbox.h activation.c ap.c b02.c bgi.c \
 	paci18_other.h paci18_par.h paci18_tgate.h paci18_const.h \
 	paci18_ftab.h paci18_fddt.h paci20.c paci20_fun.h \
 	paci20_ngate.h paci20_other.h paci20_par.h paci20_tgate.h \
-	paci20_const.h paci20_ftab.h paci20_fddt.h pgmout.c ppmout.c \
-	pw_mult.c qpp.c qpp.h reduce.c regular.c rhs.h rhslist.h rk4.c \
-	rushlarsen.c sample.c scr.h screen.c screen.h singz.c \
-	sequence.c sequence.h shell.c state.c state.h stop.c system.c \
-	system.h tb.c tbpar.h tbvar.h ttnp.c ttnp_par.h ttnp_step.h \
-	ttnp_init.h ttnnp04.c ttnnp04_par.h ttnnp04_var.h \
-	ttnnp04_step.h ttp06.c ttp06_par.h ttp06_step.h ttp06_var.h \
-	ttp2006.c ttp2006_const.h ttp2006_fddt.h ttp2006_ftab.h \
-	ttp2006_fun.h ttp2006_ngate.h ttp2006_other.h ttp2006_par.h \
-	ttp2006_tgate.h trivial.c update.c vtkout2.c windraw.c \
-	windraw.h zeeman.c zfk.c diff2dv.c diff3dv.c diffold.c \
-	diffstep.c
+	paci20_const.h paci20_ftab.h paci20_fddt.h paci20_tie.h \
+	pgmout.c ppmout.c pw_mult.c qpp.c qpp.h reduce.c regular.c \
+	rhs.h rhslist.h rk4.c rushlarsen.c sample.c scr.h screen.c \
+	screen.h singz.c sequence.c sequence.h shell.c state.c state.h \
+	stop.c system.c system.h tb.c tbpar.h tbvar.h ttnp.c \
+	ttnp_par.h ttnp_step.h ttnp_init.h ttnnp04.c ttnnp04_par.h \
+	ttnnp04_var.h ttnnp04_step.h ttp06.c ttp06_par.h ttp06_step.h \
+	ttp06_var.h ttp2006.c ttp2006_const.h ttp2006_fddt.h \
+	ttp2006_ftab.h ttp2006_fun.h ttp2006_ngate.h ttp2006_other.h \
+	ttp2006_par.h ttp2006_tgate.h trivial.c update.c vtkout2.c \
+	windraw.c windraw.h zeeman.c zfk.c diff2dv.c diff3dv.c \
+	diffold.c diffstep.c
 bb2s_SOURCES = \
 	${common_sources} \
 	adi1d.c \

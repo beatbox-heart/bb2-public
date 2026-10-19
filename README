@@ -42,21 +42,31 @@ programmers.
 
 Briefly: 
 
-- download a Beatbox tar ball, say into your $HOME directory,
-- unpack the Beatbox tar ball; this will place the contents in 
-  a new directory, 
+- download a Beatbox tar ball, say into your $HOME directory, and
+  unpack it; this will place the contents in a new directory
+  (alternatively, clone https://github.com/beatbox-heart/bb2-public),
 - change into that directory and issue the following commands: 
 
-autoreconf -fi
-export CC=mpicc
 ./configure --prefix=$HOME
 make
 make install
 
-If all works well, this will create BeatBox executables both in the
-current directory and install them on to your $HOME/bin/ directory
+You need a C compiler and make; you do not need autotools. If an MPI
+compiler wrapper (mpicc) is found, the parallel version is built as
+well; configure prints a summary of what it has found at the end.
+
+If all works well, this will create the BeatBox executables bb2s
+(sequential), bb2d and, if MPI is available, bb2p (parallel) in the
+src subdirectory, and install them into your $HOME/bin/ directory,
 which will be created if necessary; you can move them elsewhere if
 required.
+
+Only if you modify configure.ac or any of the Makefile.am files, you
+need GNU autotools (autoconf, automake, libtool), and you should run
+
+autoreconf -fi
+
+before the ./configure step.
 
 
 --- 

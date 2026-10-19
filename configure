@@ -656,6 +656,15 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+subdirs
+GRAPHICS_CPPFLAGS
+GL_LIBS
+GL_CFLAGS
+PKG_CONFIG_LIBDIR
+PKG_CONFIG_PATH
+PKG_CONFIG
+MPI_AVAILABLE_FALSE
+MPI_AVAILABLE_TRUE
 LT_SYS_LIBRARY_PATH
 OTOOL64
 OTOOL
@@ -687,20 +696,6 @@ build_vendor
 build_cpu
 build
 LIBTOOL
-subdirs
-MPI_AVAILABLE_FALSE
-MPI_AVAILABLE_TRUE
-MPICC
-GLX_LIBS
-GLX_CFLAGS
-GLX_AVAIL
-GL_LIBS
-GL_CFLAGS
-PKG_CONFIG_LIBDIR
-PKG_CONFIG_PATH
-PKG_CONFIG
-GL_AVAIL
-X11_AVAIL
 am__fastdepCC_FALSE
 am__fastdepCC_TRUE
 CCDEPMODE
@@ -717,6 +712,9 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+MAINT
+MAINTAINER_MODE_FALSE
+MAINTAINER_MODE_TRUE
 am__xargs_n
 am__rm_f_notfound
 AM_BACKSLASH
@@ -749,9 +747,6 @@ am__isrc
 INSTALL_DATA
 INSTALL_SCRIPT
 INSTALL_PROGRAM
-MAINT
-MAINTAINER_MODE_FALSE
-MAINTAINER_MODE_TRUE
 target_alias
 host_alias
 build_alias
@@ -795,9 +790,8 @@ am__quote'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
-enable_maintainer_mode
 enable_silent_rules
-with_mesa
+enable_maintainer_mode
 enable_dependency_tracking
 enable_shared
 enable_static
@@ -809,6 +803,7 @@ with_aix_soname
 with_gnu_ld
 with_sysroot
 enable_libtool_lock
+with_mesa
 '
       ac_precious_vars='build_alias
 host_alias
@@ -818,12 +813,12 @@ CFLAGS
 LDFLAGS
 LIBS
 CPPFLAGS
+LT_SYS_LIBRARY_PATH
 PKG_CONFIG
 PKG_CONFIG_PATH
 PKG_CONFIG_LIBDIR
 GL_CFLAGS
-GL_LIBS
-LT_SYS_LIBRARY_PATH'
+GL_LIBS'
 ac_subdirs_all='src/gsl-1.16.extract'
 
 # Initialize some variables set by options.
@@ -1451,11 +1446,11 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-silent-rules   less verbose build output (undo: "make V=1")
+  --disable-silent-rules  verbose build output (undo: "make V=0")
   --enable-maintainer-mode
                           enable make rules and dependencies not useful (and
                           sometimes confusing) to the casual installer
-  --enable-silent-rules   less verbose build output (undo: "make V=1")
-  --disable-silent-rules  verbose build output (undo: "make V=0")
   --enable-dependency-tracking
                           do not reject slow dependency extractors
   --disable-dependency-tracking
@@ -1474,10 +1469,11 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-mesa             Use Mesa pkg-config instead of system OpenGL
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
   --with-sysroot[=DIR]    Search for dependent libraries within DIR (or the
                           compiler's sysroot if not specified).
+  --with-mesa             find OpenGL via pkg-config (e.g. Homebrew Mesa)
+                          instead of searching for libGL
 
 Some influential environment variables:
   CC          C compiler command
@@ -1487,6 +1483,8 @@ Some influential environment variables:
   LIBS        libraries to pass to the linker, e.g. -l<library>
   CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
+  LT_SYS_LIBRARY_PATH
+              User-defined run-time library search path.
   PKG_CONFIG  path to pkg-config utility
   PKG_CONFIG_PATH
               directories to add to pkg-config's search path
@@ -1494,8 +1492,6 @@ Some influential environment variables:
               path overriding pkg-config's built-in search path
   GL_CFLAGS   C compiler flags for GL, overriding pkg-config
   GL_LIBS     linker flags for GL, overriding pkg-config
-  LT_SYS_LIBRARY_PATH
-              User-defined run-time library search path.
 
 Use these variables to override the choices made by 'configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -2562,30 +2558,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to enable maintainer-specific portions of Makefiles" >&5
-printf %s "checking whether to enable maintainer-specific portions of Makefiles... " >&6; }
-    # Check whether --enable-maintainer-mode was given.
-if test ${enable_maintainer_mode+y}
-then :
-  enableval=$enable_maintainer_mode; USE_MAINTAINER_MODE=$enableval
-else case e in #(
-  e) USE_MAINTAINER_MODE=no ;;
-esac
-fi
-
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $USE_MAINTAINER_MODE" >&5
-printf "%s\n" "$USE_MAINTAINER_MODE" >&6; }
-   if test $USE_MAINTAINER_MODE = yes; then
-  MAINTAINER_MODE_TRUE=
-  MAINTAINER_MODE_FALSE='#'
-else
-  MAINTAINER_MODE_TRUE='#'
-  MAINTAINER_MODE_FALSE=
-fi
-
-  MAINT=$MAINTAINER_MODE_TRUE
-
-
 
 am__api_version='1.17'
 
@@ -3353,117 +3325,47 @@ fi
 
 
 
-for ac_prog in gawk mawk nawk awk
-do
-  # Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_AWK+y}
+# Generated files (configure, Makefile.in) are distributed, and their
+# timestamps are not preserved by git, so by default do not try to
+# re-run autotools from make.  Developers who edit configure.ac or
+# Makefile.am should either run "autoreconf -fi" by hand, or configure
+# with --enable-maintainer-mode to have make do it automatically.
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to enable maintainer-specific portions of Makefiles" >&5
+printf %s "checking whether to enable maintainer-specific portions of Makefiles... " >&6; }
+    # Check whether --enable-maintainer-mode was given.
+if test ${enable_maintainer_mode+y}
 then :
-  printf %s "(cached) " >&6
+  enableval=$enable_maintainer_mode; USE_MAINTAINER_MODE=$enableval
 else case e in #(
-  e) if test -n "$AWK"; then
-  ac_cv_prog_AWK="$AWK" # Let the user override the test.
+  e) USE_MAINTAINER_MODE=no ;;
+esac
+fi
+
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $USE_MAINTAINER_MODE" >&5
+printf "%s\n" "$USE_MAINTAINER_MODE" >&6; }
+   if test $USE_MAINTAINER_MODE = yes; then
+  MAINTAINER_MODE_TRUE=
+  MAINTAINER_MODE_FALSE='#'
 else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_AWK="$ac_prog"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-AWK=$ac_cv_prog_AWK
-if test -n "$AWK"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $AWK" >&5
-printf "%s\n" "$AWK" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
+  MAINTAINER_MODE_TRUE='#'
+  MAINTAINER_MODE_FALSE=
 fi
 
-
-  test -n "$AWK" && break
-done
-
-
-# Initialize pkg-config (needed for PKG_CHECK_MODULES macros)
-
-# pkg.m4 - Macros to locate and use pkg-config.   -*- Autoconf -*-
-# serial 13 (pkgconf)
+  MAINT=$MAINTAINER_MODE_TRUE
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Fail at autoconf time, rather than at configure time,
+# if pkg.m4 has not been found.
 
 
 # -------------------------------
-# Host-specific tweaks
+# Compiler
 # -------------------------------
-myhost=`uname -n`
-case $myhost in
-   hector*)
-     LIBS=" -lm -lX11 -lxcb -lxcb-xlib -ldl -lXau";;
-   *) ;;
-esac
-
-myos=`uname`
-case $myos in
-   Darwin*)
-     LIBS="-L/opt/X11/lib"
-     CFLAGS="$CFLAGS -I/opt/X11/include"
-   ;;
-   *) ;;
-esac
-
-# -------------------------------
-# Option: allow forcing Mesa/Zink
-# -------------------------------
-
-# Check whether --with-mesa was given.
-if test ${with_mesa+y}
-then :
-  withval=$with_mesa; use_mesa=$withval
-else case e in #(
-  e) use_mesa=no ;;
-esac
-fi
-
-
-# -------------------------------
-# Checks for graphics libraries
-# -------------------------------
+# Prefer the MPI wrapper; a user-supplied CC=... takes precedence.
+# This must come before anything modifies CFLAGS, otherwise the
+# default "-g -O2" is lost.
 
 
 
@@ -3471,70 +3373,6 @@ fi
 
 
 
-
-
-DEPDIR="${am__leading_dot}deps"
-
-ac_config_commands="$ac_config_commands depfiles"
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether ${MAKE-make} supports the include directive" >&5
-printf %s "checking whether ${MAKE-make} supports the include directive... " >&6; }
-cat > confinc.mk << 'END'
-am__doit:
-	@echo this is the am__doit target >confinc.out
-.PHONY: am__doit
-END
-am__include="#"
-am__quote=
-# BSD make does it like this.
-echo '.include "confinc.mk" # ignored' > confmf.BSD
-# Other make implementations (GNU, Solaris 10, AIX) do it like this.
-echo 'include confinc.mk # ignored' > confmf.GNU
-_am_result=no
-for s in GNU BSD; do
-  { echo "$as_me:$LINENO: ${MAKE-make} -f confmf.$s && cat confinc.out" >&5
-   (${MAKE-make} -f confmf.$s && cat confinc.out) >&5 2>&5
-   ac_status=$?
-   echo "$as_me:$LINENO: \$? = $ac_status" >&5
-   (exit $ac_status); }
-  case $?:`cat confinc.out 2>/dev/null` in #(
-  '0:this is the am__doit target') :
-    case $s in #(
-  BSD) :
-    am__include='.include' am__quote='"' ;; #(
-  *) :
-    am__include='include' am__quote='' ;;
-esac ;; #(
-  *) :
-     ;;
-esac
-  if test "$am__include" != "#"; then
-    _am_result="yes ($s style)"
-    break
-  fi
-done
-rm -f confinc.* confmf.*
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: ${_am_result}" >&5
-printf "%s\n" "${_am_result}" >&6; }
-
-# Check whether --enable-dependency-tracking was given.
-if test ${enable_dependency_tracking+y}
-then :
-  enableval=$enable_dependency_tracking;
-fi
-
-if test "x$enable_dependency_tracking" != xno; then
-  am_depcomp="$ac_aux_dir/depcomp"
-  AMDEPBACKSLASH='\'
-  am__nodep='_no'
-fi
- if test "x$enable_dependency_tracking" != xno; then
-  AMDEP_TRUE=
-  AMDEP_FALSE='#'
-else
-  AMDEP_TRUE='#'
-  AMDEP_FALSE=
-fi
 
 
 ac_ext=c
@@ -3543,221 +3381,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}gcc", so it can be a program name with args.
-set dummy ${ac_tool_prefix}gcc; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_CC="${ac_tool_prefix}gcc"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-printf "%s\n" "$CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_prog_CC"; then
-  ac_ct_CC=$CC
-  # Extract the first word of "gcc", so it can be a program name with args.
-set dummy gcc; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_ac_ct_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$ac_ct_CC"; then
-  ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_CC="gcc"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-ac_ct_CC=$ac_cv_prog_ac_ct_CC
-if test -n "$ac_ct_CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CC" >&5
-printf "%s\n" "$ac_ct_CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-  if test "x$ac_ct_CC" = x; then
-    CC=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    CC=$ac_ct_CC
-  fi
-else
-  CC="$ac_cv_prog_CC"
-fi
-
-if test -z "$CC"; then
-          if test -n "$ac_tool_prefix"; then
-    # Extract the first word of "${ac_tool_prefix}cc", so it can be a program name with args.
-set dummy ${ac_tool_prefix}cc; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_CC="${ac_tool_prefix}cc"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-printf "%s\n" "$CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-  fi
-fi
-if test -z "$CC"; then
-  # Extract the first word of "cc", so it can be a program name with args.
-set dummy cc; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-  ac_prog_rejected=no
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    if test "$as_dir$ac_word$ac_exec_ext" = "/usr/ucb/cc"; then
-       ac_prog_rejected=yes
-       continue
-     fi
-    ac_cv_prog_CC="cc"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-if test $ac_prog_rejected = yes; then
-  # We found a bogon in the path, so make sure we never use it.
-  set dummy $ac_cv_prog_CC
-  shift
-  if test $# != 0; then
-    # We chose a different compiler from the bogus one.
-    # However, it has the same basename, so the bogon will be chosen
-    # first if we set CC to just the basename; use the full file name.
-    shift
-    ac_cv_prog_CC="$as_dir$ac_word${1+' '}$@"
-  fi
-fi
-fi ;;
-esac
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-printf "%s\n" "$CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-fi
-if test -z "$CC"; then
-  if test -n "$ac_tool_prefix"; then
-  for ac_prog in cl.exe
+  for ac_prog in mpicc gcc cc
   do
     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
 set dummy $ac_tool_prefix$ac_prog; ac_word=$2
@@ -3807,7 +3431,7 @@ fi
 fi
 if test -z "$CC"; then
   ac_ct_CC=$CC
-  for ac_prog in cl.exe
+  for ac_prog in mpicc gcc cc
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -3866,114 +3490,6 @@ ac_tool_warned=yes ;;
 esac
     CC=$ac_ct_CC
   fi
-fi
-
-fi
-if test -z "$CC"; then
-  if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}clang", so it can be a program name with args.
-set dummy ${ac_tool_prefix}clang; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_CC="${ac_tool_prefix}clang"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-printf "%s\n" "$CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_prog_CC"; then
-  ac_ct_CC=$CC
-  # Extract the first word of "clang", so it can be a program name with args.
-set dummy clang; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_ac_ct_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$ac_ct_CC"; then
-  ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_CC="clang"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-ac_ct_CC=$ac_cv_prog_ac_ct_CC
-if test -n "$ac_ct_CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CC" >&5
-printf "%s\n" "$ac_ct_CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-  if test "x$ac_ct_CC" = x; then
-    CC=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    CC=$ac_ct_CC
-  fi
-else
-  CC="$ac_cv_prog_CC"
-fi
-
 fi
 
 
@@ -4614,1595 +4130,69 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-
-depcc="$CC"   am_compiler_list=
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking dependency style of $depcc" >&5
-printf %s "checking dependency style of $depcc... " >&6; }
-if test ${am_cv_CC_dependencies_compiler_type+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -z "$AMDEP_TRUE" && test -f "$am_depcomp"; then
-  # We make a subdir and do the tests there.  Otherwise we can end up
-  # making bogus files that we don't know about and never remove.  For
-  # instance it was reported that on HP-UX the gcc test will end up
-  # making a dummy file named 'D' -- because '-MD' means "put the output
-  # in D".
-  rm -rf conftest.dir
-  mkdir conftest.dir
-  # Copy depcomp to subdir because otherwise we won't find it if we're
-  # using a relative directory.
-  cp "$am_depcomp" conftest.dir
-  cd conftest.dir
-  # We will build objects and dependencies in a subdirectory because
-  # it helps to detect inapplicable dependency modes.  For instance
-  # both Tru64's cc and ICC support -MD to output dependencies as a
-  # side effect of compilation, but ICC will put the dependencies in
-  # the current directory while Tru64 will put them in the object
-  # directory.
-  mkdir sub
-
-  am_cv_CC_dependencies_compiler_type=none
-  if test "$am_compiler_list" = ""; then
-     am_compiler_list=`sed -n 's/^#*\([a-zA-Z0-9]*\))$/\1/p' < ./depcomp`
-  fi
-  am__universal=false
-  case " $depcc " in #(
-     *\ -arch\ *\ -arch\ *) am__universal=true ;;
-     esac
-
-  for depmode in $am_compiler_list; do
-    # Setup a source with many dependencies, because some compilers
-    # like to wrap large dependency lists on column 80 (with \), and
-    # we should not choose a depcomp mode which is confused by this.
-    #
-    # We need to recreate these files for each test, as the compiler may
-    # overwrite some of them when testing with obscure command lines.
-    # This happens at least with the AIX C compiler.
-    : > sub/conftest.c
-    for i in 1 2 3 4 5 6; do
-      echo '#include "conftst'$i'.h"' >> sub/conftest.c
-      # Using ": > sub/conftst$i.h" creates only sub/conftst1.h with
-      # Solaris 10 /bin/sh.
-      echo '/* dummy */' > sub/conftst$i.h
-    done
-    echo "${am__include} ${am__quote}sub/conftest.Po${am__quote}" > confmf
-
-    # We check with '-c' and '-o' for the sake of the "dashmstdout"
-    # mode.  It turns out that the SunPro C++ compiler does not properly
-    # handle '-M -o', and we need to detect this.  Also, some Intel
-    # versions had trouble with output in subdirs.
-    am__obj=sub/conftest.${OBJEXT-o}
-    am__minus_obj="-o $am__obj"
-    case $depmode in
-    gcc)
-      # This depmode causes a compiler race in universal mode.
-      test "$am__universal" = false || continue
-      ;;
-    nosideeffect)
-      # After this tag, mechanisms are not by side-effect, so they'll
-      # only be used when explicitly requested.
-      if test "x$enable_dependency_tracking" = xyes; then
-	continue
-      else
-	break
-      fi
-      ;;
-    msvc7 | msvc7msys | msvisualcpp | msvcmsys)
-      # This compiler won't grok '-c -o', but also, the minuso test has
-      # not run yet.  These depmodes are late enough in the game, and
-      # so weak that their functioning should not be impacted.
-      am__obj=conftest.${OBJEXT-o}
-      am__minus_obj=
-      ;;
-    none) break ;;
-    esac
-    if depmode=$depmode \
-       source=sub/conftest.c object=$am__obj \
-       depfile=sub/conftest.Po tmpdepfile=sub/conftest.TPo \
-       $SHELL ./depcomp $depcc -c $am__minus_obj sub/conftest.c \
-         >/dev/null 2>conftest.err &&
-       grep sub/conftst1.h sub/conftest.Po > /dev/null 2>&1 &&
-       grep sub/conftst6.h sub/conftest.Po > /dev/null 2>&1 &&
-       grep $am__obj sub/conftest.Po > /dev/null 2>&1 &&
-       ${MAKE-make} -s -f confmf > /dev/null 2>&1; then
-      # icc doesn't choke on unknown options, it will just issue warnings
-      # or remarks (even with -Werror).  So we grep stderr for any message
-      # that says an option was ignored or not supported.
-      # When given -MP, icc 7.0 and 7.1 complain thus:
-      #   icc: Command line warning: ignoring option '-M'; no argument required
-      # The diagnosis changed in icc 8.0:
-      #   icc: Command line remark: option '-MP' not supported
-      if (grep 'ignoring option' conftest.err ||
-          grep 'not supported' conftest.err) >/dev/null 2>&1; then :; else
-        am_cv_CC_dependencies_compiler_type=$depmode
-        break
-      fi
-    fi
-  done
-
-  cd ..
-  rm -rf conftest.dir
-else
-  am_cv_CC_dependencies_compiler_type=none
-fi
- ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $am_cv_CC_dependencies_compiler_type" >&5
-printf "%s\n" "$am_cv_CC_dependencies_compiler_type" >&6; }
-CCDEPMODE=depmode=$am_cv_CC_dependencies_compiler_type
-
- if
-  test "x$enable_dependency_tracking" != xno \
-  && test "$am_cv_CC_dependencies_compiler_type" = gcc3; then
-  am__fastdepCC_TRUE=
-  am__fastdepCC_FALSE='#'
-else
-  am__fastdepCC_TRUE='#'
-  am__fastdepCC_FALSE=
-fi
-
-
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing XOpenDisplay" >&5
-printf %s "checking for library containing XOpenDisplay... " >&6; }
-if test ${ac_cv_search_XOpenDisplay+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char XOpenDisplay (void);
-int
-main (void)
-{
-return XOpenDisplay ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' X11
-do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_search_XOpenDisplay=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext
-  if test ${ac_cv_search_XOpenDisplay+y}
-then :
-  break
-fi
-done
-if test ${ac_cv_search_XOpenDisplay+y}
-then :
-
-else case e in #(
-  e) ac_cv_search_XOpenDisplay=no ;;
-esac
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_XOpenDisplay" >&5
-printf "%s\n" "$ac_cv_search_XOpenDisplay" >&6; }
-ac_res=$ac_cv_search_XOpenDisplay
-if test "$ac_res" != no
-then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  X11_AVAIL=yes
-
-else case e in #(
-  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: X11 libraries not found, Beatbox will be built without graphical displays." >&5
-printf "%s\n" "$as_me: WARNING: X11 libraries not found, Beatbox will be built without graphical displays." >&2;}
-    X11_AVAIL=no
- ;;
-esac
-fi
-
-
-# -------------------------------
-# OpenGL detection (cross-platform)
-# -------------------------------
-GL_CFLAGS=""
-GL_LIBS=""
-
-if test "x$X11_AVAIL" = "xno"; then
-  GL_AVAIL=no
-
-else
-  case "$myos" in
-    Darwin*)
-      if test "x$use_mesa" = "xyes"; then
-
-
-
-
-
-
-
-if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
-	if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
-set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_path_PKG_CONFIG+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-if test -n "$PKG_CONFIG"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
-printf "%s\n" "$PKG_CONFIG" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_path_PKG_CONFIG"; then
-  ac_pt_PKG_CONFIG=$PKG_CONFIG
-  # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_path_ac_pt_PKG_CONFIG+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) case $ac_pt_PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac ;;
-esac
-fi
-ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
-if test -n "$ac_pt_PKG_CONFIG"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_pt_PKG_CONFIG" >&5
-printf "%s\n" "$ac_pt_PKG_CONFIG" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-  if test "x$ac_pt_PKG_CONFIG" = x; then
-    PKG_CONFIG=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    PKG_CONFIG=$ac_pt_PKG_CONFIG
-  fi
-else
-  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
-fi
-
-fi
-if test -n "$PKG_CONFIG"; then
-	_pkg_min_version=0.9.0
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
-printf %s "checking pkg-config is at least version $_pkg_min_version... " >&6; }
-	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-	else
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-		PKG_CONFIG=""
-	fi
-fi
-if test -z "$PKG_CONFIG"; then
-	as_fn_error $? "pkg-config not found" "$LINENO" 5
-fi
-
-pkg_failed=no
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for gl" >&5
-printf %s "checking for gl... " >&6; }
-
-if test -n "$GL_CFLAGS"; then
-    pkg_cv_GL_CFLAGS="$GL_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gl\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "gl") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_GL_CFLAGS=`$PKG_CONFIG --cflags "gl" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$GL_LIBS"; then
-    pkg_cv_GL_LIBS="$GL_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gl\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "gl") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_GL_LIBS=`$PKG_CONFIG --libs "gl" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-                GL_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gl" 2>&1`
-        else
-                GL_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gl" 2>&1`
-        fi
-        # Put the nasty error message in config.log where it belongs
-        echo "$GL_PKG_ERRORS" >&5
-
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Mesa not found, install with \`brew install mesa\`" >&5
-printf "%s\n" "$as_me: WARNING: Mesa not found, install with \`brew install mesa\`" >&2;}
-elif test $pkg_failed = untried; then
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Mesa not found, install with \`brew install mesa\`" >&5
-printf "%s\n" "$as_me: WARNING: Mesa not found, install with \`brew install mesa\`" >&2;}
-else
-        GL_CFLAGS=$pkg_cv_GL_CFLAGS
-        GL_LIBS=$pkg_cv_GL_LIBS
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-
-fi
-        GL_CFLAGS="$GL_CFLAGS $GL_CFLAGS"
-        GL_LIBS="$GL_LIBS $GL_LIBS"
-        GL_AVAIL=yes
-
-      else
-        ac_header= ac_cache=
-for ac_item in $ac_header_c_list
-do
-  if test $ac_cache; then
-    ac_fn_c_check_header_compile "$LINENO" $ac_header ac_cv_header_$ac_cache "$ac_includes_default"
-    if eval test \"x\$ac_cv_header_$ac_cache\" = xyes; then
-      printf "%s\n" "#define $ac_item 1" >> confdefs.h
-    fi
-    ac_header= ac_cache=
-  elif test $ac_header; then
-    ac_cache=$ac_item
-  else
-    ac_header=$ac_item
-  fi
-done
-
-
-
-
-
-
-
-
-if test $ac_cv_header_stdlib_h = yes && test $ac_cv_header_string_h = yes
-then :
-
-printf "%s\n" "#define STDC_HEADERS 1" >>confdefs.h
-
-fi
-ac_fn_c_check_header_compile "$LINENO" "OpenGL/gl.h" "ac_cv_header_OpenGL_gl_h" "$ac_includes_default"
-if test "x$ac_cv_header_OpenGL_gl_h" = xyes
-then :
-
-else case e in #(
-  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: MacOS OpenGL headers not found (install Xcode Command Line Tools)" >&5
-printf "%s\n" "$as_me: WARNING: MacOS OpenGL headers not found (install Xcode Command Line Tools)" >&2;} ;;
-esac
-fi
-
-        GL_LIBS="-L/opt/X11/lib -lGL -lGLU -lX11"
-        GL_AVAIL=yes
-
-
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-**********************************************************************
-* You are building on macOS using Apple's OpenGL framework.          *
-* This implementation is deprecated and limited to OpenGL 4.1 Core.  *
-* For newer OpenGL (4.6+), consider --with-mesa and Homebrew Mesa.   *
-**********************************************************************
-" >&5
-printf "%s\n" "$as_me: WARNING:
-**********************************************************************
-* You are building on macOS using Apple's OpenGL framework.          *
-* This implementation is deprecated and limited to OpenGL 4.1 Core.  *
-* For newer OpenGL (4.6+), consider --with-mesa and Homebrew Mesa.   *
-**********************************************************************
-" >&2;}
-      fi
-      ;;
-    *)
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing glXQueryExtension" >&5
-printf %s "checking for library containing glXQueryExtension... " >&6; }
-if test ${ac_cv_search_glXQueryExtension+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char glXQueryExtension (void);
-int
-main (void)
-{
-return glXQueryExtension ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' GL
-do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_search_glXQueryExtension=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext
-  if test ${ac_cv_search_glXQueryExtension+y}
-then :
-  break
-fi
-done
-if test ${ac_cv_search_glXQueryExtension+y}
-then :
-
-else case e in #(
-  e) ac_cv_search_glXQueryExtension=no ;;
-esac
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_glXQueryExtension" >&5
-printf "%s\n" "$ac_cv_search_glXQueryExtension" >&6; }
-ac_res=$ac_cv_search_glXQueryExtension
-if test "$ac_res" != no
-then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  GL_AVAIL=yes
- GL_LIBS="-lGL -lGLU"
-else case e in #(
-  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: OpenGL libraries not found, Beatbox will be built without GL graphical extension." >&5
-printf "%s\n" "$as_me: WARNING: OpenGL libraries not found, Beatbox will be built without GL graphical extension." >&2;}
-          GL_AVAIL=no
- ;;
-esac
-fi
-
-      ;;
-  esac
-fi
-
-
-
-
-# -------------------------------
-# GLX detection
-# -------------------------------
-GLX_CFLAGS=""
-GLX_LIBS=""
-
-if test "x$X11_AVAIL" = "xno" || test "x$GL_AVAIL" = "xno"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Skipping GLX check because X11 or GL not available" >&5
-printf "%s\n" "$as_me: WARNING: Skipping GLX check because X11 or GL not available" >&2;}
-  GLX_AVAIL=no
-
-else
-  ac_fn_c_check_header_compile "$LINENO" "GL/glx.h" "ac_cv_header_GL_glx_h" "$ac_includes_default"
-if test "x$ac_cv_header_GL_glx_h" = xyes
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing glXQueryExtension" >&5
-printf %s "checking for library containing glXQueryExtension... " >&6; }
-if test ${ac_cv_search_glXQueryExtension+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char glXQueryExtension (void);
-int
-main (void)
-{
-return glXQueryExtension ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' GL GLX
-do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_search_glXQueryExtension=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext
-  if test ${ac_cv_search_glXQueryExtension+y}
-then :
-  break
-fi
-done
-if test ${ac_cv_search_glXQueryExtension+y}
-then :
-
-else case e in #(
-  e) ac_cv_search_glXQueryExtension=no ;;
-esac
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_glXQueryExtension" >&5
-printf "%s\n" "$ac_cv_search_glXQueryExtension" >&6; }
-ac_res=$ac_cv_search_glXQueryExtension
-if test "$ac_res" != no
-then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  GLX_AVAIL=yes
-
-        GLX_LIBS="-lGL"
-
-printf "%s\n" "#define HAVE_GLX 1" >>confdefs.h
-
-else case e in #(
-  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: GLX libraries not found, building without GLX support" >&5
-printf "%s\n" "$as_me: WARNING: GLX libraries not found, building without GLX support" >&2;}
-        GLX_AVAIL=no
- ;;
-esac
-fi
-
-else case e in #(
-  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: GLX header (GL/glx.h) not found, building without GLX support" >&5
-printf "%s\n" "$as_me: WARNING: GLX header (GL/glx.h) not found, building without GLX support" >&2;}
-     GLX_AVAIL=no
- ;;
-esac
-fi
-
-fi
-
-
-
-
-# -------------------------------
-# CFLAGS adjustments
-# -------------------------------
-if test "x$X11_AVAIL" = "xno"; then
-  CFLAGS="$CFLAGS -D NOX11"
-else
-  CFLAGS="$CFLAGS -D X11"
-fi
-
-if test "$GL_AVAIL" = "no"; then
-  CFLAGS="$CFLAGS -D NOGL"
-else
-  CFLAGS="$CFLAGS -D GL"
-  LIBS="$LIBS $GL_LIBS"
-fi
-
-if test "$GLX_AVAIL" = "no"; then
-  CFLAGS="$CFLAGS -D NOGLX"
-else
-  CFLAGS="$CFLAGS -D GLX"
-fi
-
-# -------------------------------
-# Other checks
-# -------------------------------
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing pow" >&5
-printf %s "checking for library containing pow... " >&6; }
-if test ${ac_cv_search_pow+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char pow (void);
-int
-main (void)
-{
-return pow ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' m
-do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_search_pow=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext
-  if test ${ac_cv_search_pow+y}
-then :
-  break
-fi
-done
-if test ${ac_cv_search_pow+y}
-then :
-
-else case e in #(
-  e) ac_cv_search_pow=no ;;
-esac
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_pow" >&5
-printf "%s\n" "$ac_cv_search_pow" >&6; }
-ac_res=$ac_cv_search_pow
-if test "$ac_res" != no
-then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-
-fi
-
-
-# -------------------------------
-# Compiler detection
-# -------------------------------
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}gcc", so it can be a program name with args.
-set dummy ${ac_tool_prefix}gcc; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_CC="${ac_tool_prefix}gcc"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-printf "%s\n" "$CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_prog_CC"; then
-  ac_ct_CC=$CC
-  # Extract the first word of "gcc", so it can be a program name with args.
-set dummy gcc; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_ac_ct_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$ac_ct_CC"; then
-  ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_CC="gcc"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-ac_ct_CC=$ac_cv_prog_ac_ct_CC
-if test -n "$ac_ct_CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CC" >&5
-printf "%s\n" "$ac_ct_CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-  if test "x$ac_ct_CC" = x; then
-    CC=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    CC=$ac_ct_CC
-  fi
-else
-  CC="$ac_cv_prog_CC"
-fi
-
-if test -z "$CC"; then
-          if test -n "$ac_tool_prefix"; then
-    # Extract the first word of "${ac_tool_prefix}cc", so it can be a program name with args.
-set dummy ${ac_tool_prefix}cc; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_CC="${ac_tool_prefix}cc"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-printf "%s\n" "$CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-  fi
-fi
-if test -z "$CC"; then
-  # Extract the first word of "cc", so it can be a program name with args.
-set dummy cc; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-  ac_prog_rejected=no
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    if test "$as_dir$ac_word$ac_exec_ext" = "/usr/ucb/cc"; then
-       ac_prog_rejected=yes
-       continue
-     fi
-    ac_cv_prog_CC="cc"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-if test $ac_prog_rejected = yes; then
-  # We found a bogon in the path, so make sure we never use it.
-  set dummy $ac_cv_prog_CC
-  shift
-  if test $# != 0; then
-    # We chose a different compiler from the bogus one.
-    # However, it has the same basename, so the bogon will be chosen
-    # first if we set CC to just the basename; use the full file name.
-    shift
-    ac_cv_prog_CC="$as_dir$ac_word${1+' '}$@"
-  fi
-fi
-fi ;;
-esac
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-printf "%s\n" "$CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-fi
-if test -z "$CC"; then
-  if test -n "$ac_tool_prefix"; then
-  for ac_prog in cl.exe
-  do
-    # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
-set dummy $ac_tool_prefix$ac_prog; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_CC="$ac_tool_prefix$ac_prog"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-printf "%s\n" "$CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-    test -n "$CC" && break
-  done
-fi
-if test -z "$CC"; then
-  ac_ct_CC=$CC
-  for ac_prog in cl.exe
-do
-  # Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_ac_ct_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$ac_ct_CC"; then
-  ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_CC="$ac_prog"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-ac_ct_CC=$ac_cv_prog_ac_ct_CC
-if test -n "$ac_ct_CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CC" >&5
-printf "%s\n" "$ac_ct_CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-  test -n "$ac_ct_CC" && break
-done
-
-  if test "x$ac_ct_CC" = x; then
-    CC=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    CC=$ac_ct_CC
-  fi
-fi
-
-fi
-if test -z "$CC"; then
-  if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}clang", so it can be a program name with args.
-set dummy ${ac_tool_prefix}clang; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_CC="${ac_tool_prefix}clang"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-CC=$ac_cv_prog_CC
-if test -n "$CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CC" >&5
-printf "%s\n" "$CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_prog_CC"; then
-  ac_ct_CC=$CC
-  # Extract the first word of "clang", so it can be a program name with args.
-set dummy clang; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_prog_ac_ct_CC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) if test -n "$ac_ct_CC"; then
-  ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_CC="clang"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi ;;
-esac
-fi
-ac_ct_CC=$ac_cv_prog_ac_ct_CC
-if test -n "$ac_ct_CC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_ct_CC" >&5
-printf "%s\n" "$ac_ct_CC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-  if test "x$ac_ct_CC" = x; then
-    CC=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    CC=$ac_ct_CC
-  fi
-else
-  CC="$ac_cv_prog_CC"
-fi
-
-fi
-
-
-test -z "$CC" && { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in '$ac_pwd':" >&5
-printf "%s\n" "$as_me: error: in '$ac_pwd':" >&2;}
-as_fn_error $? "no acceptable C compiler found in \$PATH
-See 'config.log' for more details" "$LINENO" 5; }
-
-# Provide some information about the compiler.
-printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for C compiler version" >&5
-set X $ac_compile
-ac_compiler=$2
-for ac_option in --version -v -V -qversion -version; do
-  { { ac_try="$ac_compiler $ac_option >&5"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
-printf "%s\n" "$ac_try_echo"; } >&5
-  (eval "$ac_compiler $ac_option >&5") 2>conftest.err
-  ac_status=$?
-  if test -s conftest.err; then
-    sed '10a\
-... rest of stderr output deleted ...
-         10q' conftest.err >conftest.er1
-    cat conftest.er1 >&5
-  fi
-  rm -f conftest.er1 conftest.err
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }
-done
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether the compiler supports GNU C" >&5
-printf %s "checking whether the compiler supports GNU C... " >&6; }
-if test ${ac_cv_c_compiler_gnu+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-#ifndef __GNUC__
-       choke me
-#endif
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  ac_compiler_gnu=yes
-else case e in #(
-  e) ac_compiler_gnu=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-ac_cv_c_compiler_gnu=$ac_compiler_gnu
- ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_compiler_gnu" >&5
-printf "%s\n" "$ac_cv_c_compiler_gnu" >&6; }
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-if test $ac_compiler_gnu = yes; then
-  GCC=yes
-else
-  GCC=
-fi
-ac_test_CFLAGS=${CFLAGS+y}
-ac_save_CFLAGS=$CFLAGS
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -g" >&5
-printf %s "checking whether $CC accepts -g... " >&6; }
-if test ${ac_cv_prog_cc_g+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_save_c_werror_flag=$ac_c_werror_flag
-   ac_c_werror_flag=yes
-   ac_cv_prog_cc_g=no
-   CFLAGS="-g"
-   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  ac_cv_prog_cc_g=yes
-else case e in #(
-  e) CFLAGS=""
-      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-
-else case e in #(
-  e) ac_c_werror_flag=$ac_save_c_werror_flag
-	 CFLAGS="-g"
-	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  ac_cv_prog_cc_g=yes
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-   ac_c_werror_flag=$ac_save_c_werror_flag ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_prog_cc_g" >&5
-printf "%s\n" "$ac_cv_prog_cc_g" >&6; }
-if test $ac_test_CFLAGS; then
-  CFLAGS=$ac_save_CFLAGS
-elif test $ac_cv_prog_cc_g = yes; then
-  if test "$GCC" = yes; then
-    CFLAGS="-g -O2"
-  else
-    CFLAGS="-g"
-  fi
-else
-  if test "$GCC" = yes; then
-    CFLAGS="-O2"
-  else
-    CFLAGS=
-  fi
-fi
-ac_prog_cc_stdc=no
-if test x$ac_prog_cc_stdc = xno
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $CC option to enable C11 features" >&5
-printf %s "checking for $CC option to enable C11 features... " >&6; }
-if test ${ac_cv_prog_cc_c11+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_cv_prog_cc_c11=no
-ac_save_CC=$CC
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-$ac_c_conftest_c11_program
-_ACEOF
-for ac_arg in '' -std=gnu11
-do
-  CC="$ac_save_CC $ac_arg"
-  if ac_fn_c_try_compile "$LINENO"
-then :
-  ac_cv_prog_cc_c11=$ac_arg
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam
-  test "x$ac_cv_prog_cc_c11" != "xno" && break
-done
-rm -f conftest.$ac_ext
-CC=$ac_save_CC ;;
-esac
-fi
-
-if test "x$ac_cv_prog_cc_c11" = xno
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: unsupported" >&5
-printf "%s\n" "unsupported" >&6; }
-else case e in #(
-  e) if test "x$ac_cv_prog_cc_c11" = x
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none needed" >&5
-printf "%s\n" "none needed" >&6; }
-else case e in #(
-  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_prog_cc_c11" >&5
-printf "%s\n" "$ac_cv_prog_cc_c11" >&6; }
-     CC="$CC $ac_cv_prog_cc_c11" ;;
-esac
-fi
-  ac_cv_prog_cc_stdc=$ac_cv_prog_cc_c11
-  ac_prog_cc_stdc=c11 ;;
-esac
-fi
-fi
-if test x$ac_prog_cc_stdc = xno
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $CC option to enable C99 features" >&5
-printf %s "checking for $CC option to enable C99 features... " >&6; }
-if test ${ac_cv_prog_cc_c99+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_cv_prog_cc_c99=no
-ac_save_CC=$CC
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-$ac_c_conftest_c99_program
-_ACEOF
-for ac_arg in '' -std=gnu99 -std=c99 -c99 -qlanglvl=extc1x -qlanglvl=extc99 -AC99 -D_STDC_C99=
-do
-  CC="$ac_save_CC $ac_arg"
-  if ac_fn_c_try_compile "$LINENO"
-then :
-  ac_cv_prog_cc_c99=$ac_arg
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam
-  test "x$ac_cv_prog_cc_c99" != "xno" && break
-done
-rm -f conftest.$ac_ext
-CC=$ac_save_CC ;;
-esac
-fi
-
-if test "x$ac_cv_prog_cc_c99" = xno
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: unsupported" >&5
-printf "%s\n" "unsupported" >&6; }
-else case e in #(
-  e) if test "x$ac_cv_prog_cc_c99" = x
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none needed" >&5
-printf "%s\n" "none needed" >&6; }
-else case e in #(
-  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_prog_cc_c99" >&5
-printf "%s\n" "$ac_cv_prog_cc_c99" >&6; }
-     CC="$CC $ac_cv_prog_cc_c99" ;;
-esac
-fi
-  ac_cv_prog_cc_stdc=$ac_cv_prog_cc_c99
-  ac_prog_cc_stdc=c99 ;;
-esac
-fi
-fi
-if test x$ac_prog_cc_stdc = xno
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $CC option to enable C89 features" >&5
-printf %s "checking for $CC option to enable C89 features... " >&6; }
-if test ${ac_cv_prog_cc_c89+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_cv_prog_cc_c89=no
-ac_save_CC=$CC
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-$ac_c_conftest_c89_program
-_ACEOF
-for ac_arg in '' -qlanglvl=extc89 -qlanglvl=ansi -std -Ae "-Aa -D_HPUX_SOURCE" "-Xc -D__EXTENSIONS__"
-do
-  CC="$ac_save_CC $ac_arg"
-  if ac_fn_c_try_compile "$LINENO"
-then :
-  ac_cv_prog_cc_c89=$ac_arg
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam
-  test "x$ac_cv_prog_cc_c89" != "xno" && break
-done
-rm -f conftest.$ac_ext
-CC=$ac_save_CC ;;
-esac
-fi
-
-if test "x$ac_cv_prog_cc_c89" = xno
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: unsupported" >&5
-printf "%s\n" "unsupported" >&6; }
-else case e in #(
-  e) if test "x$ac_cv_prog_cc_c89" = x
-then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: none needed" >&5
-printf "%s\n" "none needed" >&6; }
-else case e in #(
-  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_prog_cc_c89" >&5
-printf "%s\n" "$ac_cv_prog_cc_c89" >&6; }
-     CC="$CC $ac_cv_prog_cc_c89" ;;
-esac
-fi
-  ac_cv_prog_cc_stdc=$ac_cv_prog_cc_c89
-  ac_prog_cc_stdc=c89 ;;
-esac
-fi
-fi
-
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-
-  ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether $CC understands -c and -o together" >&5
-printf %s "checking whether $CC understands -c and -o together... " >&6; }
-if test ${am_cv_prog_cc_c_o+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-  # Make sure it works both with $CC and with simple cc.
-  # Following AC_PROG_CC_C_O, we do the test twice because some
-  # compilers refuse to overwrite an existing .o file with -o,
-  # though they will create one.
-  am_cv_prog_cc_c_o=yes
-  for am_i in 1 2; do
-    if { echo "$as_me:$LINENO: $CC -c conftest.$ac_ext -o conftest2.$ac_objext" >&5
-   ($CC -c conftest.$ac_ext -o conftest2.$ac_objext) >&5 2>&5
+DEPDIR="${am__leading_dot}deps"
+
+ac_config_commands="$ac_config_commands depfiles"
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether ${MAKE-make} supports the include directive" >&5
+printf %s "checking whether ${MAKE-make} supports the include directive... " >&6; }
+cat > confinc.mk << 'END'
+am__doit:
+	@echo this is the am__doit target >confinc.out
+.PHONY: am__doit
+END
+am__include="#"
+am__quote=
+# BSD make does it like this.
+echo '.include "confinc.mk" # ignored' > confmf.BSD
+# Other make implementations (GNU, Solaris 10, AIX) do it like this.
+echo 'include confinc.mk # ignored' > confmf.GNU
+_am_result=no
+for s in GNU BSD; do
+  { echo "$as_me:$LINENO: ${MAKE-make} -f confmf.$s && cat confinc.out" >&5
+   (${MAKE-make} -f confmf.$s && cat confinc.out) >&5 2>&5
    ac_status=$?
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
-   (exit $ac_status); } \
-         && test -f conftest2.$ac_objext; then
-      : OK
-    else
-      am_cv_prog_cc_c_o=no
-      break
-    fi
-  done
-  rm -f core conftest*
-  unset am_i ;;
+   (exit $ac_status); }
+  case $?:`cat confinc.out 2>/dev/null` in #(
+  '0:this is the am__doit target') :
+    case $s in #(
+  BSD) :
+    am__include='.include' am__quote='"' ;; #(
+  *) :
+    am__include='include' am__quote='' ;;
+esac ;; #(
+  *) :
+     ;;
 esac
+  if test "$am__include" != "#"; then
+    _am_result="yes ($s style)"
+    break
+  fi
+done
+rm -f confinc.* confmf.*
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: ${_am_result}" >&5
+printf "%s\n" "${_am_result}" >&6; }
+
+# Check whether --enable-dependency-tracking was given.
+if test ${enable_dependency_tracking+y}
+then :
+  enableval=$enable_dependency_tracking;
 fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $am_cv_prog_cc_c_o" >&5
-printf "%s\n" "$am_cv_prog_cc_c_o" >&6; }
-if test "$am_cv_prog_cc_c_o" != yes; then
-   # Losing compiler, so override with the script.
-   # FIXME: It is wrong to rewrite CC.
-   # But if we don't then we get into trouble of one sort or another.
-   # A longer-term fix would be to have automake use am__CC in this case,
-   # and then we could set am__CC="\$(top_srcdir)/compile \$(CC)"
-   CC="$am_aux_dir/compile $CC"
+
+if test "x$enable_dependency_tracking" != xno; then
+  am_depcomp="$ac_aux_dir/depcomp"
+  AMDEPBACKSLASH='\'
+  am__nodep='_no'
 fi
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ if test "x$enable_dependency_tracking" != xno; then
+  AMDEP_TRUE=
+  AMDEP_FALSE='#'
+else
+  AMDEP_TRUE='#'
+  AMDEP_FALSE=
+fi
+
 
 
 depcc="$CC"   am_compiler_list=
@@ -6336,125 +4326,6 @@ fi
 
 
 
-
-# -------------------------------
-# MPI detection (override CC if mpicc found)
-# -------------------------------
-# Extract the first word of "mpicc", so it can be a program name with args.
-set dummy mpicc; ac_word=$2
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_path_MPICC+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) case $MPICC in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_MPICC="$MPICC" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_path_MPICC="$as_dir$ac_word$ac_exec_ext"
-    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  test -z "$ac_cv_path_MPICC" && ac_cv_path_MPICC="no"
-  ;;
-esac ;;
-esac
-fi
-MPICC=$ac_cv_path_MPICC
-if test -n "$MPICC"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $MPICC" >&5
-printf "%s\n" "$MPICC" >&6; }
-else
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-fi
-
-
-
-if test "x$MPICC" != "xno"; then
-   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: MPI compiler found: $MPICC" >&5
-printf "%s\n" "MPI compiler found: $MPICC" >&6; }
-   CC="$MPICC"
-
-printf "%s\n" "#define HAVE_MPI 1" >>confdefs.h
-
-    if true; then
-  MPI_AVAILABLE_TRUE=
-  MPI_AVAILABLE_FALSE='#'
-else
-  MPI_AVAILABLE_TRUE='#'
-  MPI_AVAILABLE_FALSE=
-fi
-
-else
-   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: MPI compiler not found, building without MPI support" >&5
-printf "%s\n" "$as_me: WARNING: MPI compiler not found, building without MPI support" >&2;}
-    if false; then
-  MPI_AVAILABLE_TRUE=
-  MPI_AVAILABLE_FALSE='#'
-else
-  MPI_AVAILABLE_TRUE='#'
-  MPI_AVAILABLE_FALSE=
-fi
-
-fi
-
-# Ensure overrides propagate to subdirs
-
-
-
-export CC CFLAGS LDFLAGS
-
-# -------------------------------
-# Sub-configures
-# -------------------------------
-
-
-subdirs="$subdirs src/gsl-1.16.extract"
-
-
-# -------------------------------
-# Summary
-# -------------------------------
-echo ""
-echo "================= Configuration Summary ================="
-echo " C compiler:       $CC"
-if test "x$MPICC" != "xno"; then
-  echo " MPI support:      enabled ($MPICC)"
-else
-  echo " MPI support:      disabled"
-fi
-echo " X11 support:      $X11_AVAIL"
-echo " OpenGL support:   $GL_AVAIL"
-echo " GLX support:      $GLX_AVAIL"
-echo "========================================================="
-
-# -------------------------------
-# Headers and libtool
-# -------------------------------
-ac_config_headers="$ac_config_headers config.h"
-
-
-# -------------------------------
-# Libtool setup (modern) - from chatgpt 2026/02/12
-# -------------------------------
 case `pwd` in
   *\ * | *\	*)
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Libtool does not cope well with whitespace in \`pwd\`" >&5
@@ -8166,6 +6037,7 @@ fi
 printf "%s\n" "$lt_cv_sharedlib_from_linklib_cmd" >&6; }
 sharedlib_from_linklib_cmd=$lt_cv_sharedlib_from_linklib_cmd
 test -z "$sharedlib_from_linklib_cmd" && sharedlib_from_linklib_cmd=$ECHO
+
 
 
 
@@ -10295,6 +8167,35 @@ func_munge_path_list ()
     esac
 }
 
+ac_header= ac_cache=
+for ac_item in $ac_header_c_list
+do
+  if test $ac_cache; then
+    ac_fn_c_check_header_compile "$LINENO" $ac_header ac_cv_header_$ac_cache "$ac_includes_default"
+    if eval test \"x\$ac_cv_header_$ac_cache\" = xyes; then
+      printf "%s\n" "#define $ac_item 1" >> confdefs.h
+    fi
+    ac_header= ac_cache=
+  elif test $ac_header; then
+    ac_cache=$ac_item
+  else
+    ac_header=$ac_item
+  fi
+done
+
+
+
+
+
+
+
+
+if test $ac_cv_header_stdlib_h = yes && test $ac_cv_header_string_h = yes
+then :
+
+printf "%s\n" "#define STDC_HEADERS 1" >>confdefs.h
+
+fi
 ac_fn_c_check_header_compile "$LINENO" "dlfcn.h" "ac_cv_header_dlfcn_h" "$ac_includes_default
 "
 if test "x$ac_cv_header_dlfcn_h" = xyes
@@ -14796,10 +12697,540 @@ CC=$lt_save_CC
 
 
 # -------------------------------
-# Files
+# Platform-specific paths
 # -------------------------------
+case `uname` in
+   Darwin*)
+     # XQuartz
+     CPPFLAGS="$CPPFLAGS -I/opt/X11/include"
+     LDFLAGS="$LDFLAGS -L/opt/X11/lib"
+   ;;
+   *) ;;
+esac
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing pow" >&5
+printf %s "checking for library containing pow... " >&6; }
+if test ${ac_cv_search_pow+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pow (void);
+int
+main (void)
+{
+return pow ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' m
+do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_search_pow=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext
+  if test ${ac_cv_search_pow+y}
+then :
+  break
+fi
+done
+if test ${ac_cv_search_pow+y}
+then :
+
+else case e in #(
+  e) ac_cv_search_pow=no ;;
+esac
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_pow" >&5
+printf "%s\n" "$ac_cv_search_pow" >&6; }
+ac_res=$ac_cv_search_pow
+if test "$ac_res" != no
+then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+fi
+
+
+# -------------------------------
+# MPI: build bb2p only if the compiler can actually link an MPI program
+# -------------------------------
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether $CC can build MPI programs" >&5
+printf %s "checking whether $CC can build MPI programs... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <mpi.h>
+int
+main (void)
+{
+MPI_Init(0, 0);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  mpi_ok=yes
+else case e in #(
+  e) mpi_ok=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $mpi_ok" >&5
+printf "%s\n" "$mpi_ok" >&6; }
+if test "x$mpi_ok" = "xno"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: MPI not available, the parallel version bb2p will not be built. To build it, install MPI and make sure mpicc is in PATH, or set CC to an MPI compiler wrapper." >&5
+printf "%s\n" "$as_me: WARNING: MPI not available, the parallel version bb2p will not be built. To build it, install MPI and make sure mpicc is in PATH, or set CC to an MPI compiler wrapper." >&2;}
+fi
+ if test "x$mpi_ok" = "xyes"; then
+  MPI_AVAILABLE_TRUE=
+  MPI_AVAILABLE_FALSE='#'
+else
+  MPI_AVAILABLE_TRUE='#'
+  MPI_AVAILABLE_FALSE=
+fi
+
+
+# -------------------------------
+# Graphics
+# -------------------------------
+
+# Check whether --with-mesa was given.
+if test ${with_mesa+y}
+then :
+  withval=$with_mesa; use_mesa=$withval
+else case e in #(
+  e) use_mesa=no ;;
+esac
+fi
+
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing XOpenDisplay" >&5
+printf %s "checking for library containing XOpenDisplay... " >&6; }
+if test ${ac_cv_search_XOpenDisplay+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char XOpenDisplay (void);
+int
+main (void)
+{
+return XOpenDisplay ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' X11
+do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_search_XOpenDisplay=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext
+  if test ${ac_cv_search_XOpenDisplay+y}
+then :
+  break
+fi
+done
+if test ${ac_cv_search_XOpenDisplay+y}
+then :
+
+else case e in #(
+  e) ac_cv_search_XOpenDisplay=no ;;
+esac
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_XOpenDisplay" >&5
+printf "%s\n" "$ac_cv_search_XOpenDisplay" >&6; }
+ac_res=$ac_cv_search_XOpenDisplay
+if test "$ac_res" != no
+then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  X11_AVAIL=yes
+else case e in #(
+  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: X11 libraries not found, Beatbox will be built without graphical displays." >&5
+printf "%s\n" "$as_me: WARNING: X11 libraries not found, Beatbox will be built without graphical displays." >&2;}
+   X11_AVAIL=no ;;
+esac
+fi
+
+
+GL_AVAIL=no
+if test "x$X11_AVAIL" = "xyes"; then
+
+
+
+
+
+
+
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
+set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_PKG_CONFIG+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+if test -n "$PKG_CONFIG"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
+printf "%s\n" "$PKG_CONFIG" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_path_PKG_CONFIG"; then
+  ac_pt_PKG_CONFIG=$PKG_CONFIG
+  # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_ac_pt_PKG_CONFIG+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) case $ac_pt_PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac ;;
+esac
+fi
+ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
+if test -n "$ac_pt_PKG_CONFIG"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_pt_PKG_CONFIG" >&5
+printf "%s\n" "$ac_pt_PKG_CONFIG" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+  if test "x$ac_pt_PKG_CONFIG" = x; then
+    PKG_CONFIG=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    PKG_CONFIG=$ac_pt_PKG_CONFIG
+  fi
+else
+  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
+fi
+
+fi
+if test -n "$PKG_CONFIG"; then
+	_pkg_min_version=0.9.0
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
+printf %s "checking pkg-config is at least version $_pkg_min_version... " >&6; }
+	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+	else
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+		PKG_CONFIG=""
+	fi
+fi
+if test -z "$PKG_CONFIG"; then
+	as_fn_error $? "pkg-config not found" "$LINENO" 5
+fi
+if test "x$use_mesa" = "xyes"
+then :
+
+pkg_failed=no
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for gl" >&5
+printf %s "checking for gl... " >&6; }
+
+if test -n "$GL_CFLAGS"; then
+    pkg_cv_GL_CFLAGS="$GL_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gl\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "gl") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_GL_CFLAGS=`$PKG_CONFIG --cflags "gl" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$GL_LIBS"; then
+    pkg_cv_GL_LIBS="$GL_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gl\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "gl") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_GL_LIBS=`$PKG_CONFIG --libs "gl" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+                GL_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gl" 2>&1`
+        else
+                GL_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gl" 2>&1`
+        fi
+        # Put the nasty error message in config.log where it belongs
+        echo "$GL_PKG_ERRORS" >&5
+
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: --with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)" >&5
+printf "%s\n" "$as_me: WARNING: --with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)" >&2;}
+elif test $pkg_failed = untried; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: --with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)" >&5
+printf "%s\n" "$as_me: WARNING: --with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)" >&2;}
+else
+        GL_CFLAGS=$pkg_cv_GL_CFLAGS
+        GL_LIBS=$pkg_cv_GL_LIBS
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+        GL_AVAIL=yes
+       CPPFLAGS="$CPPFLAGS $GL_CFLAGS"
+       LIBS="$GL_LIBS $LIBS"
+fi
+else case e in #(
+  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing glXQueryExtension" >&5
+printf %s "checking for library containing glXQueryExtension... " >&6; }
+if test ${ac_cv_search_glXQueryExtension+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char glXQueryExtension (void);
+int
+main (void)
+{
+return glXQueryExtension ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' GL
+do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_search_glXQueryExtension=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext
+  if test ${ac_cv_search_glXQueryExtension+y}
+then :
+  break
+fi
+done
+if test ${ac_cv_search_glXQueryExtension+y}
+then :
+
+else case e in #(
+  e) ac_cv_search_glXQueryExtension=no ;;
+esac
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_glXQueryExtension" >&5
+printf "%s\n" "$ac_cv_search_glXQueryExtension" >&6; }
+ac_res=$ac_cv_search_glXQueryExtension
+if test "$ac_res" != no
+then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  GL_AVAIL=yes
+fi
+ ;;
+esac
+fi
+  # The GL sources include <GL/gl.h> and <GL/glx.h>
+  if test "x$GL_AVAIL" = "xyes"; then
+    ac_fn_c_check_header_compile "$LINENO" "GL/glx.h" "ac_cv_header_GL_glx_h" "$ac_includes_default"
+if test "x$ac_cv_header_GL_glx_h" = xyes
+then :
+
+else case e in #(
+  e) GL_AVAIL=no ;;
+esac
+fi
+
+  fi
+  if test "x$GL_AVAIL" = "xno"; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: OpenGL libraries not found, Beatbox will be built without GL graphical extension." >&5
+printf "%s\n" "$as_me: WARNING: OpenGL libraries not found, Beatbox will be built without GL graphical extension." >&2;}
+  fi
+fi
+
+# Passed to the compiler via src/Makefile.am rather than appended to
+# CFLAGS, so that they survive "make CFLAGS=..." and do not leak into
+# the GSL sub-configure.
+GRAPHICS_CPPFLAGS=""
+if test "x$X11_AVAIL" = "xyes"; then
+  GRAPHICS_CPPFLAGS="$GRAPHICS_CPPFLAGS -D X11"
+else
+  GRAPHICS_CPPFLAGS="$GRAPHICS_CPPFLAGS -D NOX11"
+fi
+if test "x$GL_AVAIL" = "xyes"; then
+  GRAPHICS_CPPFLAGS="$GRAPHICS_CPPFLAGS -D GL"
+else
+  GRAPHICS_CPPFLAGS="$GRAPHICS_CPPFLAGS -D NOGL"
+fi
+
+
+# -------------------------------
+# Output
+# -------------------------------
+ac_config_headers="$ac_config_headers config.h"
+
 ac_config_files="$ac_config_files Makefile src/Makefile"
 
+
+
+subdirs="$subdirs src/gsl-1.16.extract"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -14910,10 +13341,6 @@ LIBOBJS=$ac_libobjs
 LTLIBOBJS=$ac_ltlibobjs
 
 
-if test -z "${MAINTAINER_MODE_TRUE}" && test -z "${MAINTAINER_MODE_FALSE}"; then
-  as_fn_error $? "conditional \"MAINTAINER_MODE\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking that generated files are newer than configure" >&5
 printf %s "checking that generated files are newer than configure... " >&6; }
    if test -n "$am_sleep_pid"; then
@@ -14942,20 +13369,16 @@ else
   am__EXEEXT_FALSE=
 fi
 
+if test -z "${MAINTAINER_MODE_TRUE}" && test -z "${MAINTAINER_MODE_FALSE}"; then
+  as_fn_error $? "conditional \"MAINTAINER_MODE\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${AMDEP_TRUE}" && test -z "${AMDEP_FALSE}"; then
   as_fn_error $? "conditional \"AMDEP\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCC\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
-  as_fn_error $? "conditional \"am__fastdepCC\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${MPI_AVAILABLE_TRUE}" && test -z "${MPI_AVAILABLE_FALSE}"; then
-  as_fn_error $? "conditional \"MPI_AVAILABLE\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${MPI_AVAILABLE_TRUE}" && test -z "${MPI_AVAILABLE_FALSE}"; then
@@ -15838,8 +14261,8 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
-    "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
+    "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
 
@@ -17263,4 +15686,13 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
 printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
+
+# Printed last, so it is not buried under the GSL sub-configure output
+echo ""
+echo "================= Configuration Summary ================="
+echo " C compiler:       $CC"
+echo " MPI (bb2p):       $mpi_ok"
+echo " X11 support:      $X11_AVAIL"
+echo " OpenGL support:   $GL_AVAIL"
+echo "========================================================="
 

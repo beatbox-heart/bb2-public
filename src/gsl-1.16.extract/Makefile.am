@@ -26,6 +26,7 @@ EXTRA_DIST = autogen.sh gsl-config.in gsl.pc.in configure.ac THANKS BUGS gsl.spe
 noinst_LTLIBRARIES = libgsl.la
 libgsl_la_SOURCES = version.c
 libgsl_la_LIBADD = $(SUBLIBS)
+libgsl_la_LDFLAGS =
 # noinst_HEADERS = gsl_math.h templates_on.h templates_off.h build.h
 noinst_HEADERS += gsl_math.h templates_on.h templates_off.h build.h permutation/gsl_permutation.h
 

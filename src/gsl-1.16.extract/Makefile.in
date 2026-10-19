@@ -401,6 +401,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
+# libtoolize: Consider adding '-I m4' to ACLOCAL_AMFLAGS in Makefile.am.
+ACLOCAL_AMFLAGS = -I m4
+
 # SUBDIRS = gsl utils sys test err const complex cheb block vector matrix permutation combination multiset sort ieee-utils cblas blas linalg eigen specfunc dht qrng rng randist fft poly fit multifit statistics siman sum integration interpolation histogram ode-initval ode-initval2 roots multiroots min multimin monte ntuple diff deriv cdf wavelet bspline doc
 SUBDIRS = gsl utils sys err complex block vector matrix cblas blas linalg eigen 
 SUBLIBS = block/libgslblock.la blas/libgslblas.la complex/libgslcomplex.la eigen/libgsleigen.la err/libgslerr.la linalg/libgsllinalg.la matrix/libgslmatrix.la  sys/libgslsys.la vector/libgslvector.la
@@ -419,7 +422,7 @@ EXTRA_DIST = autogen.sh gsl-config.in gsl.pc.in configure.ac THANKS BUGS gsl.spe
 noinst_LTLIBRARIES = libgsl.la
 libgsl_la_SOURCES = version.c
 libgsl_la_LIBADD = $(SUBLIBS) $(am__append_1)
-libgsl_la_LDFLAGS = -version-info $(GSL_LT_VERSION) $(am__append_2)
+libgsl_la_LDFLAGS = $(am__append_2)
 MINGW32_HOST = @MINGW32_HOST@
 
 # m4datadir = $(datadir)/aclocal

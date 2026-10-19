@@ -8,6 +8,11 @@
 GSL = gsl-1.16.extract
 SUBDIRS = $(GSL)
 
+# -D X11/NOX11 -D GL/NOGL, as determined by configure
+# (X11 and GL libraries are added to LIBS by configure)
+common_cppflags = $(GRAPHICS_CPPFLAGS)
+common_ldadd    = $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
+
 bin_PROGRAMS = bb2s bb2d
 
 # -------------------------------
@@ -15,19 +20,17 @@ bin_PROGRAMS = bb2s bb2d
 # -------------------------------
 if MPI_AVAILABLE
 bin_PROGRAMS += bb2p
-bb2p_CPPFLAGS = -D MPI -D NO_TMPFILES ${common_cppflags} -I$(builddir)/$(GSL) $(GL_CFLAGS) $(GLX_CFLAGS)
+bb2p_CPPFLAGS = -D MPI -D NO_TMPFILES ${common_cppflags} -I$(builddir)/$(GSL)
 bb2p_LDFLAGS  = ${common_ldflags}
-bb2p_LDADD    = ${LDFLAGS} $(GL_LIBS) $(GLX_LIBS) $(X11_LIBS) \
-                 $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
+bb2p_LDADD    = ${common_ldadd}
 endif
 
 # -------------------------------
 # bb2s
 # -------------------------------
-bb2s_CPPFLAGS = ${common_cppflags} -I$(builddir)/$(GSL) $(GL_CFLAGS) $(GLX_CFLAGS)
+bb2s_CPPFLAGS = ${common_cppflags} -I$(builddir)/$(GSL)
 bb2s_LDFLAGS  = ${common_ldflags}
-bb2s_LDADD    = ${LDFLAGS} $(GL_LIBS) $(GLX_LIBS) $(X11_LIBS) \
-                 $(GSL)/.libs/libgsl.a $(GSL)/cblas/.libs/libgslcblas.a
+bb2s_LDADD    = ${common_ldadd}
 
 # -------------------------------
 # bb2d
@@ -95,7 +98,7 @@ common_sources = \
 	hh.c hh.h \
 	init.c init.h \
 	ionic.h ioniclist.h \
-	kernik19.c kernik19_const.h kernik19_fddt.h kernik19_ftab.h kernik19_fun.h kernik19_ngate.h kernik19_other.h kernik19_par.h kernik19_tgate.h \
+	kernik19.c kernik19_const.h kernik19_fddt.h kernik19_ftab.h kernik19_fun.h kernik19_ngate.h kernik19_other.h kernik19_par.h kernik19_tgate.h kernik19_tie.h \
 	k_.c k_.h \
 	k_calc.h \
 	k_code.h \
@@ -146,7 +149,7 @@ common_sources = \
 	poincare.c \
 	ppcpash18.c ppcpash18_fun.h  ppcpash18_ngate.h ppcpash18_other.h ppcpash18_par.h ppcpash18_tgate.h ppcpash18_const.h ppcpash18_ftab.h ppcpash18_fddt.h \
 	paci18.c paci18_fun.h  paci18_ngate.h paci18_other.h paci18_par.h paci18_tgate.h paci18_const.h paci18_ftab.h paci18_fddt.h \
-	paci20.c paci20_fun.h  paci20_ngate.h paci20_other.h paci20_par.h paci20_tgate.h paci20_const.h paci20_ftab.h paci20_fddt.h \
+	paci20.c paci20_fun.h  paci20_ngate.h paci20_other.h paci20_par.h paci20_tgate.h paci20_const.h paci20_ftab.h paci20_fddt.h paci20_tie.h \
 	pgmout.c \
 	ppmout.c \
 	pw_mult.c \

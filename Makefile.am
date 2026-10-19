@@ -12,21 +12,9 @@ AUTOMAKE_OPTIONS = foreign
 
 # Directories that must be recoursed (expect to find a Makefile.am
 # in each directory named in SUBDIRS).
-SUBDIRS = \
-	src \
-	src/gsl-1.16.extract \
-	src/gsl-1.16.extract/blas \
-	src/gsl-1.16.extract/block \
-	src/gsl-1.16.extract/cblas \
-	src/gsl-1.16.extract/complex \
-	src/gsl-1.16.extract/eigen \
-	src/gsl-1.16.extract/err \
-	src/gsl-1.16.extract/gsl \
-	src/gsl-1.16.extract/linalg \
-	src/gsl-1.16.extract/matrix \
-	src/gsl-1.16.extract/sys \
-	src/gsl-1.16.extract/utils \
-	src/gsl-1.16.extract/vector
+# GSL is reached via src/Makefile.am, and its own Makefile.am
+# recurses into its subdirectories, so it must not be listed here.
+SUBDIRS = src
 
 # Define some directories for use below.
 datadir   = data
@@ -61,7 +49,6 @@ docs          = \
 		doc/Ohara_Rudy_2011.c \
 		doc/Ohara_Rudy_2011.cellml \
 		doc/Ohara_Rudy_2011.h \
-		doc/beatbox.html \
 		doc/ord.c \
 		doc/ord0.bbs \
 		doc/ord_init.h \
@@ -116,9 +103,8 @@ dist_examples= $(datadir)/README \
                $(dist_params) \
                $(dist_tests)
 
-# Geometry files
-dist_geom    = \
-               README
+# Geometry files (none distributed at present; would be in $(geomdir))
+dist_geom    =
 
 # Parameter files
 dist_params  = \
@@ -131,7 +117,6 @@ dist_scripts_BeatboxWorkshop = \
                $(workshopdir)/CRN_model/pd_crn2.bbs \
                $(workshopdir)/CRN_model/pd_crn0.bbs \
                $(workshopdir)/CRN_model/pd_crn1.bbs \
-               $(workshopdir)/CRN_model/pd_crn1.rec \
                $(workshopdir)/FitzHughNagumo_model/fhn3.bbs \
                $(workshopdir)/FitzHughNagumo_model/fhn3_PositiveTension.bbs \
                $(workshopdir)/FitzHughNagumo_model/fhn3_NegativeTension.bbs \
@@ -153,7 +138,6 @@ dist_scripts_BeatboxWorkshop = \
                $(workshopdir)/FitzHughNagumo_model/fhn1.bbs \
                $(workshopdir)/FitzHughNagumo_model/ffr_slice.bbg \
                $(workshopdir)/parallel_Hector/ffr.bbg\
-               $(workshopdir)/parallel_Hector/fhn1_NegativeTension.rec \
                $(workshopdir)/parallel_Hector/fhn1_PositiveTension.rec \
                $(workshopdir)/parallel_Hector/fhn3_NegativeTension.bbs \
                $(workshopdir)/parallel_Hector/fhn_ffr_xz.bbs \
@@ -169,14 +153,12 @@ dist_scripts_hector = \
                $(hectordir)/box3D/bigbox_fhn.sh  \
                $(hectordir)/box3D/bigbox_lrd.bbs \
                $(hectordir)/box3D/bigbox_lrd.sh  \
-               $(hectordir)/phasedbn_parallel/pd_crn0.rec \
                $(hectordir)/phasedbn_parallel/pd_crn1.rec \
                $(hectordir)/phasedbn_parallel/pd_crn2.bbs \
                $(hectordir)/phasedbn_parallel/submit_pdcrn2.sh
 
 # Parallel  example scripts
 dist_scripts_parallel    = \
-                $(paralldir)/Barkley/Makefile \
                 $(paralldir)/Barkley/bkl1.rec \
                 $(paralldir)/Barkley/rabbit3.bbg \
                 $(paralldir)/Barkley/rabbit-mpi.bbs \
@@ -192,8 +174,7 @@ dist_scripts_parallel    = \
                 $(paralldir)/FitzHughNagumo_model/fhn_ffr_xz.pbs \
                 $(paralldir)/FitzHughNagumo_model/fhn_ffr_xz_scaling.bbs \
                 $(paralldir)/FitzHughNagumo_model/fhncub.par \
-                $(paralldir)/FitzHughNagumo_model/sample.bbs \
-                $(paralldir)/FitzHughNagumo_model/sample.rec
+                $(paralldir)/FitzHughNagumo_model/sample.bbs
 
 # Sequential example scripts
 dist_scripts_seq    = \
@@ -202,7 +183,6 @@ dist_scripts_seq    = \
                 $(seqdir)/Barkley_model/ezscroll.bbs \
                 $(seqdir)/Barkley_model/ezspiral.bbs \
                 $(seqdir)/Barkley_model/implicit.bbs \
-                $(seqdir)/Barkley_model/bkl1.rec \
                 $(seqdir)/Barkley_model/rabbit.bbs \
                 $(seqdir)/Barkley_model/rabbit3.bbg \
 		$(seqdir)/BeelerReuter_model/otg.bbs \
@@ -222,7 +202,6 @@ dist_scripts_seq    = \
                 $(seqdir)/CRN_model/restitutioncrn.sh \
                 $(seqdir)/CRN_model/runcrn0.sh \
                 $(seqdir)/CRN_model/runcrn1.sh \
-                $(seqdir)/CRN_model/compare1D.bbs \
                 $(seqdir)/FentonKarma_model/Makefile \
                 $(seqdir)/FentonKarma_model/fk0_ap.bbs \
                 $(seqdir)/FentonKarma_model/fk0_atrial.bbs \

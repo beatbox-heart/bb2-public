@@ -1,212 +1,117 @@
 AC_INIT([BeatBox],[2.2],[V.N.Biktashev@exeter.ac.uk])
-AM_MAINTAINER_MODE([disable])
 AC_CONFIG_AUX_DIR([.])
-AM_INIT_AUTOMAKE([-Wall gnu])
 AC_CONFIG_MACRO_DIRS([m4])
-AC_PROG_AWK
+AM_INIT_AUTOMAKE([-Wall gnu])
 
-# Initialize pkg-config (needed for PKG_CHECK_MODULES macros)
+# Generated files (configure, Makefile.in) are distributed, and their
+# timestamps are not preserved by git, so by default do not try to
+# re-run autotools from make.  Developers who edit configure.ac or
+# Makefile.am should either run "autoreconf -fi" by hand, or configure
+# with --enable-maintainer-mode to have make do it automatically.
+AM_MAINTAINER_MODE([disable])
+
+# Fail at autoconf time, rather than at configure time,
+# if pkg.m4 has not been found.
 m4_pattern_forbid([^PKG_CHECK_MODULES$])
-m4_include([m4/pkg.m4])
 
 # -------------------------------
-# Host-specific tweaks
+# Compiler
 # -------------------------------
-myhost=`uname -n`
-case $myhost in
-   hector*) 
-     LIBS=" -lm -lX11 -lxcb -lxcb-xlib -ldl -lXau";;
-   *) ;;
-esac
+# Prefer the MPI wrapper; a user-supplied CC=... takes precedence.
+# This must come before anything modifies CFLAGS, otherwise the
+# default "-g -O2" is lost.
+AC_PROG_CC([mpicc gcc cc])
+AM_PROG_CC_C_O
+LT_INIT
 
-myos=`uname`
-case $myos in
+# -------------------------------
+# Platform-specific paths
+# -------------------------------
+case `uname` in
    Darwin*)
-     LIBS="-L/opt/X11/lib"
-     CFLAGS="$CFLAGS -I/opt/X11/include"
+     # XQuartz
+     CPPFLAGS="$CPPFLAGS -I/opt/X11/include"
+     LDFLAGS="$LDFLAGS -L/opt/X11/lib"
    ;;
    *) ;;
 esac
 
-# -------------------------------
-# Option: allow forcing Mesa/Zink
-# -------------------------------
-AC_ARG_WITH([mesa],
-  AS_HELP_STRING([--with-mesa], [Use Mesa pkg-config instead of system OpenGL]),
-  [use_mesa=$withval], [use_mesa=no])
-
-# -------------------------------
-# Checks for graphics libraries
-# -------------------------------
-AC_SEARCH_LIBS(XOpenDisplay,
-  [X11],
-  [AC_SUBST(X11_AVAIL,yes)],
-  [AC_MSG_WARN([X11 libraries not found, Beatbox will be built without graphical displays.])
-    AC_SUBST(X11_AVAIL,no)],
-  [])
-
-# -------------------------------
-# OpenGL detection (cross-platform)
-# -------------------------------
-GL_CFLAGS=""
-GL_LIBS=""
-
-if test "x$X11_AVAIL" = "xno"; then
-  AC_SUBST(GL_AVAIL,no)
-else
-  case "$myos" in
-    Darwin*)
-      if test "x$use_mesa" = "xyes"; then
-        PKG_CHECK_MODULES([GL], [gl], [], 
-          [AC_MSG_WARN([Mesa not found, install with `brew install mesa`])])
-        GL_CFLAGS="$GL_CFLAGS $GL_CFLAGS"
-        GL_LIBS="$GL_LIBS $GL_LIBS"
-        AC_SUBST(GL_AVAIL,yes)
-      else
-        AC_CHECK_HEADER([OpenGL/gl.h], [],
-          [AC_MSG_WARN([MacOS OpenGL headers not found (install Xcode Command Line Tools)])])
-        GL_LIBS="-L/opt/X11/lib -lGL -lGLU -lX11"
-        AC_SUBST(GL_AVAIL,yes)
-
-        AS_WARN([
-**********************************************************************
-* You are building on macOS using Apple's OpenGL framework.          *
-* This implementation is deprecated and limited to OpenGL 4.1 Core.  *
-* For newer OpenGL (4.6+), consider --with-mesa and Homebrew Mesa.   *
-**********************************************************************
-])
-      fi
-      ;;
-    *)
-      AC_SEARCH_LIBS(glXQueryExtension,
-        [GL],
-        [AC_SUBST(GL_AVAIL,yes) GL_LIBS="-lGL -lGLU"],
-        [AC_MSG_WARN([OpenGL libraries not found, Beatbox will be built without GL graphical extension.])
-          AC_SUBST(GL_AVAIL,no)],
-      [])
-      ;;
-  esac
-fi
-
-AC_SUBST(GL_CFLAGS)
-AC_SUBST(GL_LIBS)
-
-# -------------------------------
-# GLX detection
-# -------------------------------
-GLX_CFLAGS=""
-GLX_LIBS=""
-
-if test "x$X11_AVAIL" = "xno" || test "x$GL_AVAIL" = "xno"; then
-  AC_MSG_WARN([Skipping GLX check because X11 or GL not available])
-  AC_SUBST(GLX_AVAIL,no)
-else
-  AC_CHECK_HEADER([GL/glx.h],
-    [AC_SEARCH_LIBS([glXQueryExtension],
-       [GL GLX],
-       [AC_SUBST(GLX_AVAIL,yes)
-        GLX_LIBS="-lGL"
-        AC_DEFINE([HAVE_GLX], [1], [Define if GLX is available])],
-       [AC_MSG_WARN([GLX libraries not found, building without GLX support])
-        AC_SUBST(GLX_AVAIL,no)])],
-    [AC_MSG_WARN([GLX header (GL/glx.h) not found, building without GLX support])
-     AC_SUBST(GLX_AVAIL,no)])
-fi
-
-AC_SUBST(GLX_CFLAGS)
-AC_SUBST(GLX_LIBS)
-
-# -------------------------------
-# CFLAGS adjustments
-# -------------------------------
-if test "x$X11_AVAIL" = "xno"; then
-  CFLAGS="$CFLAGS -D NOX11"
-else
-  CFLAGS="$CFLAGS -D X11"
-fi
-
-if test "$GL_AVAIL" = "no"; then
-  CFLAGS="$CFLAGS -D NOGL"
-else
-  CFLAGS="$CFLAGS -D GL"
-  LIBS="$LIBS $GL_LIBS"
-fi
-
-if test "$GLX_AVAIL" = "no"; then
-  CFLAGS="$CFLAGS -D NOGLX"
-else
-  CFLAGS="$CFLAGS -D GLX"
-fi
-
-# -------------------------------
-# Other checks
-# -------------------------------
 AC_SEARCH_LIBS(pow, [m], [], [])
 
 # -------------------------------
-# Compiler detection
+# MPI: build bb2p only if the compiler can actually link an MPI program
 # -------------------------------
-AC_PROG_CC
-AM_PROG_CC_C_O
+AC_MSG_CHECKING([whether $CC can build MPI programs])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <mpi.h>]], [[MPI_Init(0, 0);]])],
+  [mpi_ok=yes], [mpi_ok=no])
+AC_MSG_RESULT([$mpi_ok])
+if test "x$mpi_ok" = "xno"; then
+  AC_MSG_WARN([MPI not available, the parallel version bb2p will not be built. To build it, install MPI and make sure mpicc is in PATH, or set CC to an MPI compiler wrapper.])
+fi
+AM_CONDITIONAL([MPI_AVAILABLE], [test "x$mpi_ok" = "xyes"])
 
 # -------------------------------
-# MPI detection (override CC if mpicc found)
+# Graphics
 # -------------------------------
-AC_PATH_PROG([MPICC], [mpicc], [no])
+AC_ARG_WITH([mesa],
+  AS_HELP_STRING([--with-mesa], [find OpenGL via pkg-config (e.g. Homebrew Mesa) instead of searching for libGL]),
+  [use_mesa=$withval], [use_mesa=no])
 
-if test "x$MPICC" != "xno"; then
-   AC_MSG_RESULT([MPI compiler found: $MPICC])
-   CC="$MPICC"
-   AC_DEFINE([HAVE_MPI], [1], [Define if MPI is available])
-   AM_CONDITIONAL([MPI_AVAILABLE], [true])
-else
-   AC_MSG_WARN([MPI compiler not found, building without MPI support])
-   AM_CONDITIONAL([MPI_AVAILABLE], [false])
+AC_SEARCH_LIBS(XOpenDisplay, [X11],
+  [X11_AVAIL=yes],
+  [AC_MSG_WARN([X11 libraries not found, Beatbox will be built without graphical displays.])
+   X11_AVAIL=no])
+
+GL_AVAIL=no
+if test "x$X11_AVAIL" = "xyes"; then
+  AS_IF([test "x$use_mesa" = "xyes"],
+    [PKG_CHECK_MODULES([GL], [gl],
+      [GL_AVAIL=yes
+       CPPFLAGS="$CPPFLAGS $GL_CFLAGS"
+       LIBS="$GL_LIBS $LIBS"],
+      [AC_MSG_WARN([--with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)])])],
+    [AC_SEARCH_LIBS(glXQueryExtension, [GL], [GL_AVAIL=yes])])
+  # The GL sources include <GL/gl.h> and <GL/glx.h>
+  if test "x$GL_AVAIL" = "xyes"; then
+    AC_CHECK_HEADER([GL/glx.h], [], [GL_AVAIL=no])
+  fi
+  if test "x$GL_AVAIL" = "xno"; then
+    AC_MSG_WARN([OpenGL libraries not found, Beatbox will be built without GL graphical extension.])
+  fi
 fi
 
-# Ensure overrides propagate to subdirs
-AC_SUBST([CC])
-AC_SUBST([CFLAGS])
-AC_SUBST([LDFLAGS])
-export CC CFLAGS LDFLAGS
-
-# -------------------------------
-# Sub-configures
-# -------------------------------
-AC_CONFIG_SUBDIRS([src/gsl-1.16.extract])
-
-# -------------------------------
-# Summary
-# -------------------------------
-echo ""
-echo "================= Configuration Summary ================="
-echo " C compiler:       $CC"
-if test "x$MPICC" != "xno"; then
-  echo " MPI support:      enabled ($MPICC)"
+# Passed to the compiler via src/Makefile.am rather than appended to
+# CFLAGS, so that they survive "make CFLAGS=..." and do not leak into
+# the GSL sub-configure.
+GRAPHICS_CPPFLAGS=""
+if test "x$X11_AVAIL" = "xyes"; then
+  GRAPHICS_CPPFLAGS="$GRAPHICS_CPPFLAGS -D X11"
 else
-  echo " MPI support:      disabled"
+  GRAPHICS_CPPFLAGS="$GRAPHICS_CPPFLAGS -D NOX11"
 fi
-echo " X11 support:      $X11_AVAIL"
-echo " OpenGL support:   $GL_AVAIL"
-echo " GLX support:      $GLX_AVAIL"
-echo "========================================================="
+if test "x$GL_AVAIL" = "xyes"; then
+  GRAPHICS_CPPFLAGS="$GRAPHICS_CPPFLAGS -D GL"
+else
+  GRAPHICS_CPPFLAGS="$GRAPHICS_CPPFLAGS -D NOGL"
+fi
+AC_SUBST([GRAPHICS_CPPFLAGS])
 
 # -------------------------------
-# Headers and libtool
+# Output
 # -------------------------------
 AC_CONFIG_HEADERS([config.h])
-
-# -------------------------------
-# Libtool setup (modern) - from chatgpt 2026/02/12
-# -------------------------------
-LT_INIT
-
-# -------------------------------
-# Files
-# -------------------------------
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 ])
-
+AC_CONFIG_SUBDIRS([src/gsl-1.16.extract])
 AC_OUTPUT
+
+# Printed last, so it is not buried under the GSL sub-configure output
+echo ""
+echo "================= Configuration Summary ================="
+echo " C compiler:       $CC"
+echo " MPI (bb2p):       $mpi_ok"
+echo " X11 support:      $X11_AVAIL"
+echo " OpenGL support:   $GL_AVAIL"
+echo "========================================================="
