@@ -8,7 +8,7 @@
  *
  * Before running this simulation, make sure you have ppm/ sub-directory.
  * To run this simulation in serial, use the command:
- * Beatbox_SEQ LRD_ffr_slice.bbs -verbose
+ * bb2s LRD_ffr_slice.bbs -verbose
  * To run this in parallel using np number of processors, use the command:
  * mpirun -n np Beatbox LRD_ffr_slice.bbs -verbose -profile
  */ 

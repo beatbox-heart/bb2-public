@@ -3,7 +3,7 @@
  * own as most of the devices are shown here. 
  * 
  * To run the bbs script sequentially at the command line (in a terminal), use: 
- *  Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ *  bb2s name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
  * 
  * This program simulates CRN 0D (cell) restitution.
  *        

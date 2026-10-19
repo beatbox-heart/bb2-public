@@ -20,9 +20,9 @@
  * Before running this script, make sure that a correct pd_crn0.rec has been created by running pd_crn0.bbs.
  *
  * To run this bbs script with graphics, use the following command:
- * Beatbox_SEQ pd_crn1.bbs
+ * bb2s pd_crn1.bbs
  *  and to run without graphics, use the following command:
- * Beatbox_SEQ pd_crn1.bbs -nograph
+ * bb2s pd_crn1.bbs -nograph
  */
 
 // CRN Model parameters

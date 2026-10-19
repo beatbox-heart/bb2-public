@@ -12,11 +12,11 @@
  *
  * To run this bbs script with graphics, use the following command:
  *
- * Beatbox_SEQ singz.bbs
+ * bb2s singz.bbs
  *
  * and to run without graphics, use the following command:
  *
- * Beatbox_SEQ singz.bbs -nograph
+ * bb2s singz.bbs -nograph
  *
  */
 

@@ -4,7 +4,7 @@ Beatbox program to demonstrate the Luo-Rudy 1994 AP.
 The inputs are lrd.par already included in the code
 of this script, and the output is lrd0_ap.vtg.
 To run,
-Beatbox_SEQ lrd0_ap.bbs
+bb2s lrd0_ap.bbs
 */
 
 <lrd.par>

@@ -3,7 +3,7 @@
 Beatbox program to demonstrate the ten Tusscher et al. 2004 human ventricle AP.
 There are no inputs,and the output is ttnnp04_ap.vtg.
 To run,
-Beatbox_SEQ ttnnp04_ap.bbs
+bb2s ttnnp04_ap.bbs
 */
 
 def int neqn 17;

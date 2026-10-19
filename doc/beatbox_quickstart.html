@@ -111,7 +111,7 @@ following tutorials.<p>
 
 <p>
 Beatbox is a Unix-based piece of software. Thus, it will also work on
-Mac (tested on Leopard and Snow Leopard OS X) and standard Linux:
+macOS (where graphics require XQuartz) and standard Linux:
 tested on Fedora and Red Hat Linux, though any other Linux
 distribution should work. The preferred working shell for Beatbox is
 the <code>bash</code> shell. This choice of shell will assist in
@@ -121,15 +121,19 @@ or <code>bash</code>.
 </p>
 
 <p>
-Beatbox requires <code>gcc</code> (sequential) and <code>mpicc</code>
-(MPI parallel) C compilers. Beatbox also requires standard math and
-X11 libraries.
+Beatbox requires a C compiler (such as <code>gcc</code>
+or <code>clang</code>), <code>make</code> and the standard math
+library. The parallel version additionally requires an MPI
+implementation providing the <code>mpicc</code> compiler wrapper; if
+it is not found, only the sequential version is built. Graphical
+output requires the X11 and OpenGL libraries (on macOS, provided by
+XQuartz); if they are not found, Beatbox is built without graphics.
 </p>
 
 <p>
-To obtain the Beatbox source code off the project repository, you need
-a client program for Subversion (SVN).  You can also obtain a copy of
-the distribution source code from the authors.
+To obtain the most recent version of the source code from the project
+repository, you need a <code>git</code> client.  You can also obtain a
+copy of the distribution source code from the authors.
 </p>
 
 <h1 class="numbered">Obtaining Beatbox Source Code and Examples</h1>
@@ -147,55 +151,50 @@ the repository, which at the moment of writing this is at
 <a href="http://empslocal.ex.ac.uk/people/staff/vnb262/software/BeatBox/">
 <code>http://empslocal.ex.ac.uk/people/staff/vnb262/software/BeatBox/</code>
 </a>, and unpack it. Chose the place at your convenience. It could be
-your home directory or any other directory in your space. 
+your home directory or any other directory in your space.
 Say, if you downloaded the file
-<code>beatbox-1.1-417.tar.gz</code> into your
+<code>beatbox-2.2.tar.gz</code> into your
 <code>$HOME</code> directory, then you can do
 
 <pre>
 cd $HOME
-gunzip -c beatbox-1.1-417.tar.gz | tar xvf -
-cd beatbox-1.1-417
+tar xzf beatbox-2.2.tar.gz
+mv beatbox-2.2 beatbox
+cd beatbox
 </pre>
 
 and you will be in what we shall call the "beatbox package directory".
+The examples below assume that this directory
+is <code>$HOME/beatbox</code>; if you chose another place, adjust the
+paths accordingly.
 </p>
 
 <h2 class="numbered"> Development versions </h2>
 
 <p>
 Developers and more experienced users may prefer to get the most recent
-versions of the package under development. For that, 
-a Subversion (SVN) client should be working on your
-computer. Methods of obtaining SVN are detailed on their web page:
-</p>
-<ul>
-<li><a href="http://www.sliksvn.com/en/download/">
-http://www.sliksvn.com/en/download/</a></li>
-</ul>
-<p>
-Your flavour of Linux may also support updating the SVN package using
-<code>yum</code>, <code>apt-get</code>, or similar.
+version of the package under development, from its public GitHub
+repository. For that, a <code>git</code> client should be working on
+your computer; most Linux distributions provide it as a package
+(installed with <code>apt</code>, <code>dnf</code> or similar), and on
+macOS it comes with the Xcode Command Line Tools.
 </p>
 
 <p>
-Assuming you have
-SVN client on,  you can create the <code>beatbox</code> directory and
-download the package into it using the following commands: 
+You can then download the package into the <code>beatbox</code>
+directory using the following commands:
 <pre>
 cd $HOME
-mkdir beatbox
-cd beatbox
-svn co --username=anonymous --password=beatbox https://beatbox-trac.epcc.ed.ac.uk/svn/trunk .
+git clone https://github.com/beatbox-heart/bb2-public.git beatbox
 cd beatbox
 </pre>
-and you will be in the BeatBox package directory. 
+and you will be in the BeatBox package directory.
+To update it later to the most recent version, run <code>git pull</code>
+in that directory.
 </p>
 
 <p>
-Note the '.' at the end of the <code>svn</code> command. If you are already familiar
-with SVN you may note that this will given you a read-only copy of the
-directory; if you would like to contribute to the package, you are
+If you would like to contribute to the package, you are
 welcome to <a href="#Support_and_feedback">
 contact the authors (see below).</a>
 </p>
@@ -204,58 +203,45 @@ contact the authors (see below).</a>
 
 <p>
 
-<strong>For the impatient:</strong> the basic commands for compiling on local machines
-(including standard MPI clusters) as well as on HECToR (the UK
-National Supercomputing facility) have been collected into two bash
-shell scripts.  To check if your download contains these install
-scripts, and that their permissions are execute permissions, use the
-following command in the BeatBox package directory:
-
+<strong>For the impatient:</strong> in the BeatBox package directory,
+run the following commands:
 </p>
+
 <pre>
-ls -l bbx_compile*sh
+./configure --prefix=$HOME
+make
+make install
 </pre>
+
 <p>
-which should produce something like the following:
+This will compile Beatbox and install the executables
+into <code>$HOME/bin</code>, creating that directory if necessary.
+At the end of its work, <code>configure</code> prints a summary of what
+it has found: the C compiler, and whether MPI, X11 and OpenGL are
+available. If an MPI compiler wrapper (<code>mpicc</code>) is found, it
+is used as the compiler, and the parallel version is built as well.
+You do not need GNU autotools for these steps.
 </p>
-<pre>
--rwxrwxr-x. 1 user group 195 Aug  3 17:01 bbx_compile_hector.sh
--rwxrwxr-x. 1 user group  77 Aug 10 17:15 bbx_compile_local.sh
-</pre>
 
-Simply running these shell scripts from the BeatBox package directory
-will compile and install Beatbox, correspondingly on Hector:
-
-<pre>
-./bbx_compile_hector.sh
-</pre>
-
-or on a typical ("local") computer:
-
-<pre>
-./bbx_compile_local.sh
-</pre>
-
-Note that these
-scripts will install the executables into <code>$HOME/bin</code>;
-naturally, for this to work, that directory have to exist.  </p>
+<p>
+The same commands, with comments, are collected in the bash shell
+script <code>myrebuild.sh</code> in the package directory, which makes
+an optimised version, and <code>mydebug.sh</code>, which makes a
+version suitable for debugging.
+</p>
 
 <p>
 <strong> Details and variations:</strong>
 </p>
 
 <ul>
-  <li> Look at the commands in the two bash scripts. The Hector script
-  is different in loading the appropriate module, specifying
-  explicitly location of the libraries and chosing a different default
-  C compiler. Otherwise the two shells do the same taks: configure,
-  compile and install. They do not have to be all run every time. Say
-  if you only modify one of the source code files, you probably do not
-  need to run the configure, just compile and install.
+  <li> The steps do not have to be all repeated every time. Say
+  if you only modify one of the source code files, you do not
+  need to run <code>configure</code> again, just <code>make</code>
+  and <code>make install</code>.
   </li>
   <li> If you would rather the executables were
-installed elsewhere, you will need to edit the path location in the
-install scripts using the <code>--prefix</code> flag which points the
+installed elsewhere, use the <code>--prefix</code> flag, which points the
 installation to the directory you specify. Say if you do
   <pre>
   ./configure --prefix=$HOME/somewhere
@@ -266,17 +252,32 @@ installation to the directory you specify. Say if you do
   <li> If you modify the code and wish the executables to be suitable
   for debugging, modify the configure command in the following way:
   <pre>
-  ./configure CFLAGS="-g -O0" --prefix=$HOME/somewhere 
+  ./configure CFLAGS="-g -O0" --prefix=$HOME/somewhere
   </pre>
+  </li>
+  <li> To use a particular compiler, give it to <code>configure</code>
+  explicitly, e.g. <code>./configure CC=gcc</code>; with a compiler
+  that is not an MPI wrapper, only the sequential version is built.
+  </li>
+  <li> If you modify <code>configure.ac</code> or any of
+  the <code>Makefile.am</code> files, you need GNU autotools
+  (autoconf, automake, libtool), and should run
+  <pre>
+  autoreconf -fi
+  </pre>
+  before the <code>configure</code> step.
+  </li>
+</ul>
 
 
 <h1 class="numbered">Checking the Beatbox Installation</h1>
 
 <p>
 The compile and installation procedure outlined in the previous section will
-produce two executables <code>Beatbox_SEQ</code>
-and <code>Beatbox</code> in the directory <code>$HOME/bin</code>
-  (or another directory if you opted for that). 
+produce the executables <code>bb2s</code>, <code>bb2d</code>
+and, if MPI is available, <code>bb2p</code>, in the
+directory <code>$HOME/bin</code>
+  (or another directory if you opted for that).
 This can be checked using the command:
 </p>
 
@@ -289,14 +290,18 @@ which should give something similar to the following:
 </p>
 
 <pre>
-total 1836
--rwxr-xr-x. 1 usrname yourgroup  835665 Aug 10 17:23 Beatbox
--rwxr-xr-x. 1 usrname yourgroup 1036636 Aug 10 17:23 Beatbox_SEQ
+-rwxr-xr-x  1 usrname yourgroup   52264 Oct 19 22:01 bb2d
+-rwxr-xr-x  1 usrname yourgroup 1278008 Oct 19 22:01 bb2p
+-rwxr-xr-x  1 usrname yourgroup 1445912 Oct 19 22:01 bb2s
 </pre>
 
 <p>
-<code>Beatbox_SEQ</code> is the sequential executable,
-and <code>Beatbox</code> is the parallel executable. To make the
+<code>bb2s</code> is the sequential executable,
+and <code>bb2p</code> is the parallel executable.
+<code>bb2d</code> is an auxiliary utility which, for a given geometry,
+counts the non-empty subdomains of possible decompositions; it can help
+to choose a domain decomposition for a parallel run.
+To make the
 binaries accessible from anywhere on your machine, the
 <code>$HOME/bin</code> directory should be added to your path.
   Alternatively, you may copy the executables to a directory already
@@ -308,8 +313,8 @@ binaries accessible from anywhere on your machine, the
 <p>
 Sequential and parallel test scripts are provided to test Beatbox. The
 sequential test scripts are basically for execution on a single
-processor on your local computer. The provided examples of parallel
-test scripts are for execution on HECToR.
+processor on your local computer. The parallel examples can be run
+on any computer or cluster with MPI.
 </p>
 
 <p>
@@ -319,8 +324,8 @@ the <code>bbs</code> script represents what should be computed during
 one time step. Other parts of the <code>bbs</code> script dictate the
 duration of simulated activity, stimulation protocols, output, and run
 time measurements.  Thus, a <code>bbs</code> script serves as an input
-for the Beatbox executables <code>Beatbox_SEQ</code>
-and <code>Beatbox</code>, see examples below.
+for the Beatbox executables <code>bb2s</code>
+and <code>bb2p</code>, see examples below.
 </p>
 
 <p>
@@ -395,25 +400,25 @@ cd $HOME/beatbox/data/scripts/sequential/FitzHughNagumo_model
 The Fitz-Hugh Nagumo cell model Action Potential (AP) is simulated
 using the bbs program <code>fhn0.bbs</code>.
 If the <code>$HOME/bin</code> directory containing
-the <code>Beatbox_SEQ</code> executable is in your path,
+the <code>bb2s</code> executable is in your path,
 a <code>bbs</code> script can be run directly from the command line
 using the command:
 </p>
 
 <pre>
-Beatbox_SEQ fhn0.bbs
+bb2s fhn0.bbs
 </pre>
 
 or you will need to specify the full path to
-the <code>Beatbox_SEQ</code> executable otherwise:
+the <code>bb2s</code> executable otherwise:
 
 <pre>
-$HOME/bin/Beatbox_SEQ fhn0.bbs
+$HOME/bin/bb2s fhn0.bbs
 </pre>
 
 <p>
 In this example, the sequential Beatbox
-binary, <code>Beatbox_SEQ</code> is called with the input of
+binary, <code>bb2s</code> is called with the input of
 the <code>bbs</code> script <code>fhn0.bbs</code>. Here we give just a
 brief outline of the 0D FHN simulation script, please see the detailed
 comments in the file <code>fhn0.bbs</code>.
@@ -469,11 +474,11 @@ simulation via the phase distribution method.
 
 <p>
 Then, the FHN 1D script <code>fhn1.bbs</code> can be run as an
-input file for the sequential binary <code>Beatbox_SEQ</code> from the
+input file for the sequential binary <code>bb2s</code> from the
 command line
 </p>
 <pre>
-$HOME/bin/Beatbox_SEQ fhn1.bbs
+$HOME/bin/bb2s fhn1.bbs
 </pre>
 <p>
 The log of the program run will be automatically saved into the file
@@ -532,11 +537,11 @@ command:
 </p>
 
 <pre>
-$HOME/bin/Beatbox_SEQ fhn2.bbs
+$HOME/bin/bb2s fhn2.bbs
 </pre>
 <p>
 In this example, the sequential Beatbox
-binary, <code>Beatbox_SEQ</code> is called with the bbs
+binary, <code>bb2s</code> is called with the bbs
 script <code>fhn2.bbs</code>.
 </p>
 
@@ -611,7 +616,7 @@ command:
 </p>
 
 <pre>
-$HOME/bin/Beatbox_SEQ fhn3.bbs
+$HOME/bin/bb2s fhn3.bbs
 </pre>
 <p>
 This should work even on small computers. Though note that you will
@@ -624,7 +629,7 @@ otherwise it will not run.
 
 <p>
 In this example, the sequential Beatbox
-binary, <code>Beatbox_SEQ</code> is called with input of the bbs
+binary, <code>bb2s</code> is called with input of the bbs
 script <code>fhn3.bbs</code>. The <code>fhn3.bbs</code> script
 consists of a series of variable and parameter declarations, and the
 use of <code>state</code> device to prepare Beatbox for the
@@ -715,14 +720,14 @@ file consisting of various commands used to run our program. The above
 bash script contains the command:
 </p>
 <pre>
-$HOME/bin/Beatbox_SEQ crn0.bbs
+$HOME/bin/bb2s crn0.bbs
 </pre>
 <p>
 This is the most basic of commands that will be used for running a
 Beatbox simulation.  However, as of now, lets discuss the function and
 output of <code>crn0.bbs</code>. The bbs script stimulates the cell
 model using 10 current pulses.  It consists of calling the
-binary <code>$HOME/bin/Beatbox_SEQ</code> and passing to it the bbs
+binary <code>$HOME/bin/bb2s</code> and passing to it the bbs
 simulation script, in this case
 <code>crn0.bbs</code>. This bbs script declares the <code>state</code>
 of the simulation, which consists of 1 cell. The periodic
@@ -795,7 +800,7 @@ as indicated in the <code>restitutioncrn.sh</code> shell script:
 </p>
 
 <pre>
-$HOME/bin/Beatbox_SEQ crn0_rest.bbs $Nstim $Period $fileName $fileName2 $repolarisation $gk1 $gcal
+$HOME/bin/bb2s crn0_rest.bbs $Nstim $Period $fileName $fileName2 $repolarisation $gk1 $gcal
 </pre>
 
 <p>
@@ -901,11 +906,11 @@ shell script, the simulation actually runs with the command
 </p>
 
 <pre>
-$HOME/bin/Beatbox_SEQ crn1.bbs $S2 $fileName 0.09 0.1235
+$HOME/bin/bb2s crn1.bbs $S2 $fileName 0.09 0.1235
 </pre>
 
 <p>
-where the Beatbox_SEQ binary is given the <code>crn1.bbs</code> bbs
+where the bb2s binary is given the <code>crn1.bbs</code> bbs
 script, the value of S2, the output filename, and values of a couple
 of model parameters, in this case <code>gK1</code> and
 <code>gCaL</code>. The <code>crn1.bbs</code> bbs program takes these
@@ -994,7 +999,7 @@ recorded. In the scripts provided, the cell model is encoded in
 </p>
 
 <pre>
-./pd_crn0.sh
+./pd_runcrn0.sh
 </pre>
 
 <p>
@@ -1006,7 +1011,7 @@ sequential program as:
 </p>
 
 <pre>
-$HOME/bin/Beatbox_SEQ pd_crn0.bbs
+$HOME/bin/bb2s pd_crn0.bbs
 </pre>
 
 <p>
@@ -1043,7 +1048,7 @@ This <code>pd_crn0.rec</code> file forms input to the 1D strand model
 simulation, which is run as:
 </p>
 <pre>
-./pd_crn1.sh
+./pd_runcrn1.sh
 </pre>
 <p>
 The 1D bbs script <code>pd_crn1.bbs</code> starts by setting up all
@@ -1077,13 +1082,13 @@ successfully, the 2D simulation is executed using the script:
 </p>
 
 <pre>
-./pd_crn2.sh
+./pd_runcrn2.sh
 </pre>
 
 <p>
 This script creates output sub-directories as well as calls the bbs
 program <code>pd_crn2.bbs</code> using the sequential Beatbox binary,
-<code>Beatbox_SEQ</code>.  The contents of <code>pd_crn2.bbs</code>
+<code>bb2s</code>.  The contents of <code>pd_crn2.bbs</code>
 illustrates several features of the package. In common with all other
 bbs scripts, <code>pd_crn2.bbs</code> starts by setting up the
 simulation using variables, parameters, and the <code>state</code>
@@ -1150,99 +1155,57 @@ script:
 
 <h2 class="numbered">Parallel Test Scripts</h2>
 
-<p class="quest">HECToR is really a subclass of the parallel platforms
-that you could run on - why make it so specific to HECToR?</p>
-
 <p>
-To run tests on HECToR, you will need:
-</p>
-
-<ol type="a">
-<li>
-the Beatbox parallel binary called <code>Beatbox</code>;
-</li>
-<li>
-a submission script specifically for HECToR;
-</li>
-<li>
-You have access to HECToR.
-</li>
-</ol>
-
-<p class="quest">The scripts are not generic enough - for instance
-they assume that whoever is running them will have access to the
-account id e203. I think it would be much better to tell people
-how to run the code as opposed to hiding it all in scripts.</p>
-
-<p>
-All the scripts are provided in the directory:
+The parallel executable <code>bb2p</code> takes the same <code>bbs</code>
+scripts as <code>bb2s</code>, and is started by the MPI launcher of
+your system, typically <code>mpirun</code> (or <code>mpiexec</code>,
+or <code>srun</code> under Slurm). For example, to run a script on 4
+processes:
 </p>
 
 <pre>
-$HOME/beatbox/data/scripts/parallel_Hector
+mpirun -np 4 $HOME/bin/bb2p script.bbs
 </pre>
 
 <p>
-Further, the submission of the test jobs is facilitated by means of 3
-bash scripts that should be run interactively. To simulate a large 3D
-box using CRN kinetics, just run the bash script:
+By default, Beatbox chooses how to divide the computational domain
+between the processes itself; a particular decomposition can be
+requested with the <code>-decomp</code> option, e.g. <code>-decomp
+2x2x1</code>. On a cluster, such commands are normally placed in a job
+submission script for its batch system.
 </p>
-
-<pre>
-./bigbox_crn.sh
-</pre>
 
 <p>
-This bash script will:
+Examples of parallel scripts are provided in the directory
+<code>$HOME/beatbox/data/scripts/parallel</code>:
 </p>
 
-<ol type="a">
+<ul>
 <li>
-copy the binary from standard location
-(<code>$HOME/bin/Beatbox</code>) to your work space in directories
-called <code>bigboxcrn_run2</code> and <code>bigboxcrn_run2</code>;
+<code>box3D</code>: simulations of a large 3D box of tissue with CRN,
+FHN and LRD kinetics (<code>bigbox_crn.bbs</code>,
+<code>bigbox_fhn.bbs</code>, <code>bigbox_lrd.bbs</code>), suitable
+for testing how the parallel version scales with the number of
+processes;
 </li>
 <li>
-copy the bbs script <code>bigbox_crn.bbs</code> to the two newly
-created directories;
-</li>
-<li>
-produce 2 HECToR job submission scripts;
-</li>
-<li>
-edit the script line <code>#PBS -A e203</code> and specify your
-own valid account against which the execution time will be charged;
-</li>
-<li>
-submit the parallel jobs to HECToR queues.
-</li>
-</ol>
-
-<p>
-The status of your jobs can be checked using:
-</p>
-
+<code>phasedbn_parallel</code>: the 2D re-entry simulation by the
+phase distribution method (<code>pd_crn2.bbs</code>), in its parallel
+version. It needs the 1D record <code>pd_crn1.rec</code>, as generated
+in the previous section; a copy is provided in the same directory. For
+example:
 <pre>
-qstat -u my_user_name
+cd $HOME/beatbox/data/scripts/parallel/phasedbn_parallel
+mkdir -p ppm
+mpirun -np 8 $HOME/bin/bb2p pd_crn2.bbs
 </pre>
-
-<p>
-Bash scripts for FHN and LRD kinetics are also provided
-(<code>bigbox_fhn.sh</code> and <code>bigbox_lrd.sh</code>
-respectively).
-</p>
-
-The run the 2D phase distribution method based re-entry simulation
-on Hector, you will need the 1D record as generated in the previous section (pd_crn1.rec).
-In the test examples, the bbs script, the rec file, and the submission assistant script
-are all given in your directory:
-<pre>
-$HOME/beatbox/data/scripts/parallel_Hector/phasedbn_parallel/
-</pre>
-Using the submission assistant script given, submit the job to Hector queues as:
-<pre>
-./submit_pdcrn2.sh
-</pre>
+</li>
+<li>
+<code>Barkley</code>, <code>CRN_model</code>
+and <code>FitzHughNagumo_model</code>: further examples with the
+respective models.
+</li>
+</ul>
 
 <h1 class="numbered">Visualising 3D ppm output</h1>
 
@@ -1252,8 +1215,8 @@ package <code>EZView</code>.  <code>EZView</code> can be obtained from:
 </p>
 
 <ul>
-<li><a href="http://www.maths.liv.ac.uk/~vadim/software/ezview/">
-http://www.maths.liv.ac.uk/~vadim/software/ezview/</a></li>
+<li><a href="http://empslocal.ex.ac.uk/people/staff/vnb262/software/EZView/">
+http://empslocal.ex.ac.uk/people/staff/vnb262/software/EZView/</a></li>
 </ul>
 
 <p>

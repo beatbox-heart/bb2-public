@@ -3,7 +3,7 @@
  * own as most of the devices are shown here. 
  * 
  * To run the bbs script sequentially at the command line (in a terminal), use: 
- *  Beatbox_SEQ name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
+ *  bb2s name_of_bbs_script.bbs <input to bbs script> -verbose -profile 
  * 
  * This program simulates FHN CRN LRD 0D (cell) 1D 2D 3D box 3D geometry. The geometry is the ffr.bbg geometry. 
  *        

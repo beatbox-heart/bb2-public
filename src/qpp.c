@@ -232,8 +232,8 @@ static int qgetc (void)
     /*
       The strcat may give rise to spurious files with similar names to
       simulation files. This is a simple solution to the use of
-      tmpnam, a function that is not valid on all systems,
-      e.g. Hector. A simple hack? Another way of dealing with this is
+      tmpnam, a function that is not valid on all systems.
+      A simple hack? Another way of dealing with this is
       to use a different char string altogether, if this name is local
       to qgetc. Check before doing.
      */

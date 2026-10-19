@@ -19,7 +19,7 @@
  * Before running this script, make sure that the input file fhn1.rec, necessary for the phase distribution initiation, has been created by running fhn1.bbs.
  *
  * To run this bbs script, use the following command:
- * Beatbox_SEQ fhn3_NegativeTension.bbs
+ * bb2s fhn3_NegativeTension.bbs
  */
 
 //***************************

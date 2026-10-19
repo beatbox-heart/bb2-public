@@ -4,7 +4,7 @@
   Inputs: fhn.par with common parameters. 
   Outputs: record with name fhn_ap.vtg
   To run, use the command:
-  Beatbox_SEQ fhn0_ap.bbs
+  bb2s fhn0_ap.bbs
 */
 state xmax=1 ymax=1 zmax=1 vmax=3;
 

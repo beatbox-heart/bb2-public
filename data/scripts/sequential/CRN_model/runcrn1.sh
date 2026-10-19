@@ -12,5 +12,5 @@ for(( i = $start; i <= $finish; i=i+10 ))
 do
 S2=$i
 fileName=crn1d$i.vtg
-$HOME/bin/Beatbox_SEQ crn1.bbs $S2 $fileName 0.09 0.1235 
+$HOME/bin/bb2s crn1.bbs $S2 $fileName 0.09 0.1235 
 done

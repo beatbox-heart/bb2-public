@@ -10,7 +10,7 @@
  *  ezview images in png format in fhn3.dir/ directory
  *
  * To run this bbs script, use the following command:
- * Beatbox_SEQ fhn3.bbs
+ * bb2s fhn3.bbs
  */ 
 
 // Common parameters

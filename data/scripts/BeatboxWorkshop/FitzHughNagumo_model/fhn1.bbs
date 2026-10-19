@@ -19,9 +19,9 @@
  *
  * Before running this script, make sure that a correct fhn0.rec has been created by running fhn0.bbs.
  * To run this bbs script with graphics, use the following command:
- * Beatbox_SEQ fhn1.bbs
+ * bb2s fhn1.bbs
  *  and to run without graphics, use the following command:
- * Beatbox_SEQ fhn1.bbs -nograph
+ * bb2s fhn1.bbs -nograph
  */
 
 // Include the file fhn.par with the input and output parameters.

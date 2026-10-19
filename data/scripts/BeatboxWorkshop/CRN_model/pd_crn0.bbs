@@ -16,9 +16,9 @@
  *   6. "clock": output device that shows integer simulation time counter.
  *
  * To run this simulation with graphics, use the following command:
- * Beatbox_SEQ pd_crn0.bbs
+ * bb2s pd_crn0.bbs
  *  and to run without graphics, use the following command:
- * Beatbox_SEQ pd_crn0.bbs -nograph
+ * bb2s pd_crn0.bbs -nograph
  */
 
 // CRN Model parameters

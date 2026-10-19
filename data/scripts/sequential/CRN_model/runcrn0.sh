@@ -6,5 +6,5 @@
 # directory as this shell script.
 
 # Serial running of Beatbox with crn0.bbs as argument.
-$HOME/bin/Beatbox_SEQ crn0.bbs
+$HOME/bin/bb2s crn0.bbs
 

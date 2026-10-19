@@ -24,6 +24,6 @@ repolarisation=0.7
 gk1=0.09
 gcal=0.1235
 
-$HOME/bin/Beatbox_SEQ crn0_rest.bbs $Nstim $Period $fileName $fileName2 $repolarisation $gk1 $gcal
+$HOME/bin/bb2s crn0_rest.bbs $Nstim $Period $fileName $fileName2 $repolarisation $gk1 $gcal
 done
 

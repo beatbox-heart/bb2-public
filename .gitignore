@@ -34,10 +34,10 @@ src/gsl-1.16.extract/gsl_version.h
 # Exceptions: data files that are distributed (listed in Makefile.am)
 # but would otherwise be caught by the *.rec and Makefile rules above.
 # Generated output files elsewhere in data/ remain ignored.
-!data/scripts/BeatboxWorkshop/parallel_Hector/fhn1_PositiveTension.rec
+!data/scripts/BeatboxWorkshop/parallel/fhn1_PositiveTension.rec
 !data/scripts/parallel/CRN_model/pd_crn1.rec
 !data/scripts/parallel/FitzHughNagumo_model/fhn1_NegativeTension.rec
-!data/scripts/parallel_Hector/phasedbn_parallel/pd_crn1.rec
+!data/scripts/parallel/phasedbn_parallel/pd_crn1.rec
 !data/scripts/sequential/b02/Makefile
 !data/scripts/sequential/FentonKarma_model/Makefile
 !data/scripts/sequential/hh52/Makefile

@@ -29,11 +29,11 @@
  *
  * To run this bbs script with graphics, use the following command:
  *
- * Beatbox_SEQ fhn1.bbs
+ * bb2s fhn1.bbs
  *
  * and to run without graphics, use the following command:
  *
- * Beatbox_SEQ fhn1.bbs -nograph
+ * bb2s fhn1.bbs -nograph
  *
  */
 

@@ -13,9 +13,9 @@
  *   5. "clock": output device that shows integer simulation time counter.
  *
  * To run this simulation with graphics, use the following command:
- * Beatbox_SEQ fhn0.bbs
+ * bb2s fhn0.bbs
  *  and to run without graphics, use the following command:
- * Beatbox_SEQ fhn0.bbs -nograph
+ * bb2s fhn0.bbs -nograph
  */
 
 /* 

@@ -14,7 +14,7 @@
  * 3. use of shell output device to call arbitrary OS command from BeatBox (here to create an output directory for the image files);
  *
  * To run this bbs script, use the following command:
- * Beatbox_SEQ fhn3.bbs
+ * bb2s fhn3.bbs
  */
 
 //***************************

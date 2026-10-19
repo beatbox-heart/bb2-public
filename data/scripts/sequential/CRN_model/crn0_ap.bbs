@@ -3,7 +3,7 @@ CRN0 bbs AP.
 Beatbox program to demonstrate the CRN 1998 human atrial AP.
 There are no inputs,and the output is crn0_ap.vtg.
 To run,
-Beatbox_SEQ crn0_ap.bbs
+bb2s crn0_ap.bbs
 
 */
 

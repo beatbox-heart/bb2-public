@@ -20,7 +20,7 @@
  * Before running this script, make sure that the geometry file ffr.bbg is available in the work directory.
  *
  * To run this bbs script, use the following command:
- * Beatbox_SEQ fhn_ffr_iso.bbs
+ * bb2s fhn_ffr_iso.bbs
  *
  */
 

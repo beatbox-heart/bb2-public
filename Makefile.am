@@ -20,7 +20,6 @@ SUBDIRS = src
 datadir   = data
 scriptdir = $(datadir)/scripts
 workshopdir = $(scriptdir)/BeatboxWorkshop
-hectordir = $(scriptdir)/parallel_Hector
 paralldir = $(scriptdir)/parallel
 seqdir    = $(scriptdir)/sequential
 vizdir    = $(scriptdir)/viz3d
@@ -95,7 +94,6 @@ docs          = \
 # Example files
 dist_examples= $(datadir)/README \
                $(dist_scripts_BeatboxWorkshop) \
-               $(dist_scripts_hector) \
                $(dist_scripts_parallel) \
                $(dist_scripts_seq) \
                $(dist_scripts_viz3d) \
@@ -137,28 +135,20 @@ dist_scripts_BeatboxWorkshop = \
                $(workshopdir)/FitzHughNagumo_model/view.pl \
                $(workshopdir)/FitzHughNagumo_model/fhn1.bbs \
                $(workshopdir)/FitzHughNagumo_model/ffr_slice.bbg \
-               $(workshopdir)/parallel_Hector/ffr.bbg\
-               $(workshopdir)/parallel_Hector/fhn1_PositiveTension.rec \
-               $(workshopdir)/parallel_Hector/fhn3_NegativeTension.bbs \
-               $(workshopdir)/parallel_Hector/fhn_ffr_xz.bbs \
-               $(workshopdir)/parallel_Hector/fhn_ffr_xz_scaling.bbs \
-               $(workshopdir)/parallel_Hector/fhn3_NegativeTension.pbs \
-               $(workshopdir)/parallel_Hector/fhn_ffr_xz.pbs
-
-# HECToR example scripts
-dist_scripts_hector = \
-               $(hectordir)/box3D/bigbox_crn.bbs \
-               $(hectordir)/box3D/bigbox_crn.sh  \
-               $(hectordir)/box3D/bigbox_fhn.bbs \
-               $(hectordir)/box3D/bigbox_fhn.sh  \
-               $(hectordir)/box3D/bigbox_lrd.bbs \
-               $(hectordir)/box3D/bigbox_lrd.sh  \
-               $(hectordir)/phasedbn_parallel/pd_crn1.rec \
-               $(hectordir)/phasedbn_parallel/pd_crn2.bbs \
-               $(hectordir)/phasedbn_parallel/submit_pdcrn2.sh
+               $(workshopdir)/parallel/ffr.bbg\
+               $(workshopdir)/parallel/fhn1_PositiveTension.rec \
+               $(workshopdir)/parallel/fhn3_NegativeTension.bbs \
+               $(workshopdir)/parallel/fhn_ffr_xz.bbs \
+               $(workshopdir)/parallel/fhn_ffr_xz_scaling.bbs
 
 # Parallel  example scripts
 dist_scripts_parallel    = \
+                $(paralldir)/box3D/bigbox_crn.bbs \
+                $(paralldir)/box3D/bigbox_fhn.bbs \
+                $(paralldir)/box3D/bigbox_lrd.bbs \
+                $(paralldir)/box3D/lrd.par \
+                $(paralldir)/phasedbn_parallel/pd_crn1.rec \
+                $(paralldir)/phasedbn_parallel/pd_crn2.bbs \
                 $(paralldir)/Barkley/bkl1.rec \
                 $(paralldir)/Barkley/rabbit3.bbg \
                 $(paralldir)/Barkley/rabbit-mpi.bbs \
@@ -169,9 +159,7 @@ dist_scripts_parallel    = \
                 $(paralldir)/FitzHughNagumo_model/ffr.bbg \
                 $(paralldir)/FitzHughNagumo_model/fhn1_NegativeTension.rec \
                 $(paralldir)/FitzHughNagumo_model/fhn3_NegativeTension.bbs \
-                $(paralldir)/FitzHughNagumo_model/fhn3_NegativeTension.pbs \
                 $(paralldir)/FitzHughNagumo_model/fhn_ffr_xz.bbs \
-                $(paralldir)/FitzHughNagumo_model/fhn_ffr_xz.pbs \
                 $(paralldir)/FitzHughNagumo_model/fhn_ffr_xz_scaling.bbs \
                 $(paralldir)/FitzHughNagumo_model/fhncub.par \
                 $(paralldir)/FitzHughNagumo_model/sample.bbs

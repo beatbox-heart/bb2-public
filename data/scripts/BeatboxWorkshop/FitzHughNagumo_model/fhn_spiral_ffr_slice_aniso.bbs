@@ -16,7 +16,7 @@
  * Before running this script, make sure that the geometry file ffr_slice.bbg and fhn1.rec file are available in the work directory.
  *
  * To run this bbs script, use the following command:
- * Beatbox_SEQ fhn_spiral_ffr_slice_aniso.bbs
+ * bb2s fhn_spiral_ffr_slice_aniso.bbs
  *
  */
 
