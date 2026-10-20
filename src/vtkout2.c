@@ -77,6 +77,7 @@ typedef struct {
 	int count;		/*  Number of pointTypes in local space. */
 	unsigned char *prefill;	/*  buffer for pre-filling the files */
 	int raster_size;	/*  byte size of the pre-filling buffer */
+	MPI_Offset offset;	/*  where the next image starts in the file */
 #endif
 } STR;
 
@@ -139,10 +140,10 @@ RUN_HEAD(vtkout2)
 
 #if MPI
 	/* Set file size; MPI_File_preallocate hangs intermittently in Open MPI 5.0 OMPIO */
-	MPIDO(MPI_File_set_size(file->f,(MPI_Offset)headerLength+raster_size),"Couldn't set file size");
+	MPIDO(MPI_File_set_size(file->f,S->offset+headerLength+raster_size),"Couldn't set file size");
 
-	/* Header goes with no displacement, from top of file */
-	MPIDO(MPI_File_set_view(file->f,0,MPI_CHAR,MPI_CHAR,"native",MPI_INFO_NULL),"Couldn't set view for header.");
+	/* Header goes from the start of the image */
+	MPIDO(MPI_File_set_view(file->f,S->offset,MPI_CHAR,MPI_CHAR,"native",MPI_INFO_NULL),"Couldn't set view for header.");
 
 	/* Only one process shall write the header */
 	if (mpi_rank==root) {
@@ -154,9 +155,11 @@ RUN_HEAD(vtkout2)
 	}
 
 	/*  Set view for collective writing. Displace by length of header. */
-	headerSkip = headerLength;
+	headerSkip = S->offset + headerLength;
 	MPIDO(MPI_File_set_view(file->f,headerSkip,pointType,filetype,"native",MPI_INFO_NULL),"Couldn't set view for writing.");
 	MPIDO(MPI_FILE_WRITE(file->f,Buf,count,pointType,MPI_STATUS_IGNORE),"Couldn't write raster to file\n");
+	/* In append mode, the images follow one another in the same file */
+	if (append) S->offset += headerLength+raster_size;
 #else
 	fputs(header,file->f);
 	fwrite(Buf,sizeof(unsigned char),(size_t)local_xsize*local_ysize*local_zsize,file->f);
@@ -167,10 +170,10 @@ RUN_TAIL(vtkout2)
 
 DESTROY_HEAD(vtkout2)
 #if MPI
-	if (S->file.f) MPI_File_close(&(S->file.f));
+	if (S->file.f) nextq(&(S->file)); /* append mode */
 	if (S->prefill) FREE(S->prefill);
 #else
-	SAFE_CLOSE(S->file.f);
+	if (S->file.f) nextq(&(S->file)); /* append mode */
 #endif
 	if (S->Buf) FREE(S->Buf);
 	S->file.f=NULL;
@@ -208,6 +211,8 @@ CREATE_HEAD(vtkout2)
 		ABORT("Could not create communicator.\n");
 
  if(dev->s.runHere){
+	S->offset=0;
+	if (S->append && S->file.f) MPIDO(MPI_File_get_size(S->file.f,&(S->offset)),"Couldn't get file size");
 	
 	/*  Point type: 1 byte per point. */
 	MPI_Datatype pointType;

@@ -220,6 +220,8 @@ int acceptq (const char *name,const char *mode,const char *deflt,sequence *q, ch
 #endif
     q->f=NULL;
     MESSAGE("\x01%s\"%s\"%c",name,q->name,SEPARATORS[0]);
+    /* In append mode, the device writes into the same file throughout the run */
+    if (q->mode[0]=='a' && !thisq(q)) return 0;
     return 1;
 
   } 
@@ -277,6 +279,8 @@ int acceptq (const char *name,const char *mode,const char *deflt,sequence *q, ch
     q->trial=0;
 
     MESSAGE("\x01/* check: %s\"%s\",%d=\"%s\" */",name,q->mask,q->n,q->name);
+    /* In append mode, the device writes into the same file throughout the run */
+    if (q->mode[0]=='a' && !thisq(q)) return 0;
   }
 } /*  if(runHere) */
   return 1;
@@ -293,7 +297,7 @@ int getMPIFileMode (const char *fm) {
     MPImode = MPI_MODE_RDONLY;
     /* MESSAGE("Mode = MPI_MODE_RDONLY");fflush(stdout); // DEBUG */
   } else if (	0==strcmp(fm,"w") || 0==strcmp(fm,"wb") || 
-		0==strcmp(fm,"a") || 0==strcmp(fm,"ab") ||
+		0==strcmp(fm,"a") || 0==strcmp(fm,"ab") || 0==strcmp(fm,"at") ||
 		0==strcmp(fm,"a+")|| 0==strcmp(fm,"ab+")||
 		0==strcmp(fm,"a+b")){
     MPImode = MPI_MODE_WRONLY | MPI_MODE_CREATE;

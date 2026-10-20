@@ -64,6 +64,7 @@ typedef struct {
   unsigned char *Buf;   /*  output buffer */
   unsigned char *prefill;/*  buffer for pre-filling the files */
   int raster_size;	/*  byte size of the pre-filling buffer */
+  MPI_Offset offset;	/*  where the next image starts in the file */
 #endif
 } STR;
 
@@ -122,10 +123,10 @@ RUN_HEAD(ppmout)
   
   /* Set file size; MPI_File_preallocate hangs intermittently in Open MPI 5.0 OMPIO */
   prealloc_size = headerLength + raster_size;
-  MPIDO(MPI_File_set_size(file->f,prealloc_size),"Couldn't set file size");
+  MPIDO(MPI_File_set_size(file->f,S->offset+prealloc_size),"Couldn't set file size");
   
-  /* Header goes with no displacement, from top of file */
-  MPIDO(MPI_File_set_view(file->f,0,MPI_CHAR,MPI_CHAR,"native", MPI_INFO_NULL),"Couldn't set view for header.");
+  /* Header goes from the start of the image */
+  MPIDO(MPI_File_set_view(file->f,S->offset,MPI_CHAR,MPI_CHAR,"native", MPI_INFO_NULL),"Couldn't set view for header.");
 
   /* Only one process shall write the header */
   if (mpi_rank==root) {
@@ -137,7 +138,7 @@ RUN_HEAD(ppmout)
   }
   
   /*  Set view for collective writing. Displace by length of header. */
-  headerSkip = char_extent * headerLength;
+  headerSkip = S->offset + char_extent * headerLength;
   MPIDO(MPI_File_set_view(file->f,headerSkip,pointType,filetype,"native",MPI_INFO_NULL),"Couldn't set view the raster.");
 
   for(z=0;z<local_zsize;z++) {
@@ -156,6 +157,8 @@ RUN_HEAD(ppmout)
     } /*  for y */
   } /*  for z */
   MPIDO(MPI_FILE_WRITE(file->f,Buf,count,pointType,MPI_STATUS_IGNORE),"Couldn't write raster to file\n");
+  /* In append mode, the images follow one another in the same file */
+  if (append) S->offset += prealloc_size;
 #else
   /*  Sequential version */
   fprintf (file->f,"P6\n%d %d\n%d\n",nx,ny,MAXCHAR);
@@ -183,11 +186,11 @@ RUN_TAIL(ppmout)
 
 DESTROY_HEAD(ppmout) {
 #if MPI
-  if (S->file.f) MPI_File_close(&(S->file.f)); 
+  if (S->file.f) nextq(&(S->file)); /* append mode */
   if (S->prefill) FREE(S->prefill);
   FREE(S->Buf);
 #else
-  SAFE_CLOSE(S->file.f);
+  if (S->file.f) nextq(&(S->file)); /* append mode */
 #endif
   /* Erase the last file if empty */
   /* Process 0 should be ok for that even if it is not 'runHere' */
@@ -248,6 +251,9 @@ CREATE_HEAD(ppmout)
     ABORT("Could not create communicator.\n");
 
   if (dev->s.runHere) {
+
+    S->offset=0;
+    if (S->append && S->file.f) MPIDO(MPI_File_get_size(S->file.f,&(S->offset)),"Couldn't get file size");
 
     /*  Point type specific to ppmout (i.e. 3 chars per pixel). */
     MPI_Datatype pointType;

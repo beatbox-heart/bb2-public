@@ -2416,7 +2416,9 @@ following parameters optional with fixed names:
   that can do something useful with the output file, e.g. gzip it. It
   defaults to an empty string, meaning no postprocessing is to be
   done. If given, the string must contain <code>%s</code> in the place
-  where the file name to be processed is to be substituted.</li>
+  where the file name to be processed is to be substituted.
+  For a device writing in the append mode (<code>append=1</code>), all
+  output goes to one file, which is postprocessed once, at the end of the run.</li>
   
   <li><code>autonumber</code> is an integer flag (0/1), defaults to
   1. If 1, then at start time the device checks for existing files
@@ -13726,7 +13728,8 @@ This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
   <td><code>0</code></td>
   <td><code>0</code></td>
   <td><code>1</code></td>
-  <td>If <code>1</code>, new images are appended to the same <code>file</code>, otherwise to new files in the sequence</td>
+  <td>If <code>1</code>, new images are appended to the same <code>file</code>, otherwise to new files in the sequence.
+  NB: VTK readers will only see the first image in such a file.</td>
 </tr>
 
 <tr>

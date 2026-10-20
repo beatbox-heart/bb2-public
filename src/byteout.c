@@ -48,6 +48,7 @@ typedef struct {
   MPI_Datatype filetype;
   long global_size;	/*  Size of the pre-filling buffer */
   unsigned char *Prefill; /* Pre-filling buffer. Maybe too big for stack so use heap */
+  MPI_Offset offset;	/* where the next image starts in the file */
 #endif
   char debugname[MAXPATH];
   FILE *debug;
@@ -88,16 +89,16 @@ RUN_HEAD(byteout)
 	
 #if MPI
   /* Set file size; MPI_File_preallocate hangs intermittently in Open MPI 5.0 OMPIO */
-  MPIDO(MPI_File_set_size(file->f,global_size),"Couldn't set file size");
+  MPIDO(MPI_File_set_size(file->f,S->offset+global_size),"Couldn't set file size");
 
   /* Only one process shall prefill the raster, if needed */
   if (mpi_rank==root && num_empty_subdoms>0) {
-    MPIDO(MPI_File_set_view(file->f,0,MPI_CHAR,filetype,"native",MPI_INFO_NULL),"Couldn't set view for prefill");
+    MPIDO(MPI_File_set_view(file->f,S->offset,MPI_CHAR,filetype,"native",MPI_INFO_NULL),"Couldn't set view for prefill");
     MPIDO(MPI_File_write(file->f,Prefill,global_size,MPI_CHAR,MPI_STATUS_IGNORE),"Couldn't prefill the raster\n");
   }	
 
   /*  Set view for collective writing (again) */
-  MPIDO(MPI_File_set_view(file->f,0,MPI_CHAR,filetype,"native",MPI_INFO_NULL),"Couldn't set view for writing");
+  MPIDO(MPI_File_set_view(file->f,S->offset,MPI_CHAR,filetype,"native",MPI_INFO_NULL),"Couldn't set view for writing");
 #endif
 
   for(z=0;z<nz;z++){
@@ -116,6 +117,8 @@ RUN_HEAD(byteout)
 
 #if MPI
   MPIDO(MPI_FILE_WRITE(file->f,Buf,local_size,MPI_CHAR,MPI_STATUS_IGNORE),"Couldn't write raster to file\n");
+  /* In append mode, the images follow one another in the same file */
+  if (append) S->offset += global_size;
   if (debug && debugWriter) 
     fprintf(debug,"byteout [%ld:%ld]x[%ld:%ld]x[%ld:%ld]x[%ld:%ld] to %s at t=%ld\n",
 	    (long)s.global_x0, (long)s.global_x1,
@@ -139,10 +142,10 @@ DESTROY_HEAD(byteout)
 {
   FREE(S->Buf);
 #if MPI
-  if (S->file.f) MPI_File_close(&(S->file.f)); 
+  if (S->file.f) nextq(&(S->file)); /* append mode */
   if (S->Prefill) FREE(S->Prefill);
 #else
-  SAFE_CLOSE(S->file.f);
+  if (S->file.f) nextq(&(S->file)); /* append mode */
 #endif
   SAFE_CLOSE(S->debug);
   /* Erase the last file if empty */
@@ -195,6 +198,9 @@ CREATE_HEAD(byteout)
     ABORT("Could not create communicator.\n");
 
   if (dev->s.runHere) {
+    S->offset=0;
+    if (S->append && S->file.f) MPIDO(MPI_File_get_size(S->file.f,&(S->offset)),"Couldn't get file size");
+
     #define NDIMS 4
     int sizes[NDIMS],subsizes[NDIMS],starts[NDIMS];
     MPI_Datatype filetype;
