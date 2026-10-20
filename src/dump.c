@@ -171,7 +171,7 @@ CREATE_HEAD(dump)
     }
     MPIDO(MPI_Barrier(comm_dump),"Could not stop at barrier before opening file");
     
-    /*  Open and preallocate file */
+    /*  Open and size the file; MPI_File_preallocate hangs intermittently in Open MPI 5.0 OMPIO */
     MPIDO(MPI_File_open(comm_dump, S->filename, mode, MPI_INFO_NULL, &file),"Couldn't open file");
     /*  If requested by user, append to EOF */
     if (S->append) {
@@ -179,7 +179,7 @@ CREATE_HEAD(dump)
     } else {
       displacement = (MPI_Aint)0;
     }
-    MPIDO(MPI_File_preallocate(file,displacement + boxsize*sizeof(real)),"Couldn't preallocate file");
+    MPIDO(MPI_File_set_size(file,displacement + boxsize*sizeof(real)),"Couldn't set file size");
  
     /* Prefill the file if there are empty subdomains.    */
     /* This is done by one process only, which needs then */

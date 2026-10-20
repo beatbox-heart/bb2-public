@@ -87,8 +87,8 @@ RUN_HEAD(byteout)
   if (!file->f) return 1;
 	
 #if MPI
-  /* Preallocate file size */
-  MPIDO(MPI_File_preallocate(file->f,global_size),"Couldn't preallocate file");
+  /* Set file size; MPI_File_preallocate hangs intermittently in Open MPI 5.0 OMPIO */
+  MPIDO(MPI_File_set_size(file->f,global_size),"Couldn't set file size");
 
   /* Only one process shall prefill the raster, if needed */
   if (mpi_rank==root && num_empty_subdoms>0) {

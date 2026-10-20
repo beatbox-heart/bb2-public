@@ -130,9 +130,9 @@ SCALARS ImageFile char 1\n\
 LOOKUP_TABLE default\n", xsize,ysize,zsize,xsize*ysize*zsize);
 headerLength = strlen(header);
 	
-	/* Preallocate file size */
+	/* Set file size; MPI_File_preallocate hangs intermittently in Open MPI 5.0 OMPIO */
 	prealloc_size = headerLength + xsize*ysize*zsize;
-	MPI_File_preallocate(file->f,prealloc_size);
+	MPI_File_set_size(file->f,prealloc_size);
 	
 	/*  Set view with no displacement (top of file). */
 	mpi_errno = MPI_File_set_view(file->f, 0, MPI_CHAR, MPI_CHAR, "native", MPI_INFO_NULL);

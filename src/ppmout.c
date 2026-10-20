@@ -120,9 +120,9 @@ RUN_HEAD(ppmout)
   snprintf (header,256,"P6\n%d %d\n%d\n",xsize,ysize,MAXCHAR);
   headerLength = strlen(header);
   
-  /* Preallocate file size */
+  /* Set file size; MPI_File_preallocate hangs intermittently in Open MPI 5.0 OMPIO */
   prealloc_size = headerLength + raster_size;
-  MPIDO(MPI_File_preallocate(file->f,prealloc_size),"Couldn't preallocate file");
+  MPIDO(MPI_File_set_size(file->f,prealloc_size),"Couldn't set file size");
   
   /* Header goes with no displacement, from top of file */
   MPIDO(MPI_File_set_view(file->f,0,MPI_CHAR,MPI_CHAR,"native", MPI_INFO_NULL),"Couldn't set view for header.");

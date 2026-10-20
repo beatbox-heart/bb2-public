@@ -111,9 +111,9 @@ RUN_HEAD(pgmout)
   snprintf (header,256,"P5\n%d %d\n%d\n",xsize,ysize,MAXCHAR);
   headerLength = strlen(header);
   
-  /* Preallocate file size */
+  /* Set file size; MPI_File_preallocate hangs intermittently in Open MPI 5.0 OMPIO */
   prealloc_size = headerLength + raster_size;
-  MPIDO(MPI_File_preallocate(file->f,prealloc_size),"Couldn't preallocate file");
+  MPIDO(MPI_File_set_size(file->f,prealloc_size),"Couldn't set file size");
   
   /* Header goes with no displacement, from top of file */
   MPIDO(MPI_File_set_view(file->f,0,MPI_CHAR,MPI_CHAR,"native", MPI_INFO_NULL),"Couldn't set view for header.");
@@ -235,7 +235,7 @@ CREATE_HEAD(pgmout)
     int xsize = (dev->s.global_x1 - dev->s.global_x0) + 1;
     int ysize = (dev->s.global_y1 - dev->s.global_y0) + 1;
     int zsize = (dev->s.global_z1 - dev->s.global_z0) + 1;
-    int raster_size = xsize*ysize*zsize*3;;
+    int raster_size = xsize*ysize*zsize; /* one byte per point */
     unsigned char *prefill;
     
     /*  Local buffer dimensions */
