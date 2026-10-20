@@ -85,10 +85,15 @@ int thisq (sequence *q)
     char bakname[MAXPATH];
     strcpy(q->name,q->mask);
     snprintf(bakname,MAXPATH,"%s.BAK",q->name);
-    frename(q->name,bakname);
 #if MPI
+    /* Only one process does the backup, the others wait for it */
+    int rank;
+    MPI_Comm_rank(q->comm,&rank);
+    if (rank==0 && fexist(q->name)) frename(q->name,bakname);
+    MPI_Barrier(q->comm);
     MPIDO(MPI_File_open(q->comm, q->name, q->mpiMode, MPI_INFO_NULL, &(q->f)),"Could not open file.");
 #else
+    if (fexist(q->name)) frename(q->name,bakname);
     if NOT(q->f=fopen(q->name,q->mode)) EXPECTED_ERROR(	
       "Cannot open file %s in mode %s. "
       "Check that the directory exists and that you have the necessary permissions.",
@@ -202,11 +207,19 @@ int acceptq (const char *name,const char *mode,const char *deflt,sequence *q, ch
 
   /*  If the template does not contain a format specifier, test the literal filename. */
   if (NULL==(strchr(q->mask,'%'))) {
+    /* The test must not damage an existing file, which is to be backed up by thisq, */
+    /* and must not leave behind a file that did not exist.                         */
+    int existed;
     strcpy(q->name,q->mask);
 #if MPI
+    int rank;
+    MPI_Comm_rank(q->comm,&rank);
+    existed=(rank==0)?fexist(q->name):1;	/* only matters for rank 0 */
+    /* MPI_File_open does not truncate the file */
     MPIDO(MPI_File_open(q->comm, q->name, q->mpiMode, MPI_INFO_NULL, &(q->f)),"Could not open file.");
 #else
-    if NOT(q->f=fopen(q->name,q->mode)) EXPECTED_ERROR(
+    existed=fexist(q->name);
+    if NOT(q->f=fopen(q->name,(existed && q->mode[0]=='w')?"a":q->mode)) EXPECTED_ERROR(
       "Could not open %s in mode %s. "
       "Check that the directory exists and that you have the necessary permissions.",
     q->name,q->mode);
@@ -219,6 +232,7 @@ int acceptq (const char *name,const char *mode,const char *deflt,sequence *q, ch
     fclose(q->f);
 #endif
     q->f=NULL;
+    if (!existed) remove(q->name);
     MESSAGE("\x01%s\"%s\"%c",name,q->name,SEPARATORS[0]);
     /* In append mode, the device writes into the same file throughout the run */
     if (q->mode[0]=='a' && !thisq(q)) return 0;
