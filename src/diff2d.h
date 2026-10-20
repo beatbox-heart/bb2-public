@@ -53,17 +53,32 @@ DB("2D version: GEOM=%d ANISO=%d MANY=%d VARIA=%d\n", GEOM, ANISO, MANY, VARIA);
 #endif /* if !VARIA */
 
 /*---------------------------------------------------*/
-/* First round: the diff tensor and ipgrid signature */
+/* First round: the diff tensor and ipgrid signature, */
+/* at the listed points (ipass=0), then at the adjacent tissue (ipass=1) */
 /* */					// DB("first round\n");
-for (ip=0;ip<np;ip++) { 
-  P=s->p[ip];
+for (ipass=0;ipass<2;ipass++) {
+#if (VARIA || ANISO) && MPI
+ if (ipass==1) {
+  /* Variable diffusivity needs neighbours' tensors */
+  /* TODO: make sure this is done only if needed    */
+  /* TODO: make haloSwap subarrays distinct for every device that might need it, */
+  /*                             and include into them only the relevant layers! */
+  /* TODO: consider making exchange buffers smaller by selecting only needed points ??? */
+  ASSERT(d0>=0);			/* here diff tensor has to be on the grid */
+  haloSwap();			/* make it available for neighbouring subdomains */
+ }
+#endif /* (VARIA || ANISO) && MPI */
+for (ip=0;ip<(ipass?((VARIA || ANISO)?nadjacent:0):np);ip++) {
+  P=ipass?adjacent[ip]:s->p[ip];
   x=P.x;
   y=P.y;
   assert(P.z==0);
-  /* CLEAR_WEIGHTS; */
-  memset(P.X, 0, nnb*sizeof(real));
+  if (ipass==0) {
+    /* CLEAR_WEIGHTS; */
+    memset(P.X, 0, nnb*sizeof(real));
+  }
 #if !MPI
-  IPNBR(x,y,0)=ip; 			/* count this point in the ipgrid */
+  IPNBR(x,y,0)=ipass?np+ip:ip;		/* count this point in the ipgrid */
 #endif
   /* */					// DB("ip=%ld xy=%ld,%ld Gam=%g\n",ip,x,y,Gam);
 #if VARIA
@@ -112,16 +127,7 @@ for (ip=0;ip<np;ip++) {
   D(11) = Dsh;				/* ==D(22) */
 #endif /* not ANISO */  
  } /* for ip */
-
-#if (VARIA || ANISO) && MPI
-/* Variable diffusivity needs neighbours' tensors */
-/* TODO: make sure this is done only if needed    */
-/* TODO: make haloSwap subarrays distinct for every device that might need it, */
-/*                             and include into them only the relevant layers! */
-/* TODO: consider making exchange buffers smaller by selecting only needed points ??? */
-ASSERT(d0>=0);			/* here diff tensor has to be on the grid */
-haloSwap();			/* make it available for neighbouring subdomains */
-#endif /* (VARIA || ANISO) && MPI */
+} /* for ipass */
 
 /*---------------------------------*/
 /* Second round: periphery weights */

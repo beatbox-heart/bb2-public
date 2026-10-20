@@ -6110,6 +6110,20 @@ below the table of parameters.
 
 <tr>
   <td><code>int</code></td>
+  <td><code>isolated</code></td>
+  <td> see &rightarrow; </td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
+  <td>
+    If <code>1</code>, the border of the device space is a no-flux boundary;
+    if <code>0</code>, the device space is connected to the tissue beyond its border.
+    Default is <code>1</code> if the diffusivity is anisotropic or space-dependent,
+    <code>0</code> otherwise. See below.
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
   <td><code>w0</code></td>
   <td><code>-1</code></td>
   <td><code>-1</code></td>
@@ -6216,8 +6230,33 @@ tensor (remember it is symmetric), and is as follows:
   <li> <code>1</code> in isotropic 3D; </li>
   <li> <code>6</code> in 3D. </li>
 </ul>
-Finally, for technical reasons, variable
+Finally, for technical reasons, variable or anisotropic
 diffusivity in MPI demands a valid range <code>d0..d1</code>.
+</p>
+
+<p>
+If the device space is only a part of the tissue, e.g. defined by
+<code>x0..z1</code> or <code>where</code>, then the parameter
+<code>isolated</code> determines what happens at its border with the
+rest of the tissue. With <code>isolated=1</code>, the border is a
+no-flux boundary, as is the border between tissue and void. With
+<code>isolated=0</code>, the points of the device space are connected
+to their tissue neighbours beyond the border, as if these were part of
+the device space, using the diffusivity given to this device; the
+values in the tissue beyond the border are then expected to be taken
+care of by something else, e.g. set as Dirichlet boundary conditions,
+or updated by another <code>diff</code> instance. The latter is
+correct, in particular conservative, only if both instances have the
+same diffusivity at their common border, which is guaranteed if it is
+constant and isotropic. Hence the default: <code>isolated=0</code> for
+constant isotropic diffusivity, and <code>isolated=1</code> otherwise.
+To model a medium consisting of parts with different diffusivities,
+it is safer to use one <code>diff</code> device with a space-dependent
+diffusivity. If <code>isolated=0</code> and the device space does
+border on other tissue, a warning is issued.
+Different <code>diff</code> instances should not share the layers
+<code>d0..d1</code>, as with <code>isolated=0</code> each writes
+there also beyond the border of its space.
 </p>
 
 

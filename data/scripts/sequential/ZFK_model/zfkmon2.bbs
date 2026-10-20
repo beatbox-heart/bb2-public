@@ -129,8 +129,8 @@ k_func name=top    when=always x0=xil x1=xir y0=ybr y1=ybr pgm={
 /*****************/
 // Computations
 
-// Diffusion term
-diff when=always x0=xil x1=xir y0=yil y1=yir Dpar=Dl Dtrans=Dt hx=hx v0=[u] v1=[i];
+// Diffusion term; isolated=0 connects the inner points to the Dirichlet boundary points
+diff when=always isolated=0 x0=xil x1=xir y0=yil y1=yir Dpar=Dl Dtrans=Dt hx=hx v0=[u] v1=[i];
 // Timestep of the reaction-diffusion equation
 euler when=always x0=xil x1=xir y0=yil y1=yir v0=[u] v1=[u] ode=zfk ht=ht par={alpha=alpha Iu=@[i]};
 

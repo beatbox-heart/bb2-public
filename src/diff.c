@@ -158,6 +158,8 @@ typedef struct {
   Condition reweight_when;		/* When to recompute the weights: variable address */
   char reweight[maxname];		/* When to recompute the weights: variable name */
   int check_positivity;			/* Flag to test for "bad" points in anisotropy */
+  int isolated;				/* Whether border of device space is no-flux, or connects to tissue beyond */
+  size_t nadjacent;			/* Num of points of adjacent tissue, see diff_adjacent() */
 } STR;
 
 /* (Re-)Compute the weights */
@@ -464,6 +466,10 @@ CREATE_HEAD(diff)
     }
   } /* if ANISOTROPY_ON else */
 
+  /* Border of the device space: no-flux, or connected to the tissue beyond?	*/
+  /* The latter is safe if the diff tensor is constant, so default then.	*/
+  ACCEPTI(isolated,(S->loctb || ANISOTROPY_ON)?1:0,0,1);
+
   /* At this point we can check the diffusion stability limit if relevant */
   if (ht>0 && hx!=0) {
     real Dmax=fmax(S->D,fmax(S->Dl,S->Dt));
@@ -586,12 +592,71 @@ CREATE_HEAD(diff)
 
   /* Now compute and assign connection weights: this is also potentially doable at each step */
   if (SUCCESS != diff_connect(S,s)) ABORT("could not make the connection weighs");
+
+  /* Connection to adjacent tissue is dangerous unless that is deliberate */
+  long nadjacent=S->nadjacent;
+#if MPI
+  MPIDO(MPI_Allreduce(MPI_IN_PLACE,&nadjacent,1,MPI_LONG,MPI_SUM,ALL_ACTIVE_PROCS),"could not sum up the adjacent tissue points");
+#endif
+  if (nadjacent)
+    MESSAGE("\n/* WARNING: the device space borders on other tissue, and with isolated=0 is connected to it.\n"
+	    "   This is correct only if the tissue beyond the border is taken care of, e.g. by another\n"
+	    "   diff device or by boundary conditions; otherwise use isolated=1. */\n");
 }
 CREATE_TAIL(diff,1);
 
 /* Macros to print out the weights of the current point, */
 /* for debug purposes only. Remove when not needed.      */
 #include "diff_printweights.h"
+
+/****************/
+/* Adjacent tissue: tissue points beyond the border of the device space,	*/
+/* neighbouring its points. With isolated=0, they are connected to	*/
+/* the device space, so their diff tensor is needed, too.		*/
+/* List them, with the tensor kept in layers d0..d1 if any, 		*/
+/* otherwise in arrays of nD as for the listed points.			*/
+/* Duplicates are possible, and are harmless. 				*/
+static devicePoint *diff_adjacent (Space *s, int d0, int nD, size_t *nadjacent)
+{
+  devicePoint *adjacent=NULL;
+  size_t ip, n=0;
+  INT x, y, z, dx, dy, dz;
+  int pass;
+  for (pass=0;pass<2;pass++) {		/* count, then fill in */
+    n=0;
+    for (ip=0;ip<s->np;ip++) {
+      for (dx=-ONE;dx<=ONE;dx++) {
+	for (dy=-TWO;dy<=TWO;dy++) {
+	  for (dz=-TRI;dz<=TRI;dz++) {
+	    x=s->p[ip].x+dx;
+	    y=s->p[ip].y+dy;
+	    z=s->p[ip].z+dz;
+	    if (!isTissue(x,y,z) || in_space(s,x,y,z)) continue;
+	    if (pass) {
+	      adjacent[n].x=x;
+	      adjacent[n].y=y;
+	      adjacent[n].z=z;
+	      adjacent[n].u=New+ind(x,y,z,0);
+	      adjacent[n].X=NULL;
+	      if (d0>=0) {
+		adjacent[n].Y=(void *)(New+ind(x,y,z,d0));
+	      } else {
+		CALLOC((adjacent[n].Y),nD*sizeof(real),1); /* NB Y is (void *) so pointing to size 1 */
+	      }
+	    }
+	    n++;
+	  } /* for dz */
+	} /* for dy */
+      } /* for dx */
+    } /* for ip */
+    if (pass==0) {
+      if (n==0) break;
+      CALLOC(adjacent,n,sizeof(devicePoint));
+    }
+  } /* for pass */
+  *nadjacent=n;
+  return adjacent;
+} /* diff_adjacent */
 
 /****************/
 static int diff_connect (STR *S,Space *s)
@@ -606,11 +671,18 @@ static int diff_connect (STR *S,Space *s)
   DEVICE_CONST(int,nD);			/* number of diff tensor components */
   DEVICE_CONST(int,d0);			/* layers range to keep */
   DEVICE_CONST(int,d1);			/*    tensor components */
-  
+  DEVICE_CONST(int,isolated);		/* 0/1 flag for no-flux border of device space */
+
   size_t x,y,z,ip;			/* grid range counters */
   int i,j,nb;				/* short range counters */
   size_t np=s->np;			/* number of listed points of this device */
   devicePoint P;			/* the current point's structure */
+  devicePoint *adjacent=NULL;		/* adjacent tissue, connected to the device space */
+  size_t nadjacent=0;			/* .., their number */
+  int ipass;				/* 0: listed points, 1: adjacent tissue */
+
+  if (!isolated) adjacent=diff_adjacent(s,d0,nD,&nadjacent);
+  S->nadjacent=nadjacent;
   
   assert(GEOM_FIBRE_1==1);		/* shorter */	
   assert(GEOM_FIBRE_2==2);		/* if rely */
@@ -652,7 +724,12 @@ static int diff_connect (STR *S,Space *s)
   size_t *ipgrid;
   CALLOC(ipgrid,xlen*ylen*zlen,sizeof(size_t));	/* bookkeeping the points */
 #define IPNBR(x,y,z) (ipgrid[(z)+zlen*((y)+ylen*(x))])	/* number in the list of point with these coords */
-#define DNB(ij,...) (((real *)(s->p[APPLY(IPNBR,(_(__VA_ARGS__)))].Y))[DENUM(STC,ij)]) /* tensor component of neighbour */
+/* tensor component of neighbour: from the layers if any, otherwise from the listed point or adjacent tissue */
+#define DNB(ij,...) ((d0>=0)?						\
+  (New[APPLY(ind,(_(__VA_ARGS__),d0+DENUM(STC,ij)))]):			\
+  (((real *)((APPLY(IPNBR,(_(__VA_ARGS__)))<np)?				\
+	      (s->p[APPLY(IPNBR,(_(__VA_ARGS__)))].Y):			\
+	      (adjacent[APPLY(IPNBR,(_(__VA_ARGS__)))-np].Y)))[DENUM(STC,ij)]))
 #endif
 
 #define CLEAR_WEIGHTS memset(P.X, 0, nnb*sizeof(real))	/* zero out before filling them in */
@@ -664,16 +741,15 @@ static int diff_connect (STR *S,Space *s)
   /* MANY: many-point stencil. Incompatible with anisotropy nor with variable diffusivity.	*/
   /* VARIA: space-dependent diffusivities (principal values of the tensor).			*/
   /* Nota Bene: tensor may be variable due to principal values OR fibre directions!		*/
-  /* G(0,...) tells if a neighbour is connected: it must be tissue AND in the device space,	*/
-  /* so the border of the device space is a no-flux boundary, as is the border of tissue.	*/
+  /* G(0,...) tells if a neighbour is connected: it must be tissue, and if isolated,		*/
+  /* also in the device space, so the border of that is a no-flux boundary.			*/
   /* G(v,...), v>0 are the fibre direction components.						*/
-#define IN(x,y,z) in_space(s,x,y,z)
+#define CONNECTED(x,y,z) (isTissue(x,y,z) && (!isolated || in_space(s,x,y,z)))
 
   if (Geom==NULL) {			/* Not Geom, so not Aniso */
 #define GEOM 0
 #define ANISO 0
-    /* */				/* isTissue are all points in the device space  */
-#define G(v,...) ((v)?(0):(APPLY(IN,(_(__VA_ARGS__)))))
+#define G(v,...) ((v)?(0):(APPLY(CONNECTED,(_(__VA_ARGS__)))))
     /* */				DB("D=%g=%g=*(%p)=(double *)exec(%p)\n",S->D,*(S->Dptr),S->Dptr,S->Dexe);
 #include "diff1.h"
 #undef G
@@ -682,7 +758,7 @@ static int diff_connect (STR *S,Space *s)
   } else if (ANISOTROPY_ON==0) { 	/* Geom but not Aniso */
 #define GEOM 1
 #define ANISO 0
-#define G(v,...) ((v)?(0):(Geom[APPLY(geom_ind,(_(__VA_ARGS__),0))] && APPLY(IN,(_(__VA_ARGS__)))))
+#define G(v,...) ((v)?(0):(APPLY(CONNECTED,(_(__VA_ARGS__)))))
 #include "diff1.h"
 #undef G
 #undef ANISO
@@ -690,8 +766,7 @@ static int diff_connect (STR *S,Space *s)
   } else {				/* both Geom and Aniso */
 #define GEOM 1
 #define ANISO 1
-#define G(v,...) ((v)?(Geom[APPLY(geom_ind,(_(__VA_ARGS__),v))]):	\
-		  (Geom[APPLY(geom_ind,(_(__VA_ARGS__),0))] && APPLY(IN,(_(__VA_ARGS__)))))
+#define G(v,...) ((v)?(Geom[APPLY(geom_ind,(_(__VA_ARGS__),v))]):(APPLY(CONNECTED,(_(__VA_ARGS__)))))
 #include "diff1.h"
 #undef G
 #undef ANISO
@@ -746,6 +821,8 @@ static int diff_connect (STR *S,Space *s)
     } /* if check_positivity */
   } /* Geom or Aniso? */
   /* End of #include chain */
+  if (d0<0) for (ip=0;ip<nadjacent;ip++) FREE(adjacent[ip].Y);
+  FREE(adjacent);
   
   s->relisted=0;							DB("diff_connect done\n");
   return SUCCESS;

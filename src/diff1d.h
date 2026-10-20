@@ -48,16 +48,27 @@ if ((S->loctb) == NULL) {		/* variable diff but no local dependencies */
 #endif /* VARIA */
 
 /*---------------------------------------------------*/
-/* First round: the diff tensor and ipgrid signature */
+/* First round: the diff tensor and ipgrid signature, */
+/* at the listed points (ipass=0), then at the adjacent tissue (ipass=1) */
 /* */					DB("first round\n");
-for (ip=0;ip<np;ip++) { 
-  P=s->p[ip];
+for (ipass=0;ipass<2;ipass++) {
+#if (VARIA || ANISO) && MPI
+ if (ipass==1) {
+  /* Variable diffusivity needs neighbours' diff coeff */
+  ASSERT(d0>=0);			/* here diff coeff has to be on the grid */
+  haloSwap();			/* make it available for neighbouring subdomains */
+ }
+#endif /* (VARIA || ANISO) && MPI */
+for (ip=0;ip<(ipass?((VARIA || ANISO)?nadjacent:0):np);ip++) {
+  P=ipass?adjacent[ip]:s->p[ip];
   x=P.x;
   assert(P.y==0);
   assert(P.z==0);
-  CLEAR_WEIGHTS;
+  if (ipass==0) {
+    CLEAR_WEIGHTS;
+  }
 #if !MPI
-  IPNBR(x,0,0)=ip; 			/* count this point in the ipgrid */
+  IPNBR(x,0,0)=ipass?np+ip:ip;		/* count this point in the ipgrid */
 #endif
   /* */					//DB("ip=%ld xy=%ld,%ld Gam=%g\n",ip,x,y,Gam);
 #if VARIA
@@ -75,12 +86,7 @@ for (ip=0;ip<np;ip++) {
 #endif /* VARIA */
   D(11) = Dsh;				DB("x=%ld D11=%g\n",x,D(11));
  } /* for ip */
-
-#if (VARIA || ANISO) && MPI
-/* Variable diffusivity needs neighbours' diff coeff */
-ASSERT(d0>=0);			/* here diff coeff has to be on the grid */
-haloSwap();			/* make it available for neighbouring subdomains */
-#endif /* (VARIA || ANISO) && MPI */
+} /* for ipass */
 
 /*---------------------------------*/
 /* Second round: periphery weights */

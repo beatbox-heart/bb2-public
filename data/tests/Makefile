@@ -22,12 +22,12 @@ POSITIVE=funcs matout record reduce reduce-4 \
 	fhn0 fhn1 fhn2 fhn3 fhn3side fhn3side-16 \
 bkl3cont-0 bkl3cont-4 br0 hh52mrl \
 	ballf ballfcont-0 ballfcont-4 balldcont-0 balldcont-4 \
-	diffsub diffsub-4 diffwhere diffwhere-4
+	diffsub diffsub-4 diffwhere diffwhere-4 diffopen diffopen-4 diffopennl
 ALL=$(NEGATIVE) $(POSITIVE)
 all: clean closeenough admitfailure ${foreach t,$(ALL),$t.test}
 clean:
 	-rm -f *.log *.out **.fullout *.sorted
-	-rm -f bkl3cont-*.exact diffsub*.exact diffwhere*.exact
+	-rm -f bkl3cont-*.exact diffsub*.exact diffwhere*.exact diffopen*.exact
 	-rm -rf ball*.exact ball*.ctl ball*BAK ball*ct~
 
 .PHONY: %.test
@@ -150,21 +150,25 @@ balldcont-4.out: balldcont.bbs ball.bbg balld-4.ctl # do start from control poin
 	@$(MPIRUN) 4 $(BBXP) $+ $@ -verbose -debug stdout > $@.log
 
 ##########################
-# diff on a part of the tissue: same as on the tissue cut to that part, seq and mpi.
+# diff on a part of the tissue, seq and mpi: with isolated=1, same as on the tissue
+# cut to that part; with isolated=0, same as on the whole tissue, within that part.
 # The mpi decomposition leaves some processes without points of the diff device.
 DIFFSUB_DEPS=diffsub.par diffsub.ini diffsub.end
-.PRECIOUS: diffsub%.exact diffwhere%.exact
+.PRECIOUS: diffsub%.exact diffwhere%.exact diffopen%.exact
 diffsub.exact diffsub-4.exact: diffsubref.bbs $(DIFFSUB_DEPS)
 	$(COMMENT)
 	@$(BBXS) $< $@ -log /dev/null > /dev/null
 diffwhere.exact diffwhere-4.exact: diffwhereref.bbs $(DIFFSUB_DEPS)
 	$(COMMENT)
 	@$(BBXS) $< $@ -log /dev/null > /dev/null
-diffsub.out diffwhere.out: %.out: %.bbs $(DIFFSUB_DEPS)
+diffopen.exact diffopen-4.exact diffopennl.exact: diffopenref.bbs $(DIFFSUB_DEPS)
+	$(COMMENT)
+	@$(BBXS) $< $@ -log /dev/null > /dev/null
+diffsub.out diffwhere.out diffopen.out diffopennl.out: %.out: %.bbs $(DIFFSUB_DEPS)
 	$(COMMENT)
 	@-rm -rf $@
 	@$(BBXS) $< $@ -log /dev/null > /dev/null
-diffsub-4.out diffwhere-4.out: %-4.out: %.bbs $(DIFFSUB_DEPS)
+diffsub-4.out diffwhere-4.out diffopen-4.out: %-4.out: %.bbs $(DIFFSUB_DEPS)
 	$(COMMENT)
 	@-rm -rf $@
 	@$(MPIRUN) 4 $(BBXP) $< $@ -decomp 2x2x1 -log /dev/null > /dev/null

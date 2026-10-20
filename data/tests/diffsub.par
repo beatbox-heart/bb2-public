@@ -1,4 +1,4 @@
-// Common parameters of diffsub*.bbs and diffwhere*.bbs
+// Common parameters of diffsub*.bbs, diffwhere*.bbs and diffopen*.bbs
 def int nx 40; def int ny 35;	// grid size
 def int xb 10;			// border of the box space in diffsub
 def real xd 8; def real yd 9; def real rd 7; // disc space in diffwhere
