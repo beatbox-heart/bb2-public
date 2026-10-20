@@ -196,8 +196,9 @@ RUN_HEAD(diff)
     H10,H11,H12,H13,H14,H15,H16,H17,H18;/* neighbours' displacements (max no) */
 
   /* Recompute weights if requested explicitly or the space has been relisted */
+  /* NB the original, not the copy s, to keep the reset 'relisted' and serve the 'where' code */
   if (*reweight_when || s.relisted) {
-    if (SUCCESS != diff_connect(S,&s)) EXPECTED_ERROR("could not (re)make the connection weights");
+    if (SUCCESS != diff_connect(S,&(dev[idev].s))) EXPECTED_ERROR("could not (re)make the connection weights");
   }
 
   /* Simple variables are faster than array elements */
@@ -355,6 +356,7 @@ CREATE_HEAD(diff)
 {
   Space *s=&(dev->s);
   DEVICE_REQUIRES_SYNC;
+  DEVICE_ALWAYS_RUNS;			/* inactive instances must join haloSwap() and MPI_Barrier() */
   if (s->nowhere) EXPECTED_ERROR("'nowhere' is not allowed\n");
   if (0==s->listpoints==0) 
     MESSAGE("/* listpoints=1 is mandatory in this device and enforced */\n");
@@ -662,25 +664,25 @@ static int diff_connect (STR *S,Space *s)
   /* MANY: many-point stencil. Incompatible with anisotropy nor with variable diffusivity.	*/
   /* VARIA: space-dependent diffusivities (principal values of the tensor).			*/
   /* Nota Bene: tensor may be variable due to principal values OR fibre directions!		*/
-  
+  /* G(0,...) tells if a neighbour is connected: it must be tissue AND in the device space,	*/
+  /* so the border of the device space is a no-flux boundary, as is the border of tissue.	*/
+  /* G(v,...), v>0 are the fibre direction components.						*/
+#define IN(x,y,z) in_space(s,x,y,z)
+
   if (Geom==NULL) {			/* Not Geom, so not Aniso */
 #define GEOM 0
 #define ANISO 0
-    /* */				/* isTissue are all points in the device box  */
-#define IN(x,y,z) (s->global_x0<=x && x<=s->global_x1 && \
-		   s->global_y0<=y && y<=s->global_y1 && \
-		   s->global_z0<=z && z<=s->global_z1)
+    /* */				/* isTissue are all points in the device space  */
 #define G(v,...) ((v)?(0):(APPLY(IN,(_(__VA_ARGS__)))))
-    /* */				DB("D=%g=%g=*(%p)=(double *)exec(%p)\n",S->D,*(S->Dptr),S->Dptr,S->Dexe);    
+    /* */				DB("D=%g=%g=*(%p)=(double *)exec(%p)\n",S->D,*(S->Dptr),S->Dptr,S->Dexe);
 #include "diff1.h"
 #undef G
 #undef ANISO
-#undef IN
-#undef GEOM 
+#undef GEOM
   } else if (ANISOTROPY_ON==0) { 	/* Geom but not Aniso */
 #define GEOM 1
 #define ANISO 0
-#define G(v,...) Geom[APPLY(geom_ind,(_(__VA_ARGS__),v))] /* isTissue are points in Geom array */
+#define G(v,...) ((v)?(0):(Geom[APPLY(geom_ind,(_(__VA_ARGS__),0))] && APPLY(IN,(_(__VA_ARGS__)))))
 #include "diff1.h"
 #undef G
 #undef ANISO
@@ -688,7 +690,8 @@ static int diff_connect (STR *S,Space *s)
   } else {				/* both Geom and Aniso */
 #define GEOM 1
 #define ANISO 1
-#define G(v,...) Geom[APPLY(geom_ind,(_(__VA_ARGS__),v))] /* isTissue are points in Geom array */
+#define G(v,...) ((v)?(Geom[APPLY(geom_ind,(_(__VA_ARGS__),v))]):	\
+		  (Geom[APPLY(geom_ind,(_(__VA_ARGS__),0))] && APPLY(IN,(_(__VA_ARGS__)))))
 #include "diff1.h"
 #undef G
 #undef ANISO

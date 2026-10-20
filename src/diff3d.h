@@ -73,7 +73,7 @@ for (ip=0;ip<np;ip++) {
     S->z=z;				/*          symtable */
     if (S->u) memcpy(S->u,P.u,vmax*sizeof(real)); /* ditto, vector of u, if relevant */
 #if GEOM
-    if (S->geom) memcpy(S->geom,&(G(0,x,y,z)),geom_vmax*sizeof(real)); /* ditto, vector of geom */
+    if (S->geom) memcpy(S->geom,Geom+geom_ind(x,y,z,0),geom_vmax*sizeof(real)); /* ditto, vector of geom */
 #endif
 #if ANISO
     DEVICE_PAR(real,Dl);		/* longitudinal */	//DB("Dl=%g\n",Dl);

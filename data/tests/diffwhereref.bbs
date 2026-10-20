@@ -1,0 +1,7 @@
+// Reference for diffwhere.bbs: the tissue is the disc, and diff runs everywhere.
+def str out [1];
+<diffsub.par>
+state xmax=nx+2 ymax=ny+2 zmax=1 vmax=5 pgm={geom0=lt(hypot(x-xd,y-yd),rd);};
+<diffsub.ini>
+diff v0=0 v1=1 hx=hx ht=ht D=~1+0.5*sin(0.2*x+0.1*y) d0=2 d1=2;
+<diffsub.end>

@@ -1,0 +1,4 @@
+// Common output and finish of diffsub*.bbs and diffwhere*.bbs
+dump when=end v0=0 v1=4 file=[out];
+stop when=end;
+end;

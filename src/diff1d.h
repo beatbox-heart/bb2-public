@@ -66,7 +66,7 @@ for (ip=0;ip<np;ip++) {
     S->x=x;				/* copy point coord */
     if (S->u) memcpy(S->u,P.u,vmax*sizeof(real)); /* ditto, vector of u, if relevant */
 #if GEOM
-    if (S->geom) memcpy(S->geom,&(G(0,x)),geom_vmax*sizeof(real)); /* ditto, vector of geom */
+    if (S->geom) memcpy(S->geom,Geom+geom_ind(x,0,0,0),geom_vmax*sizeof(real)); /* ditto, vector of geom */
 #endif
     DEVICE_PAR(real,D);			/* scalar diffusivity only */
     Dsh=D*Gam;				/* scaled scalar */

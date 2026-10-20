@@ -1,0 +1,10 @@
+// Reference for diffsub.bbs: the tissue is cut at x=xb, and diff runs everywhere.
+def str out [1];
+<diffsub.par>
+state xmax=nx+2 ymax=ny+2 zmax=1 vmax=5 anisotropy=1 pgm={
+  geom0=gt(hypot(x-15,y-17),5)*le(x,xb);
+  geom1=cos(0.05*x+0.03*y); geom2=sin(0.05*x+0.03*y); geom3=0;
+};
+<diffsub.ini>
+diff v0=0 v1=1 hx=hx ht=ht Dl=~1+0.3*sin(0.1*x) Dt=0.2 d0=2 d1=4 reweight=always;
+<diffsub.end>

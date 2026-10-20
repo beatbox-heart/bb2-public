@@ -1,0 +1,10 @@
+// The diff device restricted by 'where' to a disc of radius rd, without geometry, must treat
+// the border of its space as a no-flux boundary, i.e. give exactly the same result as
+// diffwhereref.bbs, where the tissue is that disc. Isotropic, with variable diffusivity.
+// In MPI, decomposed so that some processes have no points of the device.
+def str out [1];
+<diffsub.par>
+state xmax=nx+2 ymax=ny+2 zmax=1 vmax=5;
+<diffsub.ini>
+diff v0=0 v1=1 hx=hx ht=ht D=~1+0.5*sin(0.2*x+0.1*y) d0=2 d1=2 where=lt(hypot(x-xd,y-yd),rd);
+<diffsub.end>

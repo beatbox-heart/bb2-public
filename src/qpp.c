@@ -1287,14 +1287,21 @@ int list_space (Space *S)
   DEVICE_CONST(int,restricted);
   DEVICE_ARRAY(char,where);
   DEVICE_CONST(pp_fn,wherecode);
-  DEVICE_CONST(int,hasu);
-  DEVICE_CONST(int,hasg);
   DEVICE_VAR(INT,x);
   DEVICE_VAR(INT,y);
   DEVICE_VAR(INT,z);
   DEVICE_VAR(size_t,np);
   DEVICE_VAR(devicePoint *,p);
   S->relisted=1;
+
+#if MPI
+  /* The box of an inactive instance is a dummy point in the halo, so must not be listed */
+  if (!S->runHere) {
+    FREE(*p);
+    *np=0;
+    return SUCCESS;
+  }
+#endif
 
   /* If device's space is default then its point list is standard */
   DEBUG("numTissuePoints=%ld, TissuePoints=%p\n",numTissuePoints,TissuePoints);
@@ -1331,12 +1338,7 @@ int list_space (Space *S)
   for ((*x)=x0;(*x)<=x1;(*x)++) {
     for ((*y)=y0;(*y)<=y1;(*y)++) {
       for ((*z)=z0;(*z)<=z1;(*z)++) {
-	if ((restricted==1) && (isTissue(*x,*y,*z)==0)) continue;
-	if (wherecode != NULL) {
-	  if (hasu) memcpy(S->u,New+ind(*x,*y,*z,0),vmax*sizeof(real));
-	  if (hasg) memcpy(S->geom,Geom+geom_ind(*x,*y,*z,0),geom_vmax*sizeof(real));
-	  if (0.0==*(real *)execute(wherecode)) continue;
-	}
+	if (!in_space(S,*x,*y,*z)) continue;
 	(*p)[*np].x=(*x);
 	(*p)[*np].y=(*y);
 	(*p)[*np].z=(*z);
@@ -1366,6 +1368,25 @@ int list_space (Space *S)
   }
   return SUCCESS;
 } /* list_space */
+
+/* Whether point (x,y,z) belongs to space S, by the same criteria as in list_space(). */
+/* Uses the global box, so applies also to points in the halo, i.e. in other subdomains. */
+int in_space (Space *S, INT x, INT y, INT z)
+{
+  if (x<S->global_x0 || x>S->global_x1 ||
+      y<S->global_y0 || y>S->global_y1 ||
+      z<S->global_z0 || z>S->global_z1) return 0;
+  if ((S->restricted==1) && (isTissue(x,y,z)==0)) return 0;
+  if (S->wherecode != NULL) {
+    S->x=x;
+    S->y=y;
+    S->z=z;
+    if (S->hasu) memcpy(S->u,New+ind(x,y,z,0),vmax*sizeof(real));
+    if (S->hasg) memcpy(S->geom,Geom+geom_ind(x,y,z,0),geom_vmax*sizeof(real));
+    if (0.0==*(real *)execute(S->wherecode)) return 0;
+  }
+  return 1;
+} /* in_space */
 
 int accept_window (BGIWindow *S, char *w)
 {

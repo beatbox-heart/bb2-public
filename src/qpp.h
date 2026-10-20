@@ -331,6 +331,9 @@ int accept_space (Space *s, char *w);
  */
 int list_space (Space *s);
 
+/*! Whether point (x,y,z) belongs to Space s; applies also to halo points. */
+int in_space (Space *s, INT x, INT y, INT z);
+
 #ifdef X11
 /*! Accepts a device's BGIWindow description from a given string.
  *	\param s Address of BGIWindow structure to be initialised.

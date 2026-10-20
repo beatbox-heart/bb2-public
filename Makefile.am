@@ -278,6 +278,13 @@ dist_tests = \
 		$(testdir)/depth.errmsg \
 		$(testdir)/diff0d.bbs \
 		$(testdir)/diff0d.errmsg \
+		$(testdir)/diffsub.bbs \
+		$(testdir)/diffsub.end \
+		$(testdir)/diffsub.ini \
+		$(testdir)/diffsub.par \
+		$(testdir)/diffsubref.bbs \
+		$(testdir)/diffwhere.bbs \
+		$(testdir)/diffwhereref.bbs \
 		$(testdir)/divzero.bbs \
 		$(testdir)/divzero.errmsg \
 		$(testdir)/fhn.par \
