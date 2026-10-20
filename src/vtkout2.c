@@ -81,7 +81,7 @@ typedef struct {
 #endif
 } STR;
 
-/* Only the r layer is output, as a scalar field; g and b are accepted for syntax compatibility with ppmout */
+/* Only the r layer is output, as a scalar field; g and b are not used */
 #define MAXCHAR 255
 RUN_HEAD(vtkout2)
 	DEVICE_CONST(int,append)
@@ -186,8 +186,9 @@ CREATE_HEAD(vtkout2)
 	ACCEPTI(append,0,0,1);
 	ACCEPTQ(file,S->append?"at":"wt",NULL);
 	ACCEPTI(r,INONE,-1,(int)vmax-1); ACCEPTR(r0,RNONE,RNONE,RNONE); ACCEPTR(r1,RNONE,RNONE,RNONE); ASSERT(S->r0!=S->r1);
-	ACCEPTI(g,INONE,-1,(int)vmax-1); ACCEPTR(g0,RNONE,RNONE,RNONE); ACCEPTR(g1,RNONE,RNONE,RNONE); ASSERT(S->g0!=S->g1);
-	ACCEPTI(b,INONE,-1,(int)vmax-1); ACCEPTR(b0,RNONE,RNONE,RNONE); ACCEPTR(b1,RNONE,RNONE,RNONE); ASSERT(S->b0!=S->b1);
+	/* g and b are not used; they are optional, for syntax compatibility with ppmout */
+	ACCEPTI(g,-1,-1,(int)vmax-1); ACCEPTR(g0,0,RNONE,RNONE); ACCEPTR(g1,1,RNONE,RNONE);
+	ACCEPTI(b,-1,-1,(int)vmax-1); ACCEPTR(b0,0,RNONE,RNONE); ACCEPTR(b1,1,RNONE,RNONE);
 	/**
 	 *	Background colour components.
 	 *	Used only when geometry is active, to show void points.

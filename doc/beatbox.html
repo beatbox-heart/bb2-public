@@ -13691,10 +13691,10 @@ beatbox/data/sequential/pd/scripts_crn1.bbs
 
 
 Outputs legacy 
-<a href="https://docs.vtk.org/en/latest/design_documents/VTKFileFormats.html"> VTK version 2 </a>
+<a href="https://docs.vtk.org/en/latest/vtk_file_formats/vtk_legacy_file_format.html"> VTK version 2 </a>
 file with a structured-points dataset. Only the red channel is output: the layer <code>r</code> is converted to bytes
 as for <code> <a href="#ppmout">ppmout</a> </code>, and written as a scalar field of type <code>unsigned_char</code>.
-The parameters <code>g</code>, <code>b</code> and their ranges are required but not used;
+The parameters <code>g</code>, <code>b</code> and their ranges are optional and not used;
 they are there to keep the syntax similar to that of <code> <a href="#ppmout">ppmout</a> </code>.
 
 </p>
@@ -13763,56 +13763,55 @@ This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
 <tr>
   <td><code>int</code></td>
   <td><code>g</code></td>
-  <td>-</td>
+  <td><code>-1</code></td>
   <td><code>-1</code></td>
   <td><code>vmax-1</code></td>
-  <td> The green colour channel of the output file is mapped to this layer of the computational grid (or ignored, for <code>g=-1</code>)</td>
-</tr>
-
-<tr> 
-  <td><code>real</code></td>
-  <td><code>g0</code></td>
-  <td>-</td>
-  <td>-</td>
-  <td>-</td>
-  <td> Green colour component <code>0</code> of the output corresponds to this value in the layer <code>g</code>. </td>
+  <td> Not used. </td>
 </tr>
 
 <tr>
   <td><code>real</code></td>
-  <td> <code>g1</code> </td>
+  <td><code>g0</code></td>
+  <td><code>0</code></td>
   <td>-</td>
   <td>-</td>
-  <td>-</td>
-  <td> Green colour component <code>255</code> (maximum) of the output corresponds to this value in the layer <code>g</code>. </td>
+  <td> Not used. </td>
 </tr>
 
+<tr>
+  <td><code>real</code></td>
+  <td><code>g1</code></td>
+  <td><code>1</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td> Not used. </td>
+</tr>
 
 <tr>
   <td><code>int</code></td>
   <td><code>b</code></td>
-  <td>-</td>
+  <td><code>-1</code></td>
   <td><code>-1</code></td>
   <td><code>vmax-1</code></td>
-  <td> The blue colour channel of the output file is mapped to this layer of the computational grid (or ignored, for <code>b=-1</code>)</td>
-</tr>
-
-<tr> 
-  <td><code>real</code></td>
-  <td><code>b0</code></td>
-  <td>-</td>
-  <td>-</td>
-  <td>-</td>
-  <td> Green colour component <code>0</code> of the output corresponds to this value in the layer <code>b</code>. </td>
+  <td> Not used. </td>
 </tr>
 
 <tr>
   <td><code>real</code></td>
-  <td> <code>b1</code> </td>
+  <td><code>b0</code></td>
+  <td><code>0</code></td>
   <td>-</td>
   <td>-</td>
+  <td> Not used. </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>b1</code></td>
+  <td><code>1</code></td>
   <td>-</td>
-  <td> Green colour component <code>255</code> (maximum) of the output corresponds to this value in the layer <code>n</code>. </td>
+  <td>-</td>
+  <td> Not used. </td>
 </tr>
 
 <tr>
@@ -13834,7 +13833,7 @@ This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
   <td><code>255</code></td>
   <td><code>0</code></td>
   <td><code>255</code></td>
-  <td> Green value of the background colour, to be displayed at void points.</td>
+  <td> Not used.</td>
 </tr>
 
 <tr>
@@ -13843,7 +13842,7 @@ This device is  <a href="#rectangular">rectangular</a> . Further parameters are:
   <td><code>255</code></td>
   <td><code>0</code></td>
   <td><code>255</code></td>
-  <td> Blue value of the background colour, to be displayed at void points.</td>
+  <td> Not used.</td>
 </tr>
 </table>
 
