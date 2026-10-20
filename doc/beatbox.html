@@ -9343,6 +9343,9 @@ dedicated layers <code>w0..w1</code> of the computational grid; then
 <code>inner_bc</code> will correct these weights at the boundary between two
 domains as described by the level in the <code>v0</code> "indicator" layer. 
 <strong>Caveat: slope-dependent correction is currently implemented only in 2D.</strong>
+Works in both sequential and parallel (MPI) modes. Grid points that are
+void in the geometry do not contribute to the estimate of the boundary
+slope, whatever their value in the <code>v0</code> layer.
 
 <h3>Parameters</h3>
 

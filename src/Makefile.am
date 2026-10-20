@@ -97,6 +97,7 @@ common_sources = \
 	ha.c ha_cur.h ha_par.h ha_un.h ha_var.h \
 	hh.c hh.h \
 	init.c init.h \
+	inner_bc.c \
 	ionic.h ioniclist.h \
 	kernik19.c kernik19_const.h kernik19_fddt.h kernik19_ftab.h kernik19_fun.h kernik19_ngate.h kernik19_other.h kernik19_par.h kernik19_tgate.h kernik19_tie.h \
 	k_.c k_.h \
@@ -196,7 +197,6 @@ bb2s_SOURCES = \
 	ezstep.c ezstep.h  ezstep1.h  ezstep2.h ezstep3.h ezstep4.h ezstep0d.h ezstep2d.h ezstep3d.h \
 	ezview.c ezgraph3d.c ezmarching.c ezview.h ezpar.h ezfix.h ezvar.h ezini.h ezarr.h ezgraph3d.h ezmarching.h ezgenerators.h \
 	imgout.c \
-	inner_bc.c \
 	k_clock.c \
 	k_draw.c \
 	k_imgout.c \

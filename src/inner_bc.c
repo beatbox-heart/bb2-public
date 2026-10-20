@@ -20,10 +20,17 @@
 
 /* Modify the on-grid diff weights for an Ohmic inner boundary, */
 /* with the correction by boundary slope. */
-/* This version is not yet for MPI. */
+/* Works in sequential and MPI modes; void points are neutral in the */
+/* slope estimate. Slope correction is implemented only in 2D. */
+
+#if MPI
+#include <mpi.h>
+#endif
 
 #include <math.h>
 #include <assert.h>
+#include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,13 +65,231 @@ enum m3_nbrs {m3000, m3p00, m3m00, m30p0, m30m0, m300p, m300m,
 	      m3pp0, m3pm0, m3mp0, m3mm0, m3p0p, m3p0m,
 	      m3m0p, m3m0m, m30pp, m30pm, m30mp, m30mm, m3nnb};
 
-/* Currently only 1D and 2D implemented so z1=z2 always */
-static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2, INT v0, real ca, real cb, int manypoint)
+static unsigned char indicator_class(real value, real c0, real c1)
 {
-  real c1, c2;
-  real v1=New[ind(x1,y1,z1,v0)];
-  real v2=New[ind(x2,y2,z2,v0)];
-  real thisv, Q;
+  if (value==c0) return 1;
+  if (value==c1) return 2;
+  return 0;
+}
+
+/* Void points are neutral in the slope estimate, whatever their indicator */
+static unsigned char point_class(INT x, INT y, INT z, int v0, real c0, real c1)
+{
+  if (!istissue(x,y,z)) return 0;
+  return indicator_class(New[ind(x,y,z,v0)],c0,c1);
+}
+
+#if MPI
+/* kslope reaches two cells beyond a local subdomain, including diagonals. */
+static size_t indicator_index(INT x, INT y, INT xmin, INT ymin, size_t ystride)
+{
+  return (size_t)(x-(xmin-2))*ystride + (size_t)(y-(ymin-2));
+}
+
+/* Absolute boundary points are stored, as halo, by the process owning
+   the adjacent interior points, so clamp them into the interior first. */
+static INT clamp_to_interior(INT q, INT qmin, INT qmax)
+{
+  if (q<qmin) return qmin;
+  if (q>qmax-1) return qmax-1;
+  return q;
+}
+
+static int indicator_owner(INT x, INT y, INT z)
+{
+  long ix, iy, iz;
+  ix=iy=iz=-1;
+  if (x<0 || y<0 || z<0) return NORANK;
+  if ((size_t)x>=xmax || (size_t)y>=ymax || (size_t)z>=zmax) return NORANK;
+  x=clamp_to_interior(x,ONE,(INT)xmax-ONE);
+  y=clamp_to_interior(y,TWO,(INT)ymax-TWO);
+  z=clamp_to_interior(z,TRI,(INT)zmax-TRI);
+  for (long i=0;i<mpi_nx;i++) {
+    if (all_xmin[i]<=(size_t)x && (size_t)x<all_xmax[i]) {ix=i; break;}
+  }
+  for (long i=0;i<mpi_ny;i++) {
+    if (all_ymin[i]<=(size_t)y && (size_t)y<all_ymax[i]) {iy=i; break;}
+  }
+  for (long i=0;i<mpi_nz;i++) {
+    if (all_zmin[i]<=(size_t)z && (size_t)z<all_zmax[i]) {iz=i; break;}
+  }
+  if (ix<0 || iy<0 || iz<0) return NORANK;
+  return ProcessRank[sind(ix,iy,iz)];
+}
+
+static void prepare_indicator_halo(int v0, real c0, real c1,
+                                   unsigned char **indicator,
+                                   size_t *ystride)
+{
+  int nranks, total_send=0, total_recv=0;
+  int *send_counts, *recv_counts, *send_displs, *recv_displs;
+  int *coord_send_counts, *coord_recv_counts;
+  int *coord_send_displs, *coord_recv_displs, *cursor;
+  long *coords_send, *coords_recv;
+  size_t *destinations;
+  unsigned char *values_send, *values_recv;
+  unsigned char *field;
+  size_t nx=(size_t)(local_xmax-local_xmin);
+  size_t ny=(size_t)(local_ymax-local_ymin);
+  size_t field_x, field_y, field_size;
+  INT xmin=(INT)local_xmin, ymin=(INT)local_ymin, z=(INT)local_zmin;
+
+  if (nx>SIZE_MAX-4 || ny>SIZE_MAX-4)
+    ABORT("inner_bc indicator halo dimensions overflow\n");
+  field_x=nx+4;
+  field_y=ny+4;
+  if (field_x && field_y>SIZE_MAX/field_x)
+    ABORT("inner_bc indicator halo size overflows\n");
+  field_size=field_x*field_y;
+  field=calloc(field_size,sizeof(*field));
+  if (!field) ABORT("Could not allocate inner_bc indicator halo\n");
+  *ystride=field_y;
+  *indicator=field;
+
+  for (INT x=xmin;x<(INT)local_xmax;x++) {
+    for (INT y=ymin;y<(INT)local_ymax;y++) {
+      field[indicator_index(x,y,xmin,ymin,field_y)] =
+        point_class(x,y,z,v0,c0,c1);
+    }
+  }
+
+  MPIDO(MPI_Comm_size(ALL_ACTIVE_PROCS,&nranks),
+        "Couldn't get active process count for inner_bc.");
+  send_counts=calloc(nranks,sizeof(*send_counts));
+  recv_counts=calloc(nranks,sizeof(*recv_counts));
+  send_displs=calloc(nranks,sizeof(*send_displs));
+  recv_displs=calloc(nranks,sizeof(*recv_displs));
+  coord_send_counts=calloc(nranks,sizeof(*coord_send_counts));
+  coord_recv_counts=calloc(nranks,sizeof(*coord_recv_counts));
+  coord_send_displs=calloc(nranks,sizeof(*coord_send_displs));
+  coord_recv_displs=calloc(nranks,sizeof(*coord_recv_displs));
+  cursor=calloc(nranks,sizeof(*cursor));
+  if (!send_counts || !recv_counts || !send_displs || !recv_displs ||
+      !coord_send_counts || !coord_recv_counts ||
+      !coord_send_displs || !coord_recv_displs || !cursor)
+    ABORT("Could not allocate inner_bc halo exchange metadata\n");
+
+  for (INT x=xmin-2;x<(INT)local_xmax+2;x++) {
+    for (INT y=ymin-2;y<(INT)local_ymax+2;y++) {
+      if (x>=xmin && x<(INT)local_xmax &&
+          y>=ymin && y<(INT)local_ymax) continue;
+      int owner=indicator_owner(x,y,z);
+      if (owner==mpi_rank) { /* absolute boundary point in own halo */
+        field[indicator_index(x,y,xmin,ymin,field_y)] =
+          point_class(x,y,z,v0,c0,c1);
+      } else if (owner>=0) {
+        if (send_counts[owner]==INT_MAX)
+          ABORT("Too many inner_bc halo requests for one rank\n");
+        send_counts[owner]++;
+      }
+    }
+  }
+
+  MPIDO(MPI_Alltoall(send_counts,1,MPI_INT,recv_counts,1,MPI_INT,
+                     ALL_ACTIVE_PROCS),
+        "Couldn't exchange inner_bc halo request counts.");
+  for (int rank=0;rank<nranks;rank++) {
+    if (send_counts[rank]>INT_MAX/2 || recv_counts[rank]>INT_MAX/2)
+      ABORT("Too many inner_bc halo requests for MPI_Alltoallv\n");
+    if (total_send>INT_MAX-send_counts[rank] ||
+        total_recv>INT_MAX-recv_counts[rank])
+      ABORT("inner_bc halo request count exceeds MPI limits\n");
+    send_displs[rank]=total_send;
+    recv_displs[rank]=total_recv;
+    coord_send_displs[rank]=2*total_send;
+    coord_recv_displs[rank]=2*total_recv;
+    total_send+=send_counts[rank];
+    total_recv+=recv_counts[rank];
+    coord_send_counts[rank]=2*send_counts[rank];
+    coord_recv_counts[rank]=2*recv_counts[rank];
+  }
+
+  coords_send=calloc(total_send?2*(size_t)total_send:1,sizeof(*coords_send));
+  coords_recv=calloc(total_recv?2*(size_t)total_recv:1,sizeof(*coords_recv));
+  destinations=calloc(total_send?total_send:1,sizeof(*destinations));
+  values_send=calloc(total_recv?total_recv:1,sizeof(*values_send));
+  values_recv=calloc(total_send?total_send:1,sizeof(*values_recv));
+  if (!coords_send || !coords_recv || !destinations ||
+      !values_send || !values_recv)
+    ABORT("Could not allocate inner_bc halo exchange buffers\n");
+  memcpy(cursor,send_displs,(size_t)nranks*sizeof(*cursor));
+
+  for (INT x=xmin-2;x<(INT)local_xmax+2;x++) {
+    for (INT y=ymin-2;y<(INT)local_ymax+2;y++) {
+      if (x>=xmin && x<(INT)local_xmax &&
+          y>=ymin && y<(INT)local_ymax) continue;
+      int owner=indicator_owner(x,y,z);
+      if (owner>=0 && owner!=mpi_rank) {
+        int pos=cursor[owner]++;
+        coords_send[2*(size_t)pos]=x;
+        coords_send[2*(size_t)pos+1]=y;
+        destinations[pos]=indicator_index(x,y,xmin,ymin,field_y);
+      }
+    }
+  }
+
+  MPIDO(MPI_Alltoallv(coords_send,coord_send_counts,coord_send_displs,MPI_LONG,
+                      coords_recv,coord_recv_counts,coord_recv_displs,MPI_LONG,
+                      ALL_ACTIVE_PROCS),
+        "Couldn't exchange inner_bc halo coordinates.");
+  for (int i=0;i<total_recv;i++) {
+    INT x=coords_recv[2*(size_t)i];
+    INT y=coords_recv[2*(size_t)i+1];
+    if (indicator_owner(x,y,z)!=mpi_rank)
+      ABORT("Invalid remote coordinate in inner_bc halo request: (%ld,%ld)\n",
+            (long)x,(long)y);
+    values_send[i]=point_class(x,y,z,v0,c0,c1);
+  }
+  MPIDO(MPI_Alltoallv(values_send,recv_counts,recv_displs,MPI_UNSIGNED_CHAR,
+                      values_recv,send_counts,send_displs,MPI_UNSIGNED_CHAR,
+                      ALL_ACTIVE_PROCS),
+        "Couldn't exchange inner_bc halo values.");
+  for (int i=0;i<total_send;i++) field[destinations[i]]=values_recv[i];
+
+  free(values_recv);
+  free(values_send);
+  free(destinations);
+  free(coords_recv);
+  free(coords_send);
+  free(cursor);
+  free(coord_recv_displs);
+  free(coord_send_displs);
+  free(coord_recv_counts);
+  free(coord_send_counts);
+  free(recv_displs);
+  free(send_displs);
+  free(recv_counts);
+  free(send_counts);
+}
+#endif
+
+static unsigned char kslope_sample(INT x, INT y, INT z, INT v0,
+                                   real ca, real cb,
+                                   const unsigned char *indicator,
+                                   size_t ystride, INT xmin, INT ymin)
+{
+#if MPI
+  if (indicator)
+    return indicator[indicator_index(x,y,xmin,ymin,ystride)];
+#else
+  (void)indicator;
+  (void)ystride;
+  (void)xmin;
+  (void)ymin;
+#endif
+  return point_class(x,y,z,v0,ca,cb);
+}
+
+/* Currently only 1D and 2D implemented so z1=z2 always */
+static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2,
+                    INT v0, real ca, real cb, int manypoint,
+                    const unsigned char *indicator, size_t ystride,
+                    INT xmin, INT ymin)
+{
+  unsigned char c1, c2, thisv;
+  unsigned char v1=kslope_sample(x1,y1,z1,v0,ca,cb,indicator,ystride,xmin,ymin);
+  unsigned char v2=kslope_sample(x2,y2,z2,v0,ca,cb,indicator,ystride,xmin,ymin);
+  real Q;
   real Sx, Sy, S, dx, dy;
   long x, y, X, Y, N;
   real alpha, p, q, k, cosalpha, sinalpha;
@@ -73,14 +298,12 @@ static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2, INT v0, real
   ASSERT(z1==z2);
   ASSERT((x1!=x2) || (y1!=y2));
   
-  if (v1==ca) c1=ca;
-  else if (v1==cb) c1=cb;
-  else ABORT("New[(x1=%ld,y1=%ld,z1=%ld,v0=%ld)]=%g neither %g nor %g\n",
+  if (v1==1 || v1==2) c1=v1;
+  else ABORT("New[(x1=%ld,y1=%ld,z1=%ld,v0=%ld)] is neither %g nor %g\n",
 	     (long)x1,(long)y1,(long)z1,(long)v0,ca,cb);
   
-  if (v2==ca) c2=ca;
-  else if (v2==cb) c2=cb;
-  else ABORT("New[(x2=%ld,y2=%ld,z2=%ld,v0=%ld)]=%g neither %g nor %g\n",
+  if (v2==1 || v2==2) c2=v2;
+  else ABORT("New[(x2=%ld,y2=%ld,z2=%ld,v0=%ld)] is neither %g nor %g\n",
 	     (long)x2,(long)y2,(long)z2,(long)v0,ca,cb);
 
   S=Sx=Sy=0.0;
@@ -88,7 +311,7 @@ static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2, INT v0, real
   
 #define account(dx,dy)				\
   x=x1+dx; y=y1+dy;				\
-  thisv=New[ind(x,y,z1,v0)];			\
+  thisv=kslope_sample(x,y,z1,v0,ca,cb,indicator,ystride,xmin,ymin); \
   Q=(thisv==c1)?1:(thisv==c2)?(-1):0;		\
   N++; X+=x; Y+=y; S+=Q; Sx+=Q*x; Sy+=Q*y;
   account(+1,0); 
@@ -102,7 +325,7 @@ static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2, INT v0, real
 #undef account
 #define account(dx,dy)				\
   x=x2+dx; y=y2+dy;				\
-  thisv=New[ind(x,y,z2,v0)];			\
+  thisv=kslope_sample(x,y,z2,v0,ca,cb,indicator,ystride,xmin,ymin); \
   Q=(thisv==c1)?1:(thisv==c2)?(-1):0;		\
   N++; X+=x; Y+=y; S+=Q; Sx+=Q*x; Sy+=Q*y;
   account(+1,0); 
@@ -156,15 +379,34 @@ RUN_HEAD(inner_bc)
   DEVICE_PAR(real,Sigma);
   DEVICE_CONST(int,manypoint);
 
+#if MPI
+  unsigned char *indicator=NULL;
+  size_t indicator_ystride=0;
+  prepare_indicator_halo(v0,c0,c1,&indicator,&indicator_ystride);
+#else
+  unsigned char *indicator=NULL;
+  size_t indicator_ystride=0;
+#endif
+
+  /* The halo exchange is collective; only ranks with device work update weights. */
+#if MPI
+  if (s.runHere) {
+#else
+  { /* s.runHere is not set in sequential mode */
+#endif
   int nn=0;
   /* Currently only 1D and 2D implemented so dz=0 always */
 #define adjust(dx,dy,dz,qq,wgt)				    \
   if (isTissue(*x+dx,*y+dy,*z+dz)) {                        \
-    real val0=New[ind(*x,*y,*z,v0)];                        \
-    real val1=New[ind(*x+dx,*y+dy,*z+dz,v0)];               \
-    if ((val0==c0 && val1==c1) || (val0==c1 && val1==c0)) { \
+    /* not New: its halo corners may be stale next to empty subdomains */ \
+    unsigned char cls0=kslope_sample(*x,*y,*z,v0,c0,c1,     \
+      indicator,indicator_ystride,local_xmin,local_ymin);   \
+    unsigned char cls1=kslope_sample(*x+dx,*y+dy,*z+dz,v0,c0,c1, \
+      indicator,indicator_ystride,local_xmin,local_ymin);   \
+    if ((cls0==1 && cls1==2) || (cls0==2 && cls1==1)) {     \
       real *pwgt=New+ind(*x,*y,*z,w0+qq);		    \
-      real k=kslope(*x,*y,*z,*x+dx,*y+dy,*z+dz, v0, c0, c1, manypoint);	\
+      real k=kslope(*x,*y,*z,*x+dx,*y+dy,*z+dz, v0, c0, c1, manypoint, \
+                   indicator,indicator_ystride,local_xmin,local_ymin); \
       real awgt=wgt*k;					    \
       New[ind(*x,*y,*z,w0+oo)]+=(*pwgt-awgt);		    \
       *pwgt=awgt;				    	    \
@@ -274,7 +516,11 @@ RUN_HEAD(inner_bc)
     EXPECTED_ERROR("unexpected dimension %d",dim);
     break;
   } /* switch dim */
+  }
 
+#if MPI
+  free(indicator);
+#endif
 }
 RUN_TAIL(inner_bc)
 
@@ -283,6 +529,8 @@ DESTROY_TAIL(inner_bc)
 
 CREATE_HEAD(inner_bc)
 {
+  DEVICE_REQUIRES_SYNC;
+  DEVICE_ALWAYS_RUNS;
   ACCEPTI(advance,0,0,1);
   ACCEPTI(v0,INONE,0,(int)vmax-1);
   ACCEPTR(c0,RNONE,RNONE,RNONE);

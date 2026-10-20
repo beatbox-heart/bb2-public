@@ -148,7 +148,7 @@ am__bb2p_SOURCES_DIST = beatbox.c beatbox.h activation.c ap.c b02.c \
 	fkmod.h flip.c flow2d.c front.c geometry.c geometry.h glerr.h \
 	globalfunc.c gpcell.c gpcell.h gpc_var.h grad2d.c ha.c \
 	ha_cur.h ha_par.h ha_un.h ha_var.h hh.c hh.h init.c init.h \
-	ionic.h ioniclist.h kernik19.c kernik19_const.h \
+	inner_bc.c ionic.h ioniclist.h kernik19.c kernik19_const.h \
 	kernik19_fddt.h kernik19_ftab.h kernik19_fun.h \
 	kernik19_ngate.h kernik19_other.h kernik19_par.h \
 	kernik19_tgate.h kernik19_tie.h k_.c k_.h k_calc.h k_code.h \
@@ -203,8 +203,9 @@ am__objects_1 = bb2p-beatbox.$(OBJEXT) bb2p-activation.$(OBJEXT) \
 	bb2p-flow2d.$(OBJEXT) bb2p-front.$(OBJEXT) \
 	bb2p-geometry.$(OBJEXT) bb2p-globalfunc.$(OBJEXT) \
 	bb2p-gpcell.$(OBJEXT) bb2p-grad2d.$(OBJEXT) bb2p-ha.$(OBJEXT) \
-	bb2p-hh.$(OBJEXT) bb2p-init.$(OBJEXT) bb2p-kernik19.$(OBJEXT) \
-	bb2p-k_.$(OBJEXT) bb2p-k_comp.$(OBJEXT) bb2p-k_exec.$(OBJEXT) \
+	bb2p-hh.$(OBJEXT) bb2p-init.$(OBJEXT) bb2p-inner_bc.$(OBJEXT) \
+	bb2p-kernik19.$(OBJEXT) bb2p-k_.$(OBJEXT) \
+	bb2p-k_comp.$(OBJEXT) bb2p-k_exec.$(OBJEXT) \
 	bb2p-k_func.$(OBJEXT) bb2p-k_poincare.$(OBJEXT) \
 	bb2p-k_print.$(OBJEXT) bb2p-l_abs.$(OBJEXT) \
 	bb2p-l_add.$(OBJEXT) bb2p-l_axpy.$(OBJEXT) \
@@ -265,8 +266,9 @@ am__objects_2 = bb2s-beatbox.$(OBJEXT) bb2s-activation.$(OBJEXT) \
 	bb2s-flow2d.$(OBJEXT) bb2s-front.$(OBJEXT) \
 	bb2s-geometry.$(OBJEXT) bb2s-globalfunc.$(OBJEXT) \
 	bb2s-gpcell.$(OBJEXT) bb2s-grad2d.$(OBJEXT) bb2s-ha.$(OBJEXT) \
-	bb2s-hh.$(OBJEXT) bb2s-init.$(OBJEXT) bb2s-kernik19.$(OBJEXT) \
-	bb2s-k_.$(OBJEXT) bb2s-k_comp.$(OBJEXT) bb2s-k_exec.$(OBJEXT) \
+	bb2s-hh.$(OBJEXT) bb2s-init.$(OBJEXT) bb2s-inner_bc.$(OBJEXT) \
+	bb2s-kernik19.$(OBJEXT) bb2s-k_.$(OBJEXT) \
+	bb2s-k_comp.$(OBJEXT) bb2s-k_exec.$(OBJEXT) \
 	bb2s-k_func.$(OBJEXT) bb2s-k_poincare.$(OBJEXT) \
 	bb2s-k_print.$(OBJEXT) bb2s-l_abs.$(OBJEXT) \
 	bb2s-l_add.$(OBJEXT) bb2s-l_axpy.$(OBJEXT) \
@@ -306,15 +308,14 @@ am_bb2s_OBJECTS = $(am__objects_2) bb2s-adi1d.$(OBJEXT) \
 	bb2s-bytein.$(OBJEXT) bb2s-ezpaint.$(OBJEXT) \
 	bb2s-ezstep.$(OBJEXT) bb2s-ezview.$(OBJEXT) \
 	bb2s-ezgraph3d.$(OBJEXT) bb2s-ezmarching.$(OBJEXT) \
-	bb2s-imgout.$(OBJEXT) bb2s-inner_bc.$(OBJEXT) \
-	bb2s-k_clock.$(OBJEXT) bb2s-k_draw.$(OBJEXT) \
-	bb2s-k_imgout.$(OBJEXT) bb2s-k_paint.$(OBJEXT) \
-	bb2s-k_paintgl.$(OBJEXT) bb2s-k_plot.$(OBJEXT) \
-	bb2s-localprint.$(OBJEXT) bb2s-matout.$(OBJEXT) \
-	bb2s-pgmin.$(OBJEXT) bb2s-ppmin.$(OBJEXT) \
-	bb2s-record.$(OBJEXT) bb2s-skrecord.$(OBJEXT) \
-	bb2s-screen_dump.$(OBJEXT) bb2s-torx.$(OBJEXT) \
-	bb2s-tory.$(OBJEXT) bb2s-torz.$(OBJEXT)
+	bb2s-imgout.$(OBJEXT) bb2s-k_clock.$(OBJEXT) \
+	bb2s-k_draw.$(OBJEXT) bb2s-k_imgout.$(OBJEXT) \
+	bb2s-k_paint.$(OBJEXT) bb2s-k_paintgl.$(OBJEXT) \
+	bb2s-k_plot.$(OBJEXT) bb2s-localprint.$(OBJEXT) \
+	bb2s-matout.$(OBJEXT) bb2s-pgmin.$(OBJEXT) \
+	bb2s-ppmin.$(OBJEXT) bb2s-record.$(OBJEXT) \
+	bb2s-skrecord.$(OBJEXT) bb2s-screen_dump.$(OBJEXT) \
+	bb2s-torx.$(OBJEXT) bb2s-tory.$(OBJEXT) bb2s-torz.$(OBJEXT)
 bb2s_OBJECTS = $(am_bb2s_OBJECTS)
 bb2s_DEPENDENCIES = $(common_ldadd)
 bb2s_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -363,118 +364,119 @@ am__depfiles_remade = ./$(DEPDIR)/bb2d-bbxd.Po \
 	./$(DEPDIR)/bb2p-grad2d.Po ./$(DEPDIR)/bb2p-ha.Po \
 	./$(DEPDIR)/bb2p-hh.Po ./$(DEPDIR)/bb2p-hh52.Po \
 	./$(DEPDIR)/bb2p-hh52m.Po ./$(DEPDIR)/bb2p-init.Po \
-	./$(DEPDIR)/bb2p-k_.Po ./$(DEPDIR)/bb2p-k_comp.Po \
-	./$(DEPDIR)/bb2p-k_exec.Po ./$(DEPDIR)/bb2p-k_func.Po \
-	./$(DEPDIR)/bb2p-k_poincare.Po ./$(DEPDIR)/bb2p-k_print.Po \
-	./$(DEPDIR)/bb2p-kernik19.Po ./$(DEPDIR)/bb2p-l_abs.Po \
-	./$(DEPDIR)/bb2p-l_add.Po ./$(DEPDIR)/bb2p-l_axpy.Po \
-	./$(DEPDIR)/bb2p-l_copy.Po ./$(DEPDIR)/bb2p-l_max.Po \
-	./$(DEPDIR)/bb2p-l_min.Po ./$(DEPDIR)/bb2p-l_move.Po \
-	./$(DEPDIR)/bb2p-l_mult.Po ./$(DEPDIR)/bb2p-l_prod.Po \
-	./$(DEPDIR)/bb2p-l_scal.Po ./$(DEPDIR)/bb2p-l_sum.Po \
-	./$(DEPDIR)/bb2p-l_swap.Po ./$(DEPDIR)/bb2p-load.Po \
-	./$(DEPDIR)/bb2p-localfunc.Po ./$(DEPDIR)/bb2p-lrd.Po \
-	./$(DEPDIR)/bb2p-mchtb.Po ./$(DEPDIR)/bb2p-mouse.Po \
-	./$(DEPDIR)/bb2p-mousevent.Po ./$(DEPDIR)/bb2p-mpipaint.Po \
-	./$(DEPDIR)/bb2p-ms.Po ./$(DEPDIR)/bb2p-n62.Po \
-	./$(DEPDIR)/bb2p-neum2d.Po ./$(DEPDIR)/bb2p-neum3d.Po \
-	./$(DEPDIR)/bb2p-noble.Po ./$(DEPDIR)/bb2p-noble2.Po \
-	./$(DEPDIR)/bb2p-noble_gbk.Po ./$(DEPDIR)/bb2p-nobleftn.Po \
-	./$(DEPDIR)/bb2p-noblen.Po ./$(DEPDIR)/bb2p-noblest2.Po \
-	./$(DEPDIR)/bb2p-noblestu.Po ./$(DEPDIR)/bb2p-ord.Po \
-	./$(DEPDIR)/bb2p-p2clib.Po ./$(DEPDIR)/bb2p-paci18.Po \
-	./$(DEPDIR)/bb2p-paci20.Po ./$(DEPDIR)/bb2p-pause.Po \
-	./$(DEPDIR)/bb2p-pgmout.Po ./$(DEPDIR)/bb2p-pipe.Po \
-	./$(DEPDIR)/bb2p-poincare.Po ./$(DEPDIR)/bb2p-ppcpash18.Po \
-	./$(DEPDIR)/bb2p-ppmout.Po ./$(DEPDIR)/bb2p-pw_mult.Po \
-	./$(DEPDIR)/bb2p-qpp.Po ./$(DEPDIR)/bb2p-reduce.Po \
-	./$(DEPDIR)/bb2p-regular.Po ./$(DEPDIR)/bb2p-rk4.Po \
-	./$(DEPDIR)/bb2p-rushlarsen.Po ./$(DEPDIR)/bb2p-sample.Po \
-	./$(DEPDIR)/bb2p-screen.Po ./$(DEPDIR)/bb2p-sequence.Po \
-	./$(DEPDIR)/bb2p-shell.Po ./$(DEPDIR)/bb2p-singz.Po \
-	./$(DEPDIR)/bb2p-state.Po ./$(DEPDIR)/bb2p-stop.Po \
-	./$(DEPDIR)/bb2p-system.Po ./$(DEPDIR)/bb2p-tb.Po \
-	./$(DEPDIR)/bb2p-trivial.Po ./$(DEPDIR)/bb2p-ttnnp04.Po \
-	./$(DEPDIR)/bb2p-ttnp.Po ./$(DEPDIR)/bb2p-ttp06.Po \
-	./$(DEPDIR)/bb2p-ttp2006.Po ./$(DEPDIR)/bb2p-update.Po \
-	./$(DEPDIR)/bb2p-vtkout2.Po ./$(DEPDIR)/bb2p-windraw.Po \
-	./$(DEPDIR)/bb2p-zeeman.Po ./$(DEPDIR)/bb2p-zfk.Po \
-	./$(DEPDIR)/bb2s-activation.Po ./$(DEPDIR)/bb2s-adi1d.Po \
-	./$(DEPDIR)/bb2s-adi2d.Po ./$(DEPDIR)/bb2s-adi3d.Po \
-	./$(DEPDIR)/bb2s-ap.Po ./$(DEPDIR)/bb2s-b02.Po \
-	./$(DEPDIR)/bb2s-beatbox.Po ./$(DEPDIR)/bb2s-bgi.Po \
-	./$(DEPDIR)/bb2s-bikt.Po ./$(DEPDIR)/bb2s-br77.Po \
-	./$(DEPDIR)/bb2s-byte.Po ./$(DEPDIR)/bb2s-bytein.Po \
-	./$(DEPDIR)/bb2s-byteout.Po ./$(DEPDIR)/bb2s-bzoregon.Po \
-	./$(DEPDIR)/bb2s-bzr.Po ./$(DEPDIR)/bb2s-cgle.Po \
-	./$(DEPDIR)/bb2s-cglel.Po ./$(DEPDIR)/bb2s-cglep.Po \
-	./$(DEPDIR)/bb2s-chrecruit.Po ./$(DEPDIR)/bb2s-chtb.Po \
-	./$(DEPDIR)/bb2s-clock.Po ./$(DEPDIR)/bb2s-crn.Po \
-	./$(DEPDIR)/bb2s-crn98.Po ./$(DEPDIR)/bb2s-crnach.Po \
-	./$(DEPDIR)/bb2s-ctlpoint.Po ./$(DEPDIR)/bb2s-d_dt.Po \
-	./$(DEPDIR)/bb2s-d_dx.Po ./$(DEPDIR)/bb2s-d_dy.Po \
-	./$(DEPDIR)/bb2s-device.Po ./$(DEPDIR)/bb2s-diff.Po \
-	./$(DEPDIR)/bb2s-diff2dv.Po ./$(DEPDIR)/bb2s-diff3dv.Po \
-	./$(DEPDIR)/bb2s-diffold.Po ./$(DEPDIR)/bb2s-diffstep.Po \
-	./$(DEPDIR)/bb2s-dump.Po ./$(DEPDIR)/bb2s-dynamic.Po \
-	./$(DEPDIR)/bb2s-ecg.Po ./$(DEPDIR)/bb2s-elliptic.Po \
-	./$(DEPDIR)/bb2s-error.Po ./$(DEPDIR)/bb2s-euler.Po \
-	./$(DEPDIR)/bb2s-ezgraph3d.Po ./$(DEPDIR)/bb2s-ezmarching.Po \
-	./$(DEPDIR)/bb2s-ezpaint.Po ./$(DEPDIR)/bb2s-ezstep.Po \
-	./$(DEPDIR)/bb2s-ezview.Po ./$(DEPDIR)/bb2s-fhnbkl.Po \
-	./$(DEPDIR)/bb2s-fhncub.Po ./$(DEPDIR)/bb2s-fhncubpar.Po \
-	./$(DEPDIR)/bb2s-fk.Po ./$(DEPDIR)/bb2s-fkmod.Po \
-	./$(DEPDIR)/bb2s-flip.Po ./$(DEPDIR)/bb2s-flow2d.Po \
-	./$(DEPDIR)/bb2s-front.Po ./$(DEPDIR)/bb2s-geometry.Po \
-	./$(DEPDIR)/bb2s-globalfunc.Po ./$(DEPDIR)/bb2s-gpcell.Po \
-	./$(DEPDIR)/bb2s-grad2d.Po ./$(DEPDIR)/bb2s-ha.Po \
-	./$(DEPDIR)/bb2s-hh.Po ./$(DEPDIR)/bb2s-hh52.Po \
-	./$(DEPDIR)/bb2s-hh52m.Po ./$(DEPDIR)/bb2s-imgout.Po \
-	./$(DEPDIR)/bb2s-init.Po ./$(DEPDIR)/bb2s-inner_bc.Po \
-	./$(DEPDIR)/bb2s-k_.Po ./$(DEPDIR)/bb2s-k_clock.Po \
-	./$(DEPDIR)/bb2s-k_comp.Po ./$(DEPDIR)/bb2s-k_draw.Po \
-	./$(DEPDIR)/bb2s-k_exec.Po ./$(DEPDIR)/bb2s-k_func.Po \
-	./$(DEPDIR)/bb2s-k_imgout.Po ./$(DEPDIR)/bb2s-k_paint.Po \
-	./$(DEPDIR)/bb2s-k_paintgl.Po ./$(DEPDIR)/bb2s-k_plot.Po \
-	./$(DEPDIR)/bb2s-k_poincare.Po ./$(DEPDIR)/bb2s-k_print.Po \
-	./$(DEPDIR)/bb2s-kernik19.Po ./$(DEPDIR)/bb2s-l_abs.Po \
-	./$(DEPDIR)/bb2s-l_add.Po ./$(DEPDIR)/bb2s-l_axpy.Po \
-	./$(DEPDIR)/bb2s-l_copy.Po ./$(DEPDIR)/bb2s-l_max.Po \
-	./$(DEPDIR)/bb2s-l_min.Po ./$(DEPDIR)/bb2s-l_move.Po \
-	./$(DEPDIR)/bb2s-l_mult.Po ./$(DEPDIR)/bb2s-l_prod.Po \
-	./$(DEPDIR)/bb2s-l_scal.Po ./$(DEPDIR)/bb2s-l_sum.Po \
-	./$(DEPDIR)/bb2s-l_swap.Po ./$(DEPDIR)/bb2s-load.Po \
-	./$(DEPDIR)/bb2s-localfunc.Po ./$(DEPDIR)/bb2s-localprint.Po \
-	./$(DEPDIR)/bb2s-lrd.Po ./$(DEPDIR)/bb2s-matout.Po \
-	./$(DEPDIR)/bb2s-mchtb.Po ./$(DEPDIR)/bb2s-mouse.Po \
-	./$(DEPDIR)/bb2s-mousevent.Po ./$(DEPDIR)/bb2s-mpipaint.Po \
-	./$(DEPDIR)/bb2s-ms.Po ./$(DEPDIR)/bb2s-n62.Po \
-	./$(DEPDIR)/bb2s-neum2d.Po ./$(DEPDIR)/bb2s-neum3d.Po \
-	./$(DEPDIR)/bb2s-noble.Po ./$(DEPDIR)/bb2s-noble2.Po \
-	./$(DEPDIR)/bb2s-noble_gbk.Po ./$(DEPDIR)/bb2s-nobleftn.Po \
-	./$(DEPDIR)/bb2s-noblen.Po ./$(DEPDIR)/bb2s-noblest2.Po \
-	./$(DEPDIR)/bb2s-noblestu.Po ./$(DEPDIR)/bb2s-ord.Po \
-	./$(DEPDIR)/bb2s-p2clib.Po ./$(DEPDIR)/bb2s-paci18.Po \
-	./$(DEPDIR)/bb2s-paci20.Po ./$(DEPDIR)/bb2s-pause.Po \
-	./$(DEPDIR)/bb2s-pgmin.Po ./$(DEPDIR)/bb2s-pgmout.Po \
-	./$(DEPDIR)/bb2s-pipe.Po ./$(DEPDIR)/bb2s-poincare.Po \
-	./$(DEPDIR)/bb2s-ppcpash18.Po ./$(DEPDIR)/bb2s-ppmin.Po \
-	./$(DEPDIR)/bb2s-ppmout.Po ./$(DEPDIR)/bb2s-pw_mult.Po \
-	./$(DEPDIR)/bb2s-qpp.Po ./$(DEPDIR)/bb2s-record.Po \
-	./$(DEPDIR)/bb2s-reduce.Po ./$(DEPDIR)/bb2s-regular.Po \
-	./$(DEPDIR)/bb2s-rk4.Po ./$(DEPDIR)/bb2s-rushlarsen.Po \
-	./$(DEPDIR)/bb2s-sample.Po ./$(DEPDIR)/bb2s-screen.Po \
-	./$(DEPDIR)/bb2s-screen_dump.Po ./$(DEPDIR)/bb2s-sequence.Po \
-	./$(DEPDIR)/bb2s-shell.Po ./$(DEPDIR)/bb2s-singz.Po \
-	./$(DEPDIR)/bb2s-skrecord.Po ./$(DEPDIR)/bb2s-state.Po \
-	./$(DEPDIR)/bb2s-stop.Po ./$(DEPDIR)/bb2s-system.Po \
-	./$(DEPDIR)/bb2s-tb.Po ./$(DEPDIR)/bb2s-torx.Po \
-	./$(DEPDIR)/bb2s-tory.Po ./$(DEPDIR)/bb2s-torz.Po \
-	./$(DEPDIR)/bb2s-trivial.Po ./$(DEPDIR)/bb2s-ttnnp04.Po \
-	./$(DEPDIR)/bb2s-ttnp.Po ./$(DEPDIR)/bb2s-ttp06.Po \
-	./$(DEPDIR)/bb2s-ttp2006.Po ./$(DEPDIR)/bb2s-update.Po \
-	./$(DEPDIR)/bb2s-vtkout2.Po ./$(DEPDIR)/bb2s-windraw.Po \
-	./$(DEPDIR)/bb2s-zeeman.Po ./$(DEPDIR)/bb2s-zfk.Po
+	./$(DEPDIR)/bb2p-inner_bc.Po ./$(DEPDIR)/bb2p-k_.Po \
+	./$(DEPDIR)/bb2p-k_comp.Po ./$(DEPDIR)/bb2p-k_exec.Po \
+	./$(DEPDIR)/bb2p-k_func.Po ./$(DEPDIR)/bb2p-k_poincare.Po \
+	./$(DEPDIR)/bb2p-k_print.Po ./$(DEPDIR)/bb2p-kernik19.Po \
+	./$(DEPDIR)/bb2p-l_abs.Po ./$(DEPDIR)/bb2p-l_add.Po \
+	./$(DEPDIR)/bb2p-l_axpy.Po ./$(DEPDIR)/bb2p-l_copy.Po \
+	./$(DEPDIR)/bb2p-l_max.Po ./$(DEPDIR)/bb2p-l_min.Po \
+	./$(DEPDIR)/bb2p-l_move.Po ./$(DEPDIR)/bb2p-l_mult.Po \
+	./$(DEPDIR)/bb2p-l_prod.Po ./$(DEPDIR)/bb2p-l_scal.Po \
+	./$(DEPDIR)/bb2p-l_sum.Po ./$(DEPDIR)/bb2p-l_swap.Po \
+	./$(DEPDIR)/bb2p-load.Po ./$(DEPDIR)/bb2p-localfunc.Po \
+	./$(DEPDIR)/bb2p-lrd.Po ./$(DEPDIR)/bb2p-mchtb.Po \
+	./$(DEPDIR)/bb2p-mouse.Po ./$(DEPDIR)/bb2p-mousevent.Po \
+	./$(DEPDIR)/bb2p-mpipaint.Po ./$(DEPDIR)/bb2p-ms.Po \
+	./$(DEPDIR)/bb2p-n62.Po ./$(DEPDIR)/bb2p-neum2d.Po \
+	./$(DEPDIR)/bb2p-neum3d.Po ./$(DEPDIR)/bb2p-noble.Po \
+	./$(DEPDIR)/bb2p-noble2.Po ./$(DEPDIR)/bb2p-noble_gbk.Po \
+	./$(DEPDIR)/bb2p-nobleftn.Po ./$(DEPDIR)/bb2p-noblen.Po \
+	./$(DEPDIR)/bb2p-noblest2.Po ./$(DEPDIR)/bb2p-noblestu.Po \
+	./$(DEPDIR)/bb2p-ord.Po ./$(DEPDIR)/bb2p-p2clib.Po \
+	./$(DEPDIR)/bb2p-paci18.Po ./$(DEPDIR)/bb2p-paci20.Po \
+	./$(DEPDIR)/bb2p-pause.Po ./$(DEPDIR)/bb2p-pgmout.Po \
+	./$(DEPDIR)/bb2p-pipe.Po ./$(DEPDIR)/bb2p-poincare.Po \
+	./$(DEPDIR)/bb2p-ppcpash18.Po ./$(DEPDIR)/bb2p-ppmout.Po \
+	./$(DEPDIR)/bb2p-pw_mult.Po ./$(DEPDIR)/bb2p-qpp.Po \
+	./$(DEPDIR)/bb2p-reduce.Po ./$(DEPDIR)/bb2p-regular.Po \
+	./$(DEPDIR)/bb2p-rk4.Po ./$(DEPDIR)/bb2p-rushlarsen.Po \
+	./$(DEPDIR)/bb2p-sample.Po ./$(DEPDIR)/bb2p-screen.Po \
+	./$(DEPDIR)/bb2p-sequence.Po ./$(DEPDIR)/bb2p-shell.Po \
+	./$(DEPDIR)/bb2p-singz.Po ./$(DEPDIR)/bb2p-state.Po \
+	./$(DEPDIR)/bb2p-stop.Po ./$(DEPDIR)/bb2p-system.Po \
+	./$(DEPDIR)/bb2p-tb.Po ./$(DEPDIR)/bb2p-trivial.Po \
+	./$(DEPDIR)/bb2p-ttnnp04.Po ./$(DEPDIR)/bb2p-ttnp.Po \
+	./$(DEPDIR)/bb2p-ttp06.Po ./$(DEPDIR)/bb2p-ttp2006.Po \
+	./$(DEPDIR)/bb2p-update.Po ./$(DEPDIR)/bb2p-vtkout2.Po \
+	./$(DEPDIR)/bb2p-windraw.Po ./$(DEPDIR)/bb2p-zeeman.Po \
+	./$(DEPDIR)/bb2p-zfk.Po ./$(DEPDIR)/bb2s-activation.Po \
+	./$(DEPDIR)/bb2s-adi1d.Po ./$(DEPDIR)/bb2s-adi2d.Po \
+	./$(DEPDIR)/bb2s-adi3d.Po ./$(DEPDIR)/bb2s-ap.Po \
+	./$(DEPDIR)/bb2s-b02.Po ./$(DEPDIR)/bb2s-beatbox.Po \
+	./$(DEPDIR)/bb2s-bgi.Po ./$(DEPDIR)/bb2s-bikt.Po \
+	./$(DEPDIR)/bb2s-br77.Po ./$(DEPDIR)/bb2s-byte.Po \
+	./$(DEPDIR)/bb2s-bytein.Po ./$(DEPDIR)/bb2s-byteout.Po \
+	./$(DEPDIR)/bb2s-bzoregon.Po ./$(DEPDIR)/bb2s-bzr.Po \
+	./$(DEPDIR)/bb2s-cgle.Po ./$(DEPDIR)/bb2s-cglel.Po \
+	./$(DEPDIR)/bb2s-cglep.Po ./$(DEPDIR)/bb2s-chrecruit.Po \
+	./$(DEPDIR)/bb2s-chtb.Po ./$(DEPDIR)/bb2s-clock.Po \
+	./$(DEPDIR)/bb2s-crn.Po ./$(DEPDIR)/bb2s-crn98.Po \
+	./$(DEPDIR)/bb2s-crnach.Po ./$(DEPDIR)/bb2s-ctlpoint.Po \
+	./$(DEPDIR)/bb2s-d_dt.Po ./$(DEPDIR)/bb2s-d_dx.Po \
+	./$(DEPDIR)/bb2s-d_dy.Po ./$(DEPDIR)/bb2s-device.Po \
+	./$(DEPDIR)/bb2s-diff.Po ./$(DEPDIR)/bb2s-diff2dv.Po \
+	./$(DEPDIR)/bb2s-diff3dv.Po ./$(DEPDIR)/bb2s-diffold.Po \
+	./$(DEPDIR)/bb2s-diffstep.Po ./$(DEPDIR)/bb2s-dump.Po \
+	./$(DEPDIR)/bb2s-dynamic.Po ./$(DEPDIR)/bb2s-ecg.Po \
+	./$(DEPDIR)/bb2s-elliptic.Po ./$(DEPDIR)/bb2s-error.Po \
+	./$(DEPDIR)/bb2s-euler.Po ./$(DEPDIR)/bb2s-ezgraph3d.Po \
+	./$(DEPDIR)/bb2s-ezmarching.Po ./$(DEPDIR)/bb2s-ezpaint.Po \
+	./$(DEPDIR)/bb2s-ezstep.Po ./$(DEPDIR)/bb2s-ezview.Po \
+	./$(DEPDIR)/bb2s-fhnbkl.Po ./$(DEPDIR)/bb2s-fhncub.Po \
+	./$(DEPDIR)/bb2s-fhncubpar.Po ./$(DEPDIR)/bb2s-fk.Po \
+	./$(DEPDIR)/bb2s-fkmod.Po ./$(DEPDIR)/bb2s-flip.Po \
+	./$(DEPDIR)/bb2s-flow2d.Po ./$(DEPDIR)/bb2s-front.Po \
+	./$(DEPDIR)/bb2s-geometry.Po ./$(DEPDIR)/bb2s-globalfunc.Po \
+	./$(DEPDIR)/bb2s-gpcell.Po ./$(DEPDIR)/bb2s-grad2d.Po \
+	./$(DEPDIR)/bb2s-ha.Po ./$(DEPDIR)/bb2s-hh.Po \
+	./$(DEPDIR)/bb2s-hh52.Po ./$(DEPDIR)/bb2s-hh52m.Po \
+	./$(DEPDIR)/bb2s-imgout.Po ./$(DEPDIR)/bb2s-init.Po \
+	./$(DEPDIR)/bb2s-inner_bc.Po ./$(DEPDIR)/bb2s-k_.Po \
+	./$(DEPDIR)/bb2s-k_clock.Po ./$(DEPDIR)/bb2s-k_comp.Po \
+	./$(DEPDIR)/bb2s-k_draw.Po ./$(DEPDIR)/bb2s-k_exec.Po \
+	./$(DEPDIR)/bb2s-k_func.Po ./$(DEPDIR)/bb2s-k_imgout.Po \
+	./$(DEPDIR)/bb2s-k_paint.Po ./$(DEPDIR)/bb2s-k_paintgl.Po \
+	./$(DEPDIR)/bb2s-k_plot.Po ./$(DEPDIR)/bb2s-k_poincare.Po \
+	./$(DEPDIR)/bb2s-k_print.Po ./$(DEPDIR)/bb2s-kernik19.Po \
+	./$(DEPDIR)/bb2s-l_abs.Po ./$(DEPDIR)/bb2s-l_add.Po \
+	./$(DEPDIR)/bb2s-l_axpy.Po ./$(DEPDIR)/bb2s-l_copy.Po \
+	./$(DEPDIR)/bb2s-l_max.Po ./$(DEPDIR)/bb2s-l_min.Po \
+	./$(DEPDIR)/bb2s-l_move.Po ./$(DEPDIR)/bb2s-l_mult.Po \
+	./$(DEPDIR)/bb2s-l_prod.Po ./$(DEPDIR)/bb2s-l_scal.Po \
+	./$(DEPDIR)/bb2s-l_sum.Po ./$(DEPDIR)/bb2s-l_swap.Po \
+	./$(DEPDIR)/bb2s-load.Po ./$(DEPDIR)/bb2s-localfunc.Po \
+	./$(DEPDIR)/bb2s-localprint.Po ./$(DEPDIR)/bb2s-lrd.Po \
+	./$(DEPDIR)/bb2s-matout.Po ./$(DEPDIR)/bb2s-mchtb.Po \
+	./$(DEPDIR)/bb2s-mouse.Po ./$(DEPDIR)/bb2s-mousevent.Po \
+	./$(DEPDIR)/bb2s-mpipaint.Po ./$(DEPDIR)/bb2s-ms.Po \
+	./$(DEPDIR)/bb2s-n62.Po ./$(DEPDIR)/bb2s-neum2d.Po \
+	./$(DEPDIR)/bb2s-neum3d.Po ./$(DEPDIR)/bb2s-noble.Po \
+	./$(DEPDIR)/bb2s-noble2.Po ./$(DEPDIR)/bb2s-noble_gbk.Po \
+	./$(DEPDIR)/bb2s-nobleftn.Po ./$(DEPDIR)/bb2s-noblen.Po \
+	./$(DEPDIR)/bb2s-noblest2.Po ./$(DEPDIR)/bb2s-noblestu.Po \
+	./$(DEPDIR)/bb2s-ord.Po ./$(DEPDIR)/bb2s-p2clib.Po \
+	./$(DEPDIR)/bb2s-paci18.Po ./$(DEPDIR)/bb2s-paci20.Po \
+	./$(DEPDIR)/bb2s-pause.Po ./$(DEPDIR)/bb2s-pgmin.Po \
+	./$(DEPDIR)/bb2s-pgmout.Po ./$(DEPDIR)/bb2s-pipe.Po \
+	./$(DEPDIR)/bb2s-poincare.Po ./$(DEPDIR)/bb2s-ppcpash18.Po \
+	./$(DEPDIR)/bb2s-ppmin.Po ./$(DEPDIR)/bb2s-ppmout.Po \
+	./$(DEPDIR)/bb2s-pw_mult.Po ./$(DEPDIR)/bb2s-qpp.Po \
+	./$(DEPDIR)/bb2s-record.Po ./$(DEPDIR)/bb2s-reduce.Po \
+	./$(DEPDIR)/bb2s-regular.Po ./$(DEPDIR)/bb2s-rk4.Po \
+	./$(DEPDIR)/bb2s-rushlarsen.Po ./$(DEPDIR)/bb2s-sample.Po \
+	./$(DEPDIR)/bb2s-screen.Po ./$(DEPDIR)/bb2s-screen_dump.Po \
+	./$(DEPDIR)/bb2s-sequence.Po ./$(DEPDIR)/bb2s-shell.Po \
+	./$(DEPDIR)/bb2s-singz.Po ./$(DEPDIR)/bb2s-skrecord.Po \
+	./$(DEPDIR)/bb2s-state.Po ./$(DEPDIR)/bb2s-stop.Po \
+	./$(DEPDIR)/bb2s-system.Po ./$(DEPDIR)/bb2s-tb.Po \
+	./$(DEPDIR)/bb2s-torx.Po ./$(DEPDIR)/bb2s-tory.Po \
+	./$(DEPDIR)/bb2s-torz.Po ./$(DEPDIR)/bb2s-trivial.Po \
+	./$(DEPDIR)/bb2s-ttnnp04.Po ./$(DEPDIR)/bb2s-ttnp.Po \
+	./$(DEPDIR)/bb2s-ttp06.Po ./$(DEPDIR)/bb2s-ttp2006.Po \
+	./$(DEPDIR)/bb2s-update.Po ./$(DEPDIR)/bb2s-vtkout2.Po \
+	./$(DEPDIR)/bb2s-windraw.Po ./$(DEPDIR)/bb2s-zeeman.Po \
+	./$(DEPDIR)/bb2s-zfk.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -742,7 +744,7 @@ common_sources = beatbox.c beatbox.h activation.c ap.c b02.c bgi.c \
 	fkmod.h flip.c flow2d.c front.c geometry.c geometry.h glerr.h \
 	globalfunc.c gpcell.c gpcell.h gpc_var.h grad2d.c ha.c \
 	ha_cur.h ha_par.h ha_un.h ha_var.h hh.c hh.h init.c init.h \
-	ionic.h ioniclist.h kernik19.c kernik19_const.h \
+	inner_bc.c ionic.h ioniclist.h kernik19.c kernik19_const.h \
 	kernik19_fddt.h kernik19_ftab.h kernik19_fun.h \
 	kernik19_ngate.h kernik19_other.h kernik19_par.h \
 	kernik19_tgate.h kernik19_tie.h k_.c k_.h k_calc.h k_code.h \
@@ -788,7 +790,6 @@ bb2s_SOURCES = \
 	ezstep.c ezstep.h  ezstep1.h  ezstep2.h ezstep3.h ezstep4.h ezstep0d.h ezstep2d.h ezstep3d.h \
 	ezview.c ezgraph3d.c ezmarching.c ezview.h ezpar.h ezfix.h ezvar.h ezini.h ezarr.h ezgraph3d.h ezmarching.h ezgenerators.h \
 	imgout.c \
-	inner_bc.c \
 	k_clock.c \
 	k_draw.c \
 	k_imgout.c \
@@ -963,6 +964,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-hh52.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-hh52m.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-init.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-inner_bc.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-k_.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-k_comp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bb2p-k_exec.Po@am__quote@ # am--include-marker
@@ -1914,6 +1916,20 @@ bb2p-init.obj: init.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='init.c' object='bb2p-init.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2p-init.obj `if test -f 'init.c'; then $(CYGPATH_W) 'init.c'; else $(CYGPATH_W) '$(srcdir)/init.c'; fi`
+
+bb2p-inner_bc.o: inner_bc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2p-inner_bc.o -MD -MP -MF $(DEPDIR)/bb2p-inner_bc.Tpo -c -o bb2p-inner_bc.o `test -f 'inner_bc.c' || echo '$(srcdir)/'`inner_bc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2p-inner_bc.Tpo $(DEPDIR)/bb2p-inner_bc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inner_bc.c' object='bb2p-inner_bc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2p-inner_bc.o `test -f 'inner_bc.c' || echo '$(srcdir)/'`inner_bc.c
+
+bb2p-inner_bc.obj: inner_bc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2p-inner_bc.obj -MD -MP -MF $(DEPDIR)/bb2p-inner_bc.Tpo -c -o bb2p-inner_bc.obj `if test -f 'inner_bc.c'; then $(CYGPATH_W) 'inner_bc.c'; else $(CYGPATH_W) '$(srcdir)/inner_bc.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2p-inner_bc.Tpo $(DEPDIR)/bb2p-inner_bc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inner_bc.c' object='bb2p-inner_bc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2p-inner_bc.obj `if test -f 'inner_bc.c'; then $(CYGPATH_W) 'inner_bc.c'; else $(CYGPATH_W) '$(srcdir)/inner_bc.c'; fi`
 
 bb2p-kernik19.o: kernik19.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2p_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2p-kernik19.o -MD -MP -MF $(DEPDIR)/bb2p-kernik19.Tpo -c -o bb2p-kernik19.o `test -f 'kernik19.c' || echo '$(srcdir)/'`kernik19.c
@@ -3679,6 +3695,20 @@ bb2s-init.obj: init.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2s-init.obj `if test -f 'init.c'; then $(CYGPATH_W) 'init.c'; else $(CYGPATH_W) '$(srcdir)/init.c'; fi`
 
+bb2s-inner_bc.o: inner_bc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2s-inner_bc.o -MD -MP -MF $(DEPDIR)/bb2s-inner_bc.Tpo -c -o bb2s-inner_bc.o `test -f 'inner_bc.c' || echo '$(srcdir)/'`inner_bc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2s-inner_bc.Tpo $(DEPDIR)/bb2s-inner_bc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inner_bc.c' object='bb2s-inner_bc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2s-inner_bc.o `test -f 'inner_bc.c' || echo '$(srcdir)/'`inner_bc.c
+
+bb2s-inner_bc.obj: inner_bc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2s-inner_bc.obj -MD -MP -MF $(DEPDIR)/bb2s-inner_bc.Tpo -c -o bb2s-inner_bc.obj `if test -f 'inner_bc.c'; then $(CYGPATH_W) 'inner_bc.c'; else $(CYGPATH_W) '$(srcdir)/inner_bc.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2s-inner_bc.Tpo $(DEPDIR)/bb2s-inner_bc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inner_bc.c' object='bb2s-inner_bc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2s-inner_bc.obj `if test -f 'inner_bc.c'; then $(CYGPATH_W) 'inner_bc.c'; else $(CYGPATH_W) '$(srcdir)/inner_bc.c'; fi`
+
 bb2s-kernik19.o: kernik19.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2s-kernik19.o -MD -MP -MF $(DEPDIR)/bb2s-kernik19.Tpo -c -o bb2s-kernik19.o `test -f 'kernik19.c' || echo '$(srcdir)/'`kernik19.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2s-kernik19.Tpo $(DEPDIR)/bb2s-kernik19.Po
@@ -4883,20 +4913,6 @@ bb2s-imgout.obj: imgout.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2s-imgout.obj `if test -f 'imgout.c'; then $(CYGPATH_W) 'imgout.c'; else $(CYGPATH_W) '$(srcdir)/imgout.c'; fi`
 
-bb2s-inner_bc.o: inner_bc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2s-inner_bc.o -MD -MP -MF $(DEPDIR)/bb2s-inner_bc.Tpo -c -o bb2s-inner_bc.o `test -f 'inner_bc.c' || echo '$(srcdir)/'`inner_bc.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2s-inner_bc.Tpo $(DEPDIR)/bb2s-inner_bc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inner_bc.c' object='bb2s-inner_bc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2s-inner_bc.o `test -f 'inner_bc.c' || echo '$(srcdir)/'`inner_bc.c
-
-bb2s-inner_bc.obj: inner_bc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2s-inner_bc.obj -MD -MP -MF $(DEPDIR)/bb2s-inner_bc.Tpo -c -o bb2s-inner_bc.obj `if test -f 'inner_bc.c'; then $(CYGPATH_W) 'inner_bc.c'; else $(CYGPATH_W) '$(srcdir)/inner_bc.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2s-inner_bc.Tpo $(DEPDIR)/bb2s-inner_bc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='inner_bc.c' object='bb2s-inner_bc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bb2s-inner_bc.obj `if test -f 'inner_bc.c'; then $(CYGPATH_W) 'inner_bc.c'; else $(CYGPATH_W) '$(srcdir)/inner_bc.c'; fi`
-
 bb2s-k_clock.o: k_clock.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bb2s_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bb2s-k_clock.o -MD -MP -MF $(DEPDIR)/bb2s-k_clock.Tpo -c -o bb2s-k_clock.o `test -f 'k_clock.c' || echo '$(srcdir)/'`k_clock.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bb2s-k_clock.Tpo $(DEPDIR)/bb2s-k_clock.Po
@@ -5381,6 +5397,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/bb2p-hh52.Po
 	-rm -f ./$(DEPDIR)/bb2p-hh52m.Po
 	-rm -f ./$(DEPDIR)/bb2p-init.Po
+	-rm -f ./$(DEPDIR)/bb2p-inner_bc.Po
 	-rm -f ./$(DEPDIR)/bb2p-k_.Po
 	-rm -f ./$(DEPDIR)/bb2p-k_comp.Po
 	-rm -f ./$(DEPDIR)/bb2p-k_exec.Po
@@ -5705,6 +5722,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/bb2p-hh52.Po
 	-rm -f ./$(DEPDIR)/bb2p-hh52m.Po
 	-rm -f ./$(DEPDIR)/bb2p-init.Po
+	-rm -f ./$(DEPDIR)/bb2p-inner_bc.Po
 	-rm -f ./$(DEPDIR)/bb2p-k_.Po
 	-rm -f ./$(DEPDIR)/bb2p-k_comp.Po
 	-rm -f ./$(DEPDIR)/bb2p-k_exec.Po
