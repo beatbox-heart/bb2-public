@@ -458,6 +458,11 @@ RUN_TAIL(ctlpoint)
 /********************/
 DESTROY_HEAD(ctlpoint) {
   SAFE_CLOSE(S->debug);
+#if MPI
+  MPI_Type_free(&(S->k_var_Type));
+  MPI_Type_free(&(S->filetype));
+  MPI_Type_free(&(S->sourceType));
+#endif
 } DESTROY_TAIL(ctlpoint)
 
 /*******************/

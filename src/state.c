@@ -440,6 +440,7 @@ void state_free(void)
 #if MPI
   FREE(occupy_grid);
   FREE(occupy_rank);
+  decomp_freeHaloTypes();
 #endif
 } /* state_free () */
 

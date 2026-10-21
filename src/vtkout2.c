@@ -172,6 +172,10 @@ DESTROY_HEAD(vtkout2)
 #if MPI
 	if (S->file.f) nextq(&(S->file)); /* append mode */
 	if (S->prefill) FREE(S->prefill);
+	if (s.runHere) {
+		MPI_Type_free(&(S->filetype));
+		MPI_Type_free(&(S->pointType));
+	}
 #else
 	if (S->file.f) nextq(&(S->file)); /* append mode */
 #endif

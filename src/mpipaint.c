@@ -420,6 +420,15 @@ RUN_HEAD(mpipaint)
 RUN_TAIL(mpipaint)
 
 DESTROY_HEAD(mpipaint)
+#if MPI
+  int rank;
+  MPI_Type_free(&(S->myType));
+  if (geom_vmax) MPI_Type_free(&(S->mygType));
+  if (mpi_rank==S->root) {
+    for (rank=0; rank<num_active_procs; rank++) MPI_Type_free(&(S->theirType[rank]));
+    FREE(S->theirType);
+  }
+#endif
 DESTROY_TAIL(mpipaint)
 
 CREATE_HEAD(mpipaint)

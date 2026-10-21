@@ -560,7 +560,22 @@ DESTROY_HEAD(elliptic) {
   FREE(S->points);
   SAFE_CLOSE(S->debug);
   SAFE_CLOSE(S->profile);
-  /* TODO: free all multigrid objects ... */
+#if MPI
+  /* Halo types of the levels that have been made */
+  {
+    MPI_Datatype **types[] = {
+      &S->xn_type, &S->xp_type, &S->yn_type, &S->yp_type, &S->zn_type, &S->zp_type,
+      &S->xn_halo_type, &S->xp_halo_type, &S->yn_halo_type, &S->yp_halo_type,
+      &S->zn_halo_type, &S->zp_halo_type};
+    int i, l;
+    for (i=0; i<sizeof(types)/sizeof(types[0]); i++) if (*types[i]) {
+      for (l=0; l<=S->upper_level; l++)
+	if ((*types[i])[l]!=MPI_DATATYPE_NULL) MPI_Type_free(&((*types[i])[l]));
+      FREE(*types[i]);
+    }
+  }
+#endif
+  /* TODO: free all other multigrid objects ... */
 } DESTROY_TAIL(elliptic)
   
 CREATE_HEAD(elliptic)
@@ -711,6 +726,12 @@ CREATE_HEAD(elliptic)
     CALLOC(S->yp_halo_type,numLevels,sizeof(MPI_Datatype));
     CALLOC(S->zn_halo_type,numLevels,sizeof(MPI_Datatype));
     CALLOC(S->zp_halo_type,numLevels,sizeof(MPI_Datatype));
+    /* so that destroy frees only the types that have been created */
+    for (l=0;l<numLevels;l++) {
+      S->xn_type[l]=S->xp_type[l]=S->yn_type[l]=S->yp_type[l]=S->zn_type[l]=S->zp_type[l]=MPI_DATATYPE_NULL;
+      S->xn_halo_type[l]=S->xp_halo_type[l]=S->yn_halo_type[l]=MPI_DATATYPE_NULL;
+      S->yp_halo_type[l]=S->zn_halo_type[l]=S->zp_halo_type[l]=MPI_DATATYPE_NULL;
+    }
 #endif
 
     /* Now make level 0 which recursively entails all others */

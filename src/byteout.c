@@ -144,6 +144,7 @@ DESTROY_HEAD(byteout)
 #if MPI
   if (S->file.f) nextq(&(S->file)); /* append mode */
   if (S->Prefill) FREE(S->Prefill);
+  if (s.runHere) MPI_Type_free(&(S->filetype));
 #else
   if (S->file.f) nextq(&(S->file)); /* append mode */
 #endif

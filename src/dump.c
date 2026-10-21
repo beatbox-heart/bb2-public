@@ -99,6 +99,7 @@ DESTROY_HEAD(dump)
 #if MPI
  if (s.runHere) { /*  No file to close if the device isn't active. */
    MPI_File_close(&(S->file));
+   MPI_Type_free(&(S->sourceType));
  }
 #else
   SAFE_CLOSE(S->file);
@@ -200,7 +201,8 @@ CREATE_HEAD(dump)
     MPIDO(MPI_File_set_view(file,displacement,MPI_DOUBLE,filetype,"native",MPI_INFO_NULL),"Couldn't set start of file");
 
     /* Check there was no misunderstanding about amount of data to be written */
-    MPIDO(MPI_Type_get_extent(filetype,&lb,&typesize),"Couldn't get filetype extent");	
+    MPIDO(MPI_Type_get_extent(filetype,&lb,&typesize),"Couldn't get filetype extent");
+    MPI_Type_free(&filetype); /* the view keeps its own reference */
     ASSERT(typesize == boxsize*sizeof(real));
    
     /*  Assign the file to the parameter structure */

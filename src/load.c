@@ -113,6 +113,7 @@ DESTROY_HEAD(load)
 			MPI_File_close(&(S->file));
 			S->file = NULL;
 		}
+		MPI_Type_free(&(S->sourceType));
 	}
 #else
   SAFE_CLOSE(S->file);
@@ -162,6 +163,7 @@ CREATE_HEAD(load)
     /*  Open file and set view */
     MPIDO(MPI_File_open(comm_load, S->filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &file),"Couldn't open file");
     MPIDO(MPI_File_set_view(file, 0, MPI_DOUBLE, filetype, "native", MPI_INFO_NULL),"Couldn't set view");
+    MPI_Type_free(&filetype); /* the view keeps its own reference */
     
     if(MPI_File_seek(file, 0, MPI_SEEK_END) != MPI_SUCCESS){
       ABORT("Process %d could not find end of file %s",mpi_rank, S->filename);

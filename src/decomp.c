@@ -600,6 +600,8 @@ void decomp_getSubdomainSize (void)
 	 (long)xlen,(long)ylen,(long)zlen);
 } /* decomp_getSubdomainSize */
 
+static int haloTypesDefined=0;	/* 1 between decomp_defineHaloTypes() and decomp_freeHaloTypes() */
+
 void decomp_defineHaloTypes (void)
 {
   /*	Types for Halo Swapping
@@ -725,4 +727,23 @@ void decomp_defineHaloTypes (void)
   } /*	if(mpi_nz > 1)	*/
 
   #undef NDIMS
+  haloTypesDefined=1;
 } /* decomp_defineHaloTypes */
+
+void decomp_freeHaloTypes (void)
+{
+  if (!haloTypesDefined) return;
+  if (mpi_nx > 1) {
+    MPI_Type_free(&XN_Type); MPI_Type_free(&XN_Halo_Type);
+    MPI_Type_free(&XP_Type); MPI_Type_free(&XP_Halo_Type);
+  }
+  if (mpi_ny > 1) {
+    MPI_Type_free(&YN_Type); MPI_Type_free(&YN_Halo_Type);
+    MPI_Type_free(&YP_Type); MPI_Type_free(&YP_Halo_Type);
+  }
+  if (mpi_nz > 1) {
+    MPI_Type_free(&ZN_Type); MPI_Type_free(&ZN_Halo_Type);
+    MPI_Type_free(&ZP_Type); MPI_Type_free(&ZP_Halo_Type);
+  }
+  haloTypesDefined=0;
+} /* decomp_freeHaloTypes */

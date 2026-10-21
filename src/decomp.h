@@ -68,6 +68,10 @@ void decomp_getSubdomainSize(void);
 */
 void decomp_defineHaloTypes(void);
 
+/*! Frees the datatypes defined by decomp_defineHaloTypes().
+*/
+void decomp_freeHaloTypes(void);
+
 /*! Defines a global communicator over all active processes. 
  *	\param old_rank The process's rank in MPI_COMM_WORLD.
  *	\param new_comm Address at which the new communicator will be created.
