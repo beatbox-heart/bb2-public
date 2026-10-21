@@ -329,6 +329,7 @@ static real kslope (INT x1, INT y1, INT z1, INT x2, INT y2, INT z2,
   long x, y, X, Y, N;
   real alpha, p, q, k, cosalpha, sinalpha;
   
+  if (dim==1) return 1.0;	/* a 1D boundary is a point; the link is always normal to it */
   ASSERT(dim==2);	/* do 3D later */
   ASSERT(z1==z2);
   ASSERT((x1!=x2) || (y1!=y2));
