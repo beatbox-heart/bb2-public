@@ -573,10 +573,11 @@ CREATE_HEAD(mpipaint)
     MPIDO(MPI_Send(buf,NLIMS,MPI_INT,root,tag(l),comm),"Could not send subdomain sizes.");
   }
 
-  /* Create my send buffer, whether I am root or not */
-  sizes[X] = xlen; subsizes[X] = s.x1-s.x0+1; starts[X] = s.x0-local_xmin;
-  sizes[Y] = ylen; subsizes[Y] = s.y1-s.y0+1; starts[Y] = s.y0-local_ymin;
-  sizes[Z] = zlen; subsizes[Z] = s.z1-s.z0+1; starts[Z] = s.z0-local_zmin;
+  /* Create my send buffer, whether I am root or not; */
+  /* offsets by ONE,TWO,TRI skip the halos, as in ind() */
+  sizes[X] = xlen; subsizes[X] = s.x1-s.x0+1; starts[X] = s.x0+ONE-local_xmin;
+  sizes[Y] = ylen; subsizes[Y] = s.y1-s.y0+1; starts[Y] = s.y0+TWO-local_ymin;
+  sizes[Z] = zlen; subsizes[Z] = s.z1-s.z0+1; starts[Z] = s.z0+TRI-local_zmin;
   sizes[V] = vmax; subsizes[V] = 1;    starts[V] = 0;
   MPIDO(MPI_Type_create_subarray(NDIMS,sizes,subsizes,starts,MPI_ORDER_C,MPI_DOUBLE,&(S->myType)),
 	"Couldn't define myType.");
@@ -584,9 +585,9 @@ CREATE_HEAD(mpipaint)
 
   /* .., for the geometry */
   if (geom_vmax) {
-    sizes[X] = xlen; subsizes[X] = s.x1-s.x0+1; starts[X] = s.x0-local_xmin;
-    sizes[Y] = ylen; subsizes[Y] = s.y1-s.y0+1; starts[Y] = s.y0-local_ymin;
-    sizes[Z] = zlen; subsizes[Z] = s.z1-s.z0+1; starts[Z] = s.z0-local_zmin;
+    sizes[X] = xlen; subsizes[X] = s.x1-s.x0+1; starts[X] = s.x0+ONE-local_xmin;
+    sizes[Y] = ylen; subsizes[Y] = s.y1-s.y0+1; starts[Y] = s.y0+TWO-local_ymin;
+    sizes[Z] = zlen; subsizes[Z] = s.z1-s.z0+1; starts[Z] = s.z0+TRI-local_zmin;
     sizes[V] = geom_vmax; subsizes[V] = 1;    starts[V] = 0;
     MPIDO(MPI_Type_create_subarray(NDIMS,sizes,subsizes,starts,MPI_ORDER_C,MPI_DOUBLE,&(S->mygType)),
 	  "Couldn't define myType.");
