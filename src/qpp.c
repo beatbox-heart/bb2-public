@@ -1508,6 +1508,11 @@ static double _geom(double _x, double _y, double _z, double _v) {
   static double _gauss(double a,double b) {return a+b*(sqrt(-2*log(_rnd(0,1)))*cos(2*pi*_rnd(0,1)));}
 #endif
 
+/* synonyms of the same, allowed in MPI too, their names serving as caution */
+static double _rndmpi(double a,double b) {return (a+(b-a)*drand48());}
+static double _rndseedmpi(double a) {unsigned long seedval=floor(a); srand48(seedval); return 0;}
+static double _gaussmpi(double a,double b) {return a+b*(sqrt(-2*log(_rndmpi(0,1)))*cos(2*pi*_rndmpi(0,1)));}
+
 /* initiation of constants used in checking limits etc */
 int init_const (void)
 {
@@ -1556,6 +1561,7 @@ int init_const (void)
   #else
   FU(rnd,2); FU(rndseed,1); FU(gauss,2); /* these functions are not "safe" in parallel runs */
   #endif
+  FU(rndmpi,2); FU(rndseedmpi,1); FU(gaussmpi,2); /* user proceed at your own risk */
 
   #undef FU
 
