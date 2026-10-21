@@ -54,6 +54,8 @@ typedef struct {
   real hx;				/* Space step (SI: m) */
   int manypoint; 			/* == NINEPOINT, NINETEENPT in ezdiff < ezspiral, ezscroll */ 
   int w0, w1;				/* Layers range to keep the stencil weights */
+  int check_positivity;			/* Report points with positive central weight */
+  int enforce_positivity;		/* Remove their negative links to make them non-positive */
 } STR;
 
 enum i1_nbrs {i10, i1p, i1m, i1nnb};
@@ -64,6 +66,39 @@ enum i3_nbrs {i3000, i3p00, i3m00, i30p0, i30m0, i300p, i300m, i3nnb};
 enum m3_nbrs {m3000, m3p00, m3m00, m30p0, m30m0, m300p, m300m,
 	      m3pp0, m3pm0, m3mp0, m3mm0, m3p0p, m3p0m,
 	      m3m0p, m3m0m, m30pp, m30pm, m30mp, m30mm, m3nnb};
+
+/* Neighbours' displacements, in the order of the enums above */
+static const int off_i1[i1nnb][3]={{0,0,0},{+1,0,0},{-1,0,0}};
+static const int off_i2[i2nnb][3]={{0,0,0},{+1,0,0},{-1,0,0},{0,+1,0},{0,-1,0}};
+static const int off_m2[m2nnb][3]={{0,0,0},{+1,0,0},{-1,0,0},{0,+1,0},{0,-1,0},
+				   {+1,+1,0},{+1,-1,0},{-1,+1,0},{-1,-1,0}};
+
+/* Report a point with positive central weight, with its stencil laid out as on the grid */
+static void report_bad(INT x, INT y, INT z, int w0, int manypoint)
+{
+#define W(qq) ((double)New[ind(x,y,z,w0+qq)])
+  URGENT_MESSAGE("\n/* #%d t=%ld inner_bc: bad point (%ld,%ld,%ld) W=\n",
+		 mpi_rank,(long)t,(long)x,(long)y,(long)z);
+  switch (dim) {
+  case 1:
+    URGENT_MESSAGE("%g\t%g\t%g\n",W(i1m),W(i10),W(i1p));
+    break;
+  case 2:
+    if (manypoint)
+      URGENT_MESSAGE("%g\t%g\t%g\n%g\t%g\t%g\n%g\t%g\t%g\n",
+		     W(m2mp),W(m20p),W(m2pp),
+		     W(m2m0),W(m200),W(m2p0),
+		     W(m2mm),W(m20m),W(m2pm));
+    else
+      URGENT_MESSAGE("%g\t%g\t%g\n%g\t%g\t%g\n%g\t%g\t%g\n",
+		     0.0,W(i20p),0.0,
+		     W(i2m0),W(i200),W(i2p0),
+		     0.0,W(i20m),0.0);
+    break;
+  }
+  URGENT_MESSAGE(" The central weight is positive: %g, which will cause numerical instability. */\n",W(0));
+#undef W
+}
 
 static unsigned char indicator_class(real value, real c0, real c1)
 {
@@ -378,6 +413,8 @@ RUN_HEAD(inner_bc)
   DEVICE_CONST(real,hx);
   DEVICE_PAR(real,Sigma);
   DEVICE_CONST(int,manypoint);
+  DEVICE_CONST(int,check_positivity);
+  DEVICE_CONST(int,enforce_positivity);
 
 #if MPI
   unsigned char *indicator=NULL;
@@ -518,6 +555,84 @@ RUN_HEAD(inner_bc)
   } /* switch dim */
   }
 
+  /* Positivity of the central weights.						*/
+  /* An anisotropic stencil has negative (cross-derivative) links, normally	*/
+  /* outweighed by the positive links to the orthogonal neighbours. Replacing	*/
+  /* the links across the boundary by the weak Ohmic ones may leave a point	*/
+  /* with negative links uncompensated, so its central weight becomes positive	*/
+  /* and the scheme locally anti-diffusive, i.e. unstable.			*/
+  /* Enforcement zeroes all negative links of such points, from both ends:	*/
+  /* a link is removed if either of its ends is bad. Each row keeps zero sum,	*/
+  /* the bad rows become diagonally dominant, and the operator stays symmetric	*/
+  /* if it was. Removing a negative link from a symmetric operator can only	*/
+  /* decrease its eigenvalues, so this never makes stability worse.		*/
+  if (check_positivity || enforce_positivity) {
+    int nnb=0;				/* stencil size */
+    const int (*off)[3]=NULL;		/* neighbours' displacements */
+    unsigned char *bad=NULL;		/* flags of bad points in local memory, halo included */
+    long nbad=0, nlinks=0;		/* counters of bad points and zeroed weights */
+    INT xx, yy, zz;
+    switch (dim) {
+    case 1: nnb=i1nnb; off=off_i1; break;
+    case 2: if (manypoint) {nnb=m2nnb; off=off_m2;} else {nnb=i2nnb; off=off_i2;} break;
+    default: EXPECTED_ERROR("unexpected dimension %d",dim);
+    }
+#if MPI
+    haloSwap();				/* central weights of neighbours, as adjusted by their ranks */
+#endif
+#define pind(x,y,z) (ind(x,y,z,0)/vmax)	/* number of the point in local memory */
+    /* First pass: flag the bad points before any enforcement, */
+    /* so that both ends of a link see the same flags */
+    CALLOC(bad,xlen*ylen*zlen,sizeof(unsigned char));
+    for (xx=(INT)local_xmin-ONE;xx<(INT)local_xmax+ONE;xx++)
+      for (yy=(INT)local_ymin-TWO;yy<(INT)local_ymax+TWO;yy++)
+	for (zz=(INT)local_zmin-TRI;zz<(INT)local_zmax+TRI;zz++)
+	  bad[pind(xx,yy,zz)]=(isTissue(xx,yy,zz) && New[ind(xx,yy,zz,w0)]>0);
+    /* Second pass: report and enforce at the device's points */
+#if MPI
+    if (s.runHere) {
+#else
+    {
+#endif
+#define COMMANDS							\
+      if (bad[pind(*x,*y,*z)]) {					\
+	nbad++;								\
+	if (check_positivity) report_bad(*x,*y,*z,w0,manypoint);	\
+      }									\
+      if (enforce_positivity) {						\
+	int nb;								\
+	for (nb=1;nb<nnb;nb++) {					\
+	  real *pw=New+ind(*x,*y,*z,w0+nb);				\
+	  if (*pw<0 && (bad[pind(*x,*y,*z)] ||				\
+			bad[pind(*x+off[nb][0],*y+off[nb][1],*z+off[nb][2])])) { \
+	    New[ind(*x,*y,*z,w0)]+=*pw;	/* keep zero row sum */		\
+	    *pw=0;							\
+	    nlinks++;							\
+	  }								\
+	}								\
+      }
+      DO_FOR_ALL_POINTS;
+#undef COMMANDS
+    }
+#undef pind
+    FREE(bad);
+#if MPI
+    {
+      long nloc[2]={nbad,nlinks}, nall[2];
+      MPIDO(MPI_Allreduce(nloc,nall,2,MPI_LONG,MPI_SUM,ALL_ACTIVE_PROCS),
+	    "Couldn't sum up inner_bc positivity counters.");
+      nbad=nall[0];
+      nlinks=nall[1];
+    }
+#endif
+    if (nbad)
+      MESSAGE("\n/* t=%ld inner_bc: %ld points with positive central weight%s */\n",
+	      (long)t,nbad,enforce_positivity?" found":"; consider enforce_positivity=1");
+    if (nlinks)
+      MESSAGE("/* t=%ld inner_bc: %ld negative weights zeroed to enforce positivity */\n",
+	      (long)t,nlinks);
+  } /* if check_positivity || enforce_positivity */
+
 #if MPI
   free(indicator);
 #endif
@@ -557,6 +672,10 @@ CREATE_HEAD(inner_bc)
     MESSAGE("w0=%d w1=%d vmax=%d nnb=%d\n",w0,w1,vmax,nnb);
     ASSERT(w1-w0+1==nnb);
   }
+  ACCEPTI(check_positivity,1,0,1);	/* report points with positive central weight */
+  ACCEPTI(enforce_positivity,0,0,1);	/* zero their negative links */
+  if (dim==3 && (S->check_positivity || S->enforce_positivity))
+    EXPECTED_ERROR("check_positivity and enforce_positivity are not implemented in 3D");
   #if MPI
   if (advance) run_inner_bc (dev->s,S,dev->sync,dev->alwaysRun);
   #else

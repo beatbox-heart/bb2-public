@@ -1,3 +1,23 @@
+/**
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
+ * (see ../AUTHORS for the full list of contributors)
+ *
+ * This file is part of Beatbox.
+ *
+ * Beatbox is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Beatbox is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Beatbox.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 <!DOCTYPE html>
 <html lang="en">
 <style>
@@ -215,9 +235,9 @@ number of dependencies to an absolute minimum. You will require:
   provided in due course, when demand is established.</li>
   <li>A C compiler, ideally <code>gcc</code> if only sequential version is
   needed, or <code>mpicc</code> for sequential+parallel version.</li>
-  <li>A suitable MPI library, preferably
-  <a href="http://www.mcs.anl.gov/research/projects/mpich2/">mpich2</a>
-  if you want to run in parallel.</li>
+  <li>A suitable MPI library, such as
+  <a href="https://www.open-mpi.org/">Open MPI</a> or
+  <a href="https://www.mpich.org/">MPICH</a>, if you want to run in parallel.</li>
   <li>The standard X11 libraries if you want to have run-time
   visualization (some facilities are currently mostl available in sequential mode).</li>
   <li>Some of the examples use utilities from
@@ -374,11 +394,41 @@ argument.
 </p>
 
 <p>
-Correspondingly, assuming that you have mpich2, 
+Similarly, with an MPI installation,
 the parallel version on a local computer may be run using
 <pre>
    mpirun -np &lt;num_procs&gt; bb2p [&lt;options&gt;] [--] &lt;input_script&gt; [&lt;arguments&gt; | &lt;options&gt; | -- ]
 </pre>
+
+<h3>Parallel output troubleshooting</h3>
+
+<p>
+If a parallel run stops while writing output, or produces empty or
+incomplete output files, for example from <code>ppmout</code>, <code>byteout</code> or
+<code>dump</code>, and you use Open MPI, try adding <code>--mca io romio341</code> to
+the <code>mpirun</code> command:
+</p>
+
+<pre>
+mpirun --mca io romio341 -np &lt;num_procs&gt; bb2p [&lt;options&gt;] [--] &lt;input_script&gt; [&lt;arguments&gt; | &lt;options&gt; | -- ]
+</pre>
+
+<p>
+This is a run-time option and does not require recompiling Beatbox.
+It worked around a parallel-output hang in one tested Open MPI
+installation, but may not be available in every Open MPI installation.
+It is specific to Open MPI and should not be used with MPICH. If Open MPI
+reports that the option or component is unavailable, ask your system
+administrator which MPI output options are supported. Use the same MPI
+installation to compile Beatbox and to run it.
+</p>
+
+<p>
+The <code>--mca io romio341</code> option does not set the number of processes.
+Replace <code>&lt;num_procs&gt;</code> in the command above with the number you want
+to use. With Open MPI, leaving out <code>-np</code> normally starts just one
+process; it does not automatically use all available processors.
+</p>
 
 <p>
 The parsing of the input script and the simulations are commented by
@@ -9388,6 +9438,22 @@ Works in both sequential and parallel (MPI) modes. Grid points that are
 void in the geometry do not contribute to the estimate of the boundary
 slope, whatever their value in the <code>v0</code> layer.
 
+<p> <strong>Caveat: stability.</strong> In anisotropic tissue, the
+stencil of the <code>diff</code> device has negative weights at the diagonal
+links, due to the mixed derivative terms; normally these are outweighed
+by the positive weights of the links to the orthogonal neighbours, so
+the central weight is negative. When <code>inner_bc</code> replaces the weights
+of the links across the boundary by (small, if <code>Sigma</code> is small)
+Ohmic ones, a point whose negative links were compensated mainly by
+links across the boundary, e.g. a single cell of one domain protruding
+into the other and connected to its own domain only diagonally, may get
+a positive central weight. Such a point is locally anti-diffusive and
+makes the scheme unstable, regardless of the time step. The parameters
+<code>check_positivity</code> and <code>enforce_positivity</code> report and remedy such
+points. Note that a negative central weight everywhere is necessary but
+not sufficient for stability: a cluster of points may be unstable even
+though each of them has a negative central weight.
+
 <h3>Parameters</h3>
 
 <table border="1">
@@ -9503,7 +9569,47 @@ slope, whatever their value in the <code>v0</code> layer.
   <td> <code>vmax-1</code> </td>
   <td>
     Upper bound of the layer range containing stencil weights.
-    Must be the same as in the corresponding <code>diff</code> device. 
+    Must be the same as in the corresponding <code>diff</code> device.
+  </td>
+</tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>check_positivity</code> </td>
+  <td> <code>1</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td>
+    If <code>check_positivity=1</code>, after the weights have been corrected,
+    every point of the device space whose central stencil weight is
+    positive is reported, with its coordinates (and MPI rank) and its
+    stencil weights laid out as on the grid, followed by the total
+    number of such points. Such points make the scheme locally
+    anti-diffusive, which typically shows as a runaway of the diffusing
+    variable at or near them. Only 1D and 2D are implemented.
+  </td>
+</tr>
+
+<tr>
+  <td> <code>int</code> </td>
+  <td> <code>enforce_positivity</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>0</code> </td>
+  <td> <code>1</code> </td>
+  <td>
+    If <code>enforce_positivity=1</code>, at every point with positive central
+    weight all negative stencil weights are set to zero, and the central
+    weights are corrected so that each row still sums to zero. A link is
+    removed from both its ends if either end is such a point, so a
+    symmetric connectivity matrix stays symmetric, and the corrected
+    points get non-positive central weights. Removing negative links
+    from a symmetric matrix can only decrease its eigenvalues, so this
+    never makes stability worse. The number of zeroed weights is
+    reported. This changes the numerical scheme at the affected points
+    (the cross-derivative flux through the removed links is ignored),
+    so is meant as a remedy for isolated defects of the geometry rather
+    than a substitute for fixing the geometry. Only 1D and 2D are
+    implemented.
   </td>
 </tr>
 
