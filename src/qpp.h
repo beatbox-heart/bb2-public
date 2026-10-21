@@ -334,14 +334,12 @@ int list_space (Space *s);
 /*! Whether point (x,y,z) belongs to Space s; applies also to halo points. */
 int in_space (Space *s, INT x, INT y, INT z);
 
-#ifdef X11
 /*! Accepts a device's BGIWindow description from a given string.
  *	\param s Address of BGIWindow structure to be initialised.
  *	\param w String to search.
  * 	\return 1 for success, 0 for failure.
  */
 int accept_window (BGIWindow *s, char *w);
-#endif
 
 /*! 
  * The smallest real bigger than val. 
@@ -515,12 +513,10 @@ double _u (double _x, double _y, double _z, double _v);
 #define ENDBLOCK	   close_block()
 
 
-#ifdef X11
-/*! Accept a device's BGIWindow description via accept_window(), and define eponymous local variable. 
+/*! Accept a device's BGIWindow description via accept_window(), and define eponymous local variable.
  *	\param b Address of BGIWindow structure to be initialised.
  */
 #define ACCEPT_WINDOW(b) if (!accept_window(&(S->b),w)) return (0); BGIWindow b=S->b;
-#endif
 
 /*! Similar to assert() but cannot be screened */
 /* #define ASSERT(p) { if(0==(p)) EXPECTED_ERROR("Assertion failed:\n %s",#p); } - defined in error.h */
