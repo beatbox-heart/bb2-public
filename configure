@@ -658,10 +658,6 @@ LTLIBOBJS
 LIBOBJS
 subdirs
 GRAPHICS_CPPFLAGS
-GL_LIBS
-GL_CFLAGS
-PKG_CONFIG_LIBDIR
-PKG_CONFIG_PATH
 PKG_CONFIG
 MPI_AVAILABLE_FALSE
 MPI_AVAILABLE_TRUE
@@ -813,12 +809,7 @@ CFLAGS
 LDFLAGS
 LIBS
 CPPFLAGS
-LT_SYS_LIBRARY_PATH
-PKG_CONFIG
-PKG_CONFIG_PATH
-PKG_CONFIG_LIBDIR
-GL_CFLAGS
-GL_LIBS'
+LT_SYS_LIBRARY_PATH'
 ac_subdirs_all='src/gsl-1.16.extract'
 
 # Initialize some variables set by options.
@@ -1485,13 +1476,6 @@ Some influential environment variables:
               you have headers in a nonstandard directory <include dir>
   LT_SYS_LIBRARY_PATH
               User-defined run-time library search path.
-  PKG_CONFIG  path to pkg-config utility
-  PKG_CONFIG_PATH
-              directories to add to pkg-config's search path
-  PKG_CONFIG_LIBDIR
-              path overriding pkg-config's built-in search path
-  GL_CFLAGS   C compiler flags for GL, overriding pkg-config
-  GL_LIBS     linker flags for GL, overriding pkg-config
 
 Use these variables to override the choices made by 'configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -3354,10 +3338,6 @@ fi
 
   MAINT=$MAINTAINER_MODE_TRUE
 
-
-
-# Fail at autoconf time, rather than at configure time,
-# if pkg.m4 has not been found.
 
 
 # -------------------------------
@@ -12905,15 +12885,11 @@ fi
 
 GL_AVAIL=no
 if test "x$X11_AVAIL" = "xyes"; then
-
-
-
-
-
-
-
-if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
-	if test -n "$ac_tool_prefix"; then
+  if test "x$use_mesa" = "xyes"
+then :
+  # pkg-config is called directly: PKG_CHECK_MODULES would make
+    # pkg-config a requirement even when --with-mesa is not given.
+    if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
 set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
@@ -13023,99 +12999,15 @@ else
   PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
 fi
 
-fi
-if test -n "$PKG_CONFIG"; then
-	_pkg_min_version=0.9.0
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
-printf %s "checking pkg-config is at least version $_pkg_min_version... " >&6; }
-	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-	else
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-		PKG_CONFIG=""
-	fi
-fi
-if test -z "$PKG_CONFIG"; then
-	as_fn_error $? "pkg-config not found" "$LINENO" 5
-fi
-if test "x$use_mesa" = "xyes"
+     if test -n "$PKG_CONFIG" && $PKG_CONFIG --exists gl
 then :
-
-pkg_failed=no
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for gl" >&5
-printf %s "checking for gl... " >&6; }
-
-if test -n "$GL_CFLAGS"; then
-    pkg_cv_GL_CFLAGS="$GL_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gl\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "gl") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_GL_CFLAGS=`$PKG_CONFIG --cflags "gl" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$GL_LIBS"; then
-    pkg_cv_GL_LIBS="$GL_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"gl\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "gl") 2>&5
-  ac_status=$?
-  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_GL_LIBS=`$PKG_CONFIG --libs "gl" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-                GL_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gl" 2>&1`
-        else
-                GL_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gl" 2>&1`
-        fi
-        # Put the nasty error message in config.log where it belongs
-        echo "$GL_PKG_ERRORS" >&5
-
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: --with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)" >&5
-printf "%s\n" "$as_me: WARNING: --with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)" >&2;}
-elif test $pkg_failed = untried; then
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: --with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)" >&5
-printf "%s\n" "$as_me: WARNING: --with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)" >&2;}
-else
-        GL_CFLAGS=$pkg_cv_GL_CFLAGS
-        GL_LIBS=$pkg_cv_GL_LIBS
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-        GL_AVAIL=yes
-       CPPFLAGS="$CPPFLAGS $GL_CFLAGS"
-       LIBS="$GL_LIBS $LIBS"
+  GL_AVAIL=yes
+        CPPFLAGS="$CPPFLAGS `$PKG_CONFIG --cflags gl`"
+        LIBS="`$PKG_CONFIG --libs gl` $LIBS"
+else case e in #(
+  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: --with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)" >&5
+printf "%s\n" "$as_me: WARNING: --with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)" >&2;} ;;
+esac
 fi
 else case e in #(
   e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing glXQueryExtension" >&5

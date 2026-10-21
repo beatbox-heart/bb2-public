@@ -10,10 +10,6 @@ AM_INIT_AUTOMAKE([-Wall gnu])
 # with --enable-maintainer-mode to have make do it automatically.
 AM_MAINTAINER_MODE([disable])
 
-# Fail at autoconf time, rather than at configure time,
-# if pkg.m4 has not been found.
-m4_pattern_forbid([^PKG_CHECK_MODULES$])
-
 # -------------------------------
 # Compiler
 # -------------------------------
@@ -65,11 +61,14 @@ AC_SEARCH_LIBS(XOpenDisplay, [X11],
 GL_AVAIL=no
 if test "x$X11_AVAIL" = "xyes"; then
   AS_IF([test "x$use_mesa" = "xyes"],
-    [PKG_CHECK_MODULES([GL], [gl],
-      [GL_AVAIL=yes
-       CPPFLAGS="$CPPFLAGS $GL_CFLAGS"
-       LIBS="$GL_LIBS $LIBS"],
-      [AC_MSG_WARN([--with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)])])],
+    # pkg-config is called directly: PKG_CHECK_MODULES would make
+    # pkg-config a requirement even when --with-mesa is not given.
+    [AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
+     AS_IF([test -n "$PKG_CONFIG" && $PKG_CONFIG --exists gl],
+       [GL_AVAIL=yes
+        CPPFLAGS="$CPPFLAGS `$PKG_CONFIG --cflags gl`"
+        LIBS="`$PKG_CONFIG --libs gl` $LIBS"],
+       [AC_MSG_WARN([--with-mesa given but pkg-config cannot find gl (on macOS: brew install mesa)])])],
     [AC_SEARCH_LIBS(glXQueryExtension, [GL], [GL_AVAIL=yes])])
   # The GL sources include <GL/gl.h> and <GL/glx.h>
   if test "x$GL_AVAIL" = "xyes"; then
