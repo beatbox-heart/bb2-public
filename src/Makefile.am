@@ -127,6 +127,7 @@ common_sources = \
 	l_swap.c \
 	load.c \
 	localfunc.c \
+	localprint.c \
 	lrd.c lrd_par.h lrd_step.h lrd_var.h \
 	mchtb.c mchtb.h \
 	mchtbpar.h mchtbvar.h \
@@ -170,6 +171,7 @@ common_sources = \
 	stop.c \
 	system.c system.h \
 	tb.c tbpar.h tbvar.h \
+	textbuf.c textbuf.h \
 	ttnp.c ttnp_par.h ttnp_step.h ttnp_init.h ttnnp04.c ttnnp04_par.h ttnnp04_var.h ttnnp04_step.h \
 	ttp06.c  ttp06_par.h ttp06_step.h ttp06_var.h \
 	ttp2006.c ttp2006_const.h ttp2006_fddt.h ttp2006_ftab.h ttp2006_fun.h ttp2006_ngate.h ttp2006_other.h ttp2006_par.h ttp2006_tgate.h \
@@ -203,7 +205,6 @@ bb2s_SOURCES = \
 	k_paint.c \
 	k_paintgl.c \
 	k_plot.c \
-	localprint.c \
 	matout.c \
 	pgmin.c \
 	ppmin.c \

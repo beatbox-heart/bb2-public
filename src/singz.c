@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al.
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -19,6 +19,13 @@
  */
 
 /* Finding "tips" - intersections of isolines in a z-section */
+/*									           */
+/* File output: each process prints its tips into its own text buffer, every	   */
+/* tip tagged by the global position of its cell. The root collects the buffers,  */
+/* sorts the tips and assembles the record, with all time stamps and separators,  */
+/* so the file does not depend on the domain decomposition and is the same as in  */
+/* the sequential mode (see textbuf.h).					   */
+/* Tip statistics k-variables are reduced over all processes.		 	   */
 
 #if MPI
 #include <mpi.h>
@@ -37,21 +44,20 @@
 #include "device.h"
 #include "qpp.h"
 #include "bikt.h"
+#include "textbuf.h"
 #ifdef X11
 #include "windraw.h"
 #endif
 
+/* runHere is only set in MPI, despite the comment in device.h */
 #if MPI
-extern int idev;
-#endif
-
-
-#if MPI
-#define debug(fmt,...) printf (fmt,t,mpi_rank, __VA_ARGS__)
+#define RUNS_HERE(s) ((s).runHere)
 #else
-#define debug(fmt,...) printf (fmt,t,0, __VA_ARGS__)
+#define RUNS_HERE(s) 1
 #endif
 
+/* Tip statistics: number of tips, sums of coordinates and of their squares */
+enum {SUM_N, SUM_X, SUM_Y, SUM_Z, SUM_X2, SUM_Y2, SUM_Z2, NSUM};
 
 typedef struct {
   int v0, v1;			/* source layers */
@@ -68,17 +74,20 @@ typedef struct {
   char pointsep[80];		/* separator between points */
   char sectionsep[80];		/* separator between z-sections */
   char recordsep[80];		/* separator between t-records */
-  #define SINGZBUFMAX (4*1024*1024-1) /* 4M-1, reserve one byte in the end for trailing zero */
-  char buf[SINGZBUFMAX+1];	/* output buffer: should be long enough to print whole record incl trailing zero */
-  char *p;			/* pointer showing after the end of the record in the buffer so far */
+  textpieces mine;		/* texts of this process's tips in the current record */
+  #if MPI
+  textpieces all;		/* ..., of all processes (root only) */
+  #endif
+  textbuf out;			/* the record as it goes to the file (root only) */
   #if MPI
   MPI_Comm comm;		/* communicator for this device instance */
-  int tag;			/* tag for messages of this device instance (don't need if private communicator?) */
-  int root;			/* the rank of the instance that does the file output */
+  int root;			/* rank of the reporting process in ALL_ACTIVE_PROCS */
+  int commroot;			/* ..., and in comm */
   #endif
   #define MAXSTACK 10
-  real xtip[MAXSTACK],ytip[MAXSTACK],ztip[MAXSTACK]; /* array to store singular points found at previous/next step */
+  real xtip[MAXSTACK],ytip[MAXSTACK],ztip[MAXSTACK]; /* tips found at previous/next step, for graphics */
   int ntip;
+  double sum[NSUM];		/* statistics of all tips found by this process */
 
   /* Addresses of k-variables to store statistics of found tips */
   KREAL(Npoints); /* better be made integer but might clash with older scripts */
@@ -95,62 +104,21 @@ typedef struct {
 #endif
 } STR;
 
-
-/* Add the message to the buffer of this process */
-static int overflow_reported=0;
-static void output(STR *S,char *fmt, ...) {
-  va_list ap;
-  int l, n, nmax;
-/*   #if MPI */
-/*   printf("t=%d rank=%d output fmt=%s\n",t,mpi_rank,fmt); */
-/*   #endif */
-  if NOT(S->fileout) return;
-  
-  l = (S->p) - (&(S->buf[0])) ;			/* how many characters already are in the buffer */
-  nmax = SINGZBUFMAX - l;			/* how many characters are still available */
-  if (nmax>0) {
-    va_start(ap, fmt);
-    n=vsnprintf(S->p,nmax,fmt,ap);		/* how many characters would be needed */
-    va_end(ap);
-    if (n<nmax) {				/* enough space, proceed as normal */
-      S->p += n;
-    } else {
-      S->p += nmax;				/* only output what's fit in the buffer */
-      if (overflow_reported==0) {
-	MESSAGE("singz buffer overflow\n");	/* and repeated the buffer overflow */
-	overflow_reported=1;			/* only report it once */
-      }
-    }
-    *(S->p)='\0';				/* don't forget the trailing zero */
+/* Sort the tips of the record and assemble it in S->out, with time stamps and  */
+/* separators. Sequentially, the tips are those of this process; in MPI, of all. */
+static void assemble_record(STR *S, textpieces *rec, long z0, long z1) {
+  size_t i=0;
+  long z;
+  tp_sort(rec);
+  S->out.n=0;
+  if (S->everyrecord) txt_printf(&(S->out),"%10ld ",t);
+  for (z=z0;z<=z1;z++) {
+    if (S->everysection) txt_printf(&(S->out),"%10ld ",t);
+    for (;i<rec->n && tp_key_z(rec->pc[i].key)==z;i++)
+      txt_write(&(S->out),rec->txt.s+rec->pc[i].off,(size_t)rec->pc[i].len);
+    txt_puts(&(S->out),S->sectionsep);
   }
-}
-
-/* Output buffers of all processes to the file, via the root process */
-static void flush_buffer(STR *S) {
-  if NOT(S->fileout) return;
-#if MPI
-  int rank;
-  if (mpi_rank == S->root) {			/* If I am the reporting process */
-    fputs(S->buf,S->file); 			/* first print out my own buffer */
-    for (rank=0; rank<num_active_procs; rank++) { /* then get all other buffers */
-      if (rank==S->root) continue;
-      MPIDO(MPI_Recv(S->buf,SINGZBUFMAX,MPI_CHAR,rank,S->tag,S->comm,MPI_STATUS_IGNORE),
-	    "singz buffer receipt failure");
-      fputs(S->buf,S->file); 			/* and output them too. */
-    }
-    fflush(S->file);				/* always flush the file after writing to it. */
-  } else { 					/* Else just send my buffer to the reporting proc */
-    MPIDO(MPI_Send(S->buf,(S->p-S->buf+1),MPI_CHAR,S->root,S->tag,S->comm),
-	  "singz buffer send failure");
-  }
-  S->p=&(S->buf[0]);				/* In any case reset my buffer. */
-  *(S->p)='\0';
-#else
-  fputs(S->buf,S->file);			/* Sequential: just output the buffer */
-  fflush(S->file);				/* always flush the file after writing to it */
-  S->p=&(S->buf[0]);				/* and reset the buffer. */	
-  *(S->p)='\0';
-#endif
+  txt_puts(&(S->out),S->recordsep);
 }
 
 #define u(k,x,y) New[ind(x,y,z,S->K[k])]
@@ -195,15 +163,24 @@ static void util(int x, int y, real dx, real dy, STR *S,Space *s,int z) {
     phi=atan2(uy, ux);
     psi=atan2(vy, vx);
     cosangle=(ux*vx+uy*vy)/sqrt((ux*ux+uy*uy)*(vx*vx+vy*vy));
-    if (S->everypoint) output(S,"%10ld",t);
-    if (s->z0==s->z1) 
-      output(S," %f %f %f %f %f",
-	      (float)(x+dx),(float)(y+dy),(float)phi,(float)psi,(float)cosangle);
-    else 
-      output(S," %f %f %f %f %f %f",
-	      (float)(x+dx),(float)(y+dy),(float)(z),(float)phi,(float)psi,(float)cosangle);
-    output(S,"%s",S->pointsep);
+    /* One tip per cell, so the cell defines the order of output */
+    tp_begin(&(S->mine),tp_key(x,y,z));
+    if (S->everypoint) txt_printf(&(S->mine.txt),"%10ld",t);
+    /* 2D or 3D is decided by the whole device space, not this process's part */
+    if (s->global_z0==s->global_z1)
+      txt_printf(&(S->mine.txt)," %f %f %f %f %f",
+		 (float)(x+dx),(float)(y+dy),(float)phi,(float)psi,(float)cosangle);
+    else
+      txt_printf(&(S->mine.txt)," %f %f %f %f %f %f",
+		 (float)(x+dx),(float)(y+dy),(float)(z),(float)phi,(float)psi,(float)cosangle);
+    txt_puts(&(S->mine.txt),S->pointsep);
+    tp_end(&(S->mine));
   }
+  /* Statistics count all tips; only the first MAXSTACK are kept for graphics */
+  S->sum[SUM_N]  += 1;
+  S->sum[SUM_X]  += x+dx;  S->sum[SUM_X2] += (x+dx)*(x+dx);
+  S->sum[SUM_Y]  += y+dy;  S->sum[SUM_Y2] += (y+dy)*(y+dy);
+  S->sum[SUM_Z]  += z;     S->sum[SUM_Z2] += (double)z*z;
   if (S->ntip < MAXSTACK) {
     S->xtip[S->ntip]=x+dx;
     S->ytip[S->ntip]=y+dy;
@@ -234,10 +211,6 @@ static int isoline (int k, int x, int y, real fc, real *fx, real *fy, STR *S, in
   }
   if (j==2) return 1;
   return 0;		/* j==1 also possible and not interesting */
-/*
-  if (j==0) return 0;
-  ABORT("strange cell: j=%d",j);
-*/
 }
 
 static int isocross(STR *S,Space *s, int z) {
@@ -266,15 +239,6 @@ static int isocross(STR *S,Space *s, int z) {
     #undef Det
     uok = ( tu>=0 && tu<=1 );
     vok = ( tv>=0 && tv<=1 );
-    #if 0
-    if (uok && vok) {
-      dx = ux[0]*tu + ux[1]*(1-tu);
-      dy = uy[0]*tu + uy[1]*(1-tu);
-      util (x, y, dx, dy, S, s, z);
-    } else if (uok || vok) {
-      ABORT("strange cell %d %d",x,y);		/* error in algorithm */
-    }
-    #else
     if (uok) {
       dx = ux[0]*tu + ux[1]*(1-tu);
       dy = uy[0]*tu + uy[1]*(1-tu);
@@ -284,7 +248,6 @@ static int isocross(STR *S,Space *s, int z) {
       dy = uy[0]*tu + uy[1]*(1-tu);
       util (x, y, dx, dy, S, s, z);
     }
-    #endif
   }
   return 1; 		/* successfull */
 }
@@ -302,64 +265,80 @@ RUN_HEAD(singz)
 #else
 #define imroot 1
 #endif
-  
-  /* Graphic output: repaint the old tip(s) to the foreground color */
-#ifdef X11
-  if (graphics) {
-    SetWindow(wnd);
-    if NOT(SetLimits(s.x0, s.x1, s.y0, s.y1)) return 0;
-    for (i=0;i<S->ntip;i++)
-      Pixel (S->xtip[i],S->ytip[i],wnd.color%16);
-  }
-#endif
-  S->ntip=0;
 
-  /* File output while finding new tip(s) */
-  if (imroot && S->everyrecord) output(S,"%10ld ",t);
-  for (z=s.z0;z<=s.z1;z++) {
-    if (imroot && S->everysection) output(S,"%10ld ",t);
-    isocross(S,&s,z);
-    if (imroot) output(S,"%s",S->sectionsep);
-  }
-  if (imroot) output(S,"%s",S->recordsep);
-  flush_buffer(S);
-
-  /* Graphic output: paint the new tip(s) to the border color */
+  /* In MPI, this may be an instance with nothing to do but the reduction of statistics */
+  if (RUNS_HERE(s)) {
+    /* Graphic output: repaint the old tip(s) to the foreground color */
 #ifdef X11
-  if (graphics) {
-    for (i=0;i<S->ntip;i++) 
-      Pixel (S->xtip[i],S->ytip[i],wnd.color/16);
-  }
+    if (graphics) {
+      SetWindow(wnd);
+      if NOT(SetLimits(s.x0, s.x1, s.y0, s.y1)) return 0;
+      for (i=0;i<S->ntip;i++)
+	Pixel (S->xtip[i],S->ytip[i],wnd.color%16);
+    }
 #endif
+    S->ntip=0;
+    for (i=0;i<NSUM;i++) S->sum[i]=0;
+    tp_reset(&(S->mine));
+
+    /* Find new tip(s), printing them into the buffer */
+    for (z=s.z0;z<=s.z1;z++) isocross(S,&s,z);
+
+    /* File output of the whole record by the root */
+    if (S->fileout) {
+#if MPI
+      if (!tp_gather(&(S->mine),&(S->all),S->commroot,S->comm)) return 0;
+      if (imroot) assemble_record(S,&(S->all),s.global_z0,s.global_z1);
+#else
+      assemble_record(S,&(S->mine),s.global_z0,s.global_z1);
+#endif
+      if (imroot) {
+	fwrite(S->out.s,1,S->out.n,S->file);
+	fflush(S->file);
+      }
+    }
+
+    /* Graphic output: paint the new tip(s) to the border color */
+#ifdef X11
+    if (graphics) {
+      for (i=0;i<S->ntip;i++)
+	Pixel (S->xtip[i],S->ytip[i],wnd.color/16);
+    }
+#endif
+  } /* if s.runHere */
 
   if (S->k_output) {
-    int N=S->ntip;
+    double sum[NSUM];
+    double N;
+    for (i=0;i<NSUM;i++) sum[i]=RUNS_HERE(s)?S->sum[i]:0;
+#if MPI
+    /* All processes need the k-variables, hence this device always runs */
+    MPIDO(MPI_Allreduce(MPI_IN_PLACE,sum,NSUM,MPI_DOUBLE,MPI_SUM,ALL_ACTIVE_PROCS),
+	  "singz: could not reduce tip statistics");
+#endif
+    N=sum[SUM_N];
+    if (S->Npoints) *(S->Npoints)=N;
     if (N>0) {
-      double X=0; double Y=0; double Z=0;
-      double X2=0; double Y2=0; double Z2=0;
-      for (i=0;i<N;i++) {
-	X+=S->xtip[i]; X2+=S->xtip[i]*S->xtip[i];
-	Y+=S->ytip[i]; Y2+=S->ytip[i]*S->ytip[i];
-	Z+=S->ztip[i]; Z2+=S->ztip[i]*S->ztip[i];
-      }
-      X/=N;Y/=N;Z/=N;
-      X2/=N;Y2/=N;Z2/=N;
-      if (S->Npoints) *(S->Npoints)=N;
+      double X=sum[SUM_X]/N,   Y=sum[SUM_Y]/N,   Z=sum[SUM_Z]/N;
+      double X2=sum[SUM_X2]/N, Y2=sum[SUM_Y2]/N, Z2=sum[SUM_Z2]/N;
       if (S->xmean)   *(S->xmean)  =X;
       if (S->ymean)   *(S->ymean)  =Y;
       if (S->zmean)   *(S->zmean)  =Z;
-      if (S->xstddev) *(S->xstddev)=sqrt(X2-X*X);
-      if (S->ystddev) *(S->ystddev)=sqrt(Y2-Y*Y);
-      if (S->zstddev) *(S->zstddev)=sqrt(Z2-Z*Z);
-    } else {
-      if (S->Npoints) *(S->Npoints)=N;
+      if (S->xstddev) *(S->xstddev)=sqrt(fmax(X2-X*X,0));
+      if (S->ystddev) *(S->ystddev)=sqrt(fmax(Y2-Y*Y,0));
+      if (S->zstddev) *(S->zstddev)=sqrt(fmax(Z2-Z*Z,0));
     }
   }
-#undef s
+#undef imroot
 }
 RUN_TAIL(singz)
 
 DESTROY_HEAD(singz)
+  tp_free(&(S->mine));
+#if MPI
+  tp_free(&(S->all));
+#endif
+  txt_free(&(S->out));
   SAFE_CLOSE(S->file);
 DESTROY_TAIL(singz)
 
@@ -375,29 +354,20 @@ CREATE_HEAD(singz)
   S->K[0] = v0;  S->K[1] = v1;
   ACCEPTI(precise_orientation,0,0,1);
 #if MPI
+  /* It needs two layers of halo, and we have only one */
   if (S->precise_orientation) {
     MESSAGE("\nprecise_orientation=1 is not allowed in MPI. "
 	    "Your simulation will continue with precise_orientation=0. */");
     S->precise_orientation=0;
   }
 #endif
-#if MPI
-  /* TODO: make it work for arbitrary user's choice of everys. */
-  /* For now, it does not work in any other way.               */
-  ACCEPTS(pointsep,"\n");
-  ACCEPTS(sectionsep,"");
-  ACCEPTS(recordsep,"");
-  ACCEPTI(everypoint,1,1,1);
-  ACCEPTI(everysection,0,0,0);
-  ACCEPTI(everyrecord,0,0,0);
-#else
+  /* Since the root assembles the records, these work the same in MPI */
   ACCEPTS(pointsep," ");
   ACCEPTS(sectionsep,"\t");
   ACCEPTS(recordsep,"\n");
   ACCEPTI(everypoint,0,0,1);
   ACCEPTI(everysection,0,0,1);
   ACCEPTI(everyrecord,1,0,1);
-#endif
   S->ntip = 0;
   {
     int everypoint=S->everypoint;
@@ -422,34 +392,40 @@ CREATE_HEAD(singz)
     (S->xstddev!=NULL) ||
     (S->ystddev!=NULL) ||
     (S->zstddev!=NULL);
-  
-  
-  S->p = &(S->buf[0]);
-  
+  /* The statistics are global k-variables, so all processes take part in computing them */
+  if (S->k_output) {DEVICE_ALWAYS_RUNS}
+
   ACCEPTI(append,1,0,1);
 #if MPI
   if (!deviceCommunicatorWithFirstRank(dev->s.runHere, &(S->comm), &(S->root)))
     EXPECTED_ERROR("Could not create communicator.\n");
-  S->tag=idev;
+  if (dev->s.runHere) {
+    /* Where is the root in the device's communicator */
+    int mine=-1, me;
+    MPI_Comm_rank(S->comm,&me);
+    if (mpi_rank==S->root) mine=me;
+    MPIDO(MPI_Allreduce(&mine,&(S->commroot),1,MPI_INT,MPI_MAX,S->comm),
+	  "singz: could not identify the root");
+  }
   /* the choice below does not work if global_x0... point falls in the void                */
   /* S->root = getRankContainingPoint(dev->s.global_x0,dev->s.global_y0,dev->s.global_z0); */
   if (mpi_rank==S->root) {
     ACCEPTF(file,S->append?"at":"wt","");
-    S->fileout=(S->file!=NULL);
   } else {
-    S->fileout=accepts("file=",&(S->filename[0]), "", w) && (S->filename[0]!='\0');
+    if (!accepts("file=",&(S->filename[0]),"",w)) return 0;
     S->file=NULL;
   }
-  /* TODO: make this listpointable? */
-  /* Need to cover the cleft space */
-  if (mpi_ix == mpi_nx-1) dev->s.x1--;
-  if (mpi_iy == mpi_ny-1) dev->s.y1--;
 #else
-  dev->s.x1--;
-  dev->s.y1--;
   ACCEPTF(file,S->append?"at":"wt","");
-  S->fileout=(S->file!=NULL);
 #endif
+  S->fileout=(S->filename[0]!='\0');
+
+  /* TODO: make this listpointable? */
+  /* Need to cover the cleft space: cells are [x,x+1]*[y,y+1], so the last column  */
+  /* and row of the device space are not cells' origins. In MPI, only the process  */
+  /* owning that column/row drops it; others use their halo for x+1, y+1.	   */
+  if (dev->s.x1==dev->s.global_x1) dev->s.x1--;
+  if (dev->s.y1==dev->s.global_y1) dev->s.y1--;
 
 #ifdef X11
   ACCEPT_WINDOW(wnd);

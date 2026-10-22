@@ -13428,7 +13428,6 @@ coordinates.
   <td> <code>0</code> </td>
   <td> <code>1</code> </td>
   <td> In the file output, time <code>t</code> value will precede coordinates of every found singularity point.
-    In MPI, this parameter must be equal to <code>1</code>.
   </td>
 </tr>
 
@@ -13439,7 +13438,6 @@ coordinates.
   <td> <code>0</code> </td>
   <td> <code>1</code> </td>
   <td> In the file output, time <code>t</code> value will precede the output from every z-section.
-    In MPI, this parameter must be equal to <code>0</code>.
   </td>
 </tr>
 
@@ -13452,7 +13450,6 @@ coordinates.
   <td>
     In the file output, time <code>t</code> value will precede
     the output from every call of the device.
-    In MPI, this parameter must be equal to <code>0</code>.
     <br />
     <strong>NB</strong> Exactly one of
     <code>everypoint,everysection,everyrecord</code> must be 1, the
@@ -13569,7 +13566,14 @@ coordinates.
 <p> All k-variables must be of real type, and are optional
 parameters. If a k-variable is not specified, the corresponding
 quantity is not stored anywhere. The mean and standard deviation are
-assigned only if nonzero number of points are detected. </p>
+assigned only if nonzero number of points are detected. In MPI, the
+statistics are of all points found by all processes. </p>
+
+<p> In the file output, the singular points are listed by
+<i>z</i>-sections in increasing order of <i>z</i>, and within a
+section, in increasing order of <i>y</i> and then <i>x</i> of the
+grid cell containing the point. In MPI, the output is the same as in
+the sequential mode, regardless of the domain decomposition. </p>
 
 <h3>Typical Syntax</h3>
 
@@ -13711,11 +13715,7 @@ file output, which looks like this:
 There is now more columns than in the 2D case: the added is the fourth
 column, which contains the <code>z</code>-coordinates of the tip
 points. The lines corresponding to different values of time counter
-are separated by extra empty lines; however, if this is run in
-parallel, there may be extra empty lines, which are to be eliminated
-by postprocessing.
-</p>
-<p class="quest"> This may be considered as a "feature" that hopefully will be fixed a some stage. 
+are separated by extra empty lines. 
 </p>
 
 <h3>Instances of sample in Example Scripts</h3>

@@ -19,7 +19,7 @@ FAIL=echo ' failed'; ./admitfailure
 
 NEGATIVE=nodev depth nexist notype reserved noname declared divzero diff0d nomem nomem-4
 POSITIVE=funcs matout record reduce reduce-4 \
-	fhn0 fhn1 fhn2 fhn3 fhn3side fhn3side-16 \
+	fhn0 fhn1 fhn2 fhn3 fhn3side fhn3side-16 fhn3sidebox fhn3sidebox-4 \
 bkl3cont-0 bkl3cont-4 br0 hh52mrl \
 	ballf ballfcont-0 ballfcont-4 balldcont-0 balldcont-4 \
 	diffsub diffsub-4 diffwhere diffwhere-4 diffopen diffopen-4 diffopennl
