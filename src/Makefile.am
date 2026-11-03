@@ -71,6 +71,7 @@ common_sources = \
 	device.c device.h \
 	devlist.h \
 	diff.c diff1.h diff2.h diff3.h diff1d.h diff2d.h diff3d.h diff_printweights.h \
+	diffweights.h diffweights_str.h diffweights_code.h \
 	displayName.h \
 	dump.c \
 	dump_types.h \

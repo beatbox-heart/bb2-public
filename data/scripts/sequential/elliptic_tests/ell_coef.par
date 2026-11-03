@@ -1,0 +1,55 @@
+// Common part of ell_coef.bbs and ell_coefng.bbs: arguments and parameters.
+// Usage: bb2s -nograph -- ell_coef[ng].bbs kind nx ny nz coef1 coef2 rhs ul gs vcycles
+//   kind      0,1,2,3: isotropic; 4,5: anisotropic (constant fibres, see below)
+//             (0: ell_coefng.bbs, without geometry; 1,2,3: ell_coefiso.bbs; 4,5: ell_coef.bbs)
+//             The analytic RHS assumes: 0,1,2: D=D0; 3: D=~D0*(1+va*sin(bx*X+by*Y));
+//             4: Dl=~Dl0*(1+va*sin(bx*X)), Dt=Dt0; 5: Dl=Dl0, Dt=Dt0,
+//             where X=(x-1)*hx, Y=(y-1)*hx, and va=0.3 for kinds 3,4, else 0.
+//   coef1 coef2  the coefficient parameters, passed verbatim to elliptic and diff,
+//             e.g. D=D0 manypoint=1, or Dl=~Dl0*(1+va*sin(bx*(x-1)*hx)) Dt=Dt0;
+//             they must agree with kind (no spaces in them)
+//   nx ny nz  intervals (nz=0 for 2D); tissue nodes 1..n+1, Dirichlet on the outer ones
+//   rhs       0: analytic RHS; 1: RHS = diff applied to the exact solution
+//   ul        multigrid depth (-1: plain GS)
+//   gs        1: also solve by plain GS into layer g, for comparison
+//   vcycles   number of V-cycles (max)
+// Output (stdout, last line): Eu=max|p-u_exact|, Eg=max|g-u_exact|, Epg=max|p-g|.
+def int kind [1];
+def int nx [2]; def int ny [3]; def int nz [4];
+def real rhs [7];
+def int ul [8];
+def real gs [9];
+def int vcyc [10];
+
+// Layers; the diff tensor layers d0..d1 are needed for =~ coefficients in MPI
+def str ua 0; def str f 1; def str p 2; def str g 3; def str d 4;
+def int d0 5;
+def int iso le(kind,3);
+def int nD ifgt0(iso,1,ifgt0(nz,6,3));
+def int d1 d0+nD-1;
+
+def real Lbox 10.0;
+def real hx Lbox/nx;
+def real deg pi/180;
+def real va 0.3*(eq(kind,3)+eq(kind,4));
+def real D0 0.7;
+def real Dl0 2.0;
+def real Dt0 0.5;
+def real bx 2*pi*0.5/Lbox;
+def real by 2*pi*0.3/Lbox*gt(ny,0);
+// constant fibres for the anisotropic kinds
+def real th 30*deg;
+def real al 20*deg*gt(nz,0);
+def real fx cos(al)*cos(th);
+def real fy cos(al)*sin(th);
+def real fz sin(al);
+// the plane wave
+def real kx 2*pi*1.0/Lbox;
+def real ky 2*pi*0.6/Lbox*gt(ny,0);
+def real kz 2*pi*0.35/Lbox*gt(nz,0);
+def real ph 0.3;
+def real tol 1e-10;
+// interior (unknowns) and boundary (Dirichlet) ranges
+def int xi0 2; def int xi1 nx;
+def int yi0 2*gt(ny,0); def int yi1 ifgt0(ny,ny,0);
+def int zi0 2*gt(nz,0); def int zi1 ifgt0(nz,nz,0);

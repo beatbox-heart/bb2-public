@@ -1,0 +1,7 @@
+// As ell_coef.bbs, but isotropic (kinds 1,2,3): the geometry defines only the tissue.
+// See ell_coef.par for the arguments.
+<ell_coef.par>
+state xmax=nx+3 ymax=ifgt0(ny,ny+3,1) zmax=ifgt0(nz,nz+3,1) vmax=d0+6 pgm={
+  geom0=ge(x,1)*le(x,nx+1)*ifgt0(ny,ge(y,1)*le(y,ny+1),1)*ifgt0(nz,ge(z,1)*le(z,nz+1),1);
+};
+<ell_coef.inc>

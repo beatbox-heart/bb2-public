@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <limits.h>
 
 #include "system.h"
 #include "beatbox.h"
@@ -46,6 +47,10 @@
 #include "device.h"
 #include "bikt.h"
 #include "qpp.h"
+#include "geometry.h"
+
+/* The connection weights are computed by the code of the diff device */
+#include "diffweights.h"
 
 /*==============================================*/
 /* Important defined/derived types              */
@@ -138,11 +143,8 @@ typedef struct {
 typedef struct {                
 
   /***********************/
-  /* The usual diff stuff */
-
-  real Dpar;				/* Parallel diffusion coefficient. ANISO only */
-  real Dtrans;				/* Transverse diffusion coefficient. ANISO only. */
-  real hx;				/* Space step */
+  /* The usual diff stuff: the parameters of the connection weights, as in diff */
+#include "diffweights_str.h"
   int v0;				/* layer for the diffusive field */
   int v1;				/* auxiliary layer */
 
@@ -156,15 +158,22 @@ typedef struct {
 
 #if MPI
   MPI_Comm comm; 			/* Communicator for reduction operation. */
+  int *active;				/* runHere flags of all processes: only the active ones */
+					/* take part in the multigrid's halo exchanges          */
   int root; 				/* Rank of device root in ALL_ACTIVE_PROCS */
 #endif
 
-  /*****************************************************/
-  /* The pinning condition, needed for Neumann problem */
+  /*****************************************************************/
+  /* The singular problem: no-flux at all borders, no Dirichlet values */
+  int singular;				/* nonzero if no point is linked to values beyond the device space */
+  real fmean;				/* plain GS: mean of the RHS, subtracted to make it compatible */
+  /* Normalization of the solution of the singular problem: zero mean, or if pin=1, */
+  /* shifted by a constant so that u(xpin,ypin,zpin)=upin. NB this is applied to   */
+  /* the solution, not imposed as an equation, so does not affect convergence.     */
   int pin;				/* 0/1 flag */
-  int xpin, ypin, zpin;			/* grid coord of pinning point */
+  int xpin, ypin, zpin;			/* global coords of the pinning point */
   real upin;				/* pinning value */
-#define PINCOEFF (10.0)			/* to make pinning equation commensurate with others */
+  list_t pinpoint;			/* its number in S->points, 0 if not in this subdomain */
 
   /***********************************/
   /* Base iteration parameters (TBE) */
@@ -176,6 +185,8 @@ typedef struct {
   int maxiter;				/* Max num of iterations after multigrid precondition */
   int preiter;				/* Max num of iter before coarsening */
   int postiter;				/* Max num of iter after coarsening */
+  int coarseiter;			/* Max num of iter at the coarsest level (0: preiter+postiter as elsewhere) */
+  real coarsereduce;			/* ... iterate there until the residual is reduced by this factor */
  
 
   /*******************/
@@ -213,7 +224,6 @@ typedef struct {
   /* index_t pointIndex[numLevels][nPoints+1] */
   /* The grids are level arrays of "flattened" 1D arrays representing 1D, 2D or 3D meshes */
   real **ugrid;				/* The solution grid. */
-#define Pgrid ugrid			/* At start time, same arrays used to calc row sums of P matrices */
   real **rgrid;				/* The residual grid. */
 #define ggrid rgrid			/* At start time, same arrays used as "geometry" grid (nonzeros at tissue points) */
   real **fgrid;				/* The RHS (free terms, "force") grid */
@@ -228,13 +238,26 @@ typedef struct {
 
   /* Transition matrices */
   contr_t numContributors;		/* max number of contributors: depends on dimensionality */
-  sindex_t **D;				/* 1D index displacements for contributors */
+  sindex_t **Dc;			/* 1D index displacements for contributors */
   /* sindex_t D[numLevels][numContributors] */
   index_t ***contributors;		/* 1D indices of such contributor nodes for each higher level point */
   /* index_t contributors[numLevels][nPoints+1][numContributorsMax] */
   real ***P;				/* P matrix entries */
   real ***R;				/* R matrix entries */
   /* real P/R[numLevels][nPoints+1][numContributorsMax] */
+  /* The same P matrix by rows, for prolongation by the fine points:  */
+  /* point i of level l-1 gets parN[l][i] terms parW[l][8*i+n]*u_l[parIdx[l][8*i+n]] */
+  int **parN;
+  index_t **parIdx;
+  real **parW;
+
+  /* Coarsening geometry, for each dimension d (0=x,1=y,2=z) and level l,	*/
+  /* in global coordinates measured in the mesh steps of that level.		*/
+  int *off[3];				/* l>0: coarse local k <-> fine local 2k+off[d][l] at level l-1 */
+  long *g0[3];				/* global coordinate of the local netto point 0 */
+  long *glo[3], *ghi[3];		/* global limits of the device space (images of the level-0 ones) */
+  long *anchor[3];			/* level l+1 points are at level-l global positions of this parity */
+  int dlo[3], dhi[3];			/* nonzero if the low/high face of the device space has Dirichlet links */
 
 #if MPI
   /* Halo exchange MPI datatypes for multigrid levels */
@@ -258,6 +281,9 @@ typedef struct {
 
 } STR;
 /*****************************************************************************/
+
+/* The weights code of the diff device: diff_weights_accept(), diff_connect() */
+#include "diffweights_code.h"
 
 /*==============================================*/
 /* Local static objects                         */
@@ -351,9 +377,21 @@ static scoord_t cdz[maxcn]={
 
 /* Make list of points, with their connections */
 static int list_points(STR *S,Space s);
+/* The singular problem */
+static int is_singular(STR *S);
+static real points_mean(real *grid,STR *S);
+static real layer_mean(int v,STR *S);
+static void apply_pin(STR *S);
 
 /* Prepare multigrid stuff for given level (and above, recursively) */
 static int make_level(int level,STR *S);
+
+/* Find the parity of the coarsening of the given level */
+static void set_anchor(int level,STR *S);
+/* Coarse parents of a fine point, and their kinds */
+static int fine_parents(int level,const long f[3],long k[8][3],real w[8],STR *S);
+static int parent_kind(int level,const long k[3],STR *S);
+static real fine_norm(int level,const long f[3],STR *S);
 
 /* Straight iterations (outside multigrid construct) */
 static real iterate_base(int it, STR *S);
@@ -421,13 +459,14 @@ static void profile_report(STR *S);
 
 /* Macros to make higher-level nodes coords from lower-level coords */
 /* This way it is used only for the dimensions of the coarser grid */
-#define coarsex(xl) ((xl+2)/2-1)
-#define coarsey(yl) ((yl+2)/2-1)
-#define coarsez(zl) ((zl+2)/2-1)
 /* And vice-versa */
-#define finex(xh) (2*(xh))
-#define finey(xh) (2*(yh))
-#define finez(xh) (2*(zh))
+/* Fine (level-1) local coordinate of a coarse (level) point; uses 'level' in scope */
+#define finex(xh) (2*(xh)+S->off[0][level])
+#define finey(yh) (2*(yh)+S->off[1][level])
+#define finez(zh) (2*(zh)+S->off[2][level])
+/* Integer floor division by 2 and remainder mod 2, correct for negative numbers */
+#define mod2(a) ((((a)%2)+2)%2)
+#define fdiv2(a) (((a)-mod2(a))/2)
 
 #undef DEBUG
 #define DEBUG(...) if (S->debug&&S->debugWriter) {fprintf(S->debug,__VA_ARGS__);fflush(S->debug);}
@@ -471,7 +510,6 @@ RUN_HEAD(elliptic)
   DEBUG("\nelliptic #%d: t=%ld\n", mpi_rank, (long)t);
   profile_start(S);
   
-  if (!ANISOTROPY_ON) EXPECTED_ERROR("this device is implemented only for the anisotropic case\n");
   
   /* Apply the linear predictor */
   /* if (vp>=0) { */
@@ -545,11 +583,19 @@ RUN_HEAD(elliptic)
   /* Straight GS iterations by the old code. */
   /* This is to be phased out when all done? */
   else {
+    S->fmean=(S->singular)?layer_mean(v0,S):0.0; /* the singular problem: compatible RHS */
     for (it=0;it<maxiter;it++)
       if (tolerance>iterate_base(it,S))
 	break;
     DEBUG("result: iter=%ld resnorm=%lg\n", (long)it, (double)S->resnorm);
+    if (S->singular) {			/* ... and zero-mean solution */
+      real mean=layer_mean(v1,S);
+      for (i=1;i<=numPoints;i++) New[ind(points[i].x,points[i].y,points[i].z,v1)]-=mean;
+    }
   }
+
+  /* The singular problem with pin=1: shift the solution so that u(pin)=upin */
+  if (S->singular && S->pin) apply_pin(S);
 
   profile_report(S);
 }
@@ -557,10 +603,24 @@ RUN_TAIL(elliptic)
 
   /*******************/
 DESTROY_HEAD(elliptic) {
+  if (S->points) {
+    list_t i;
+    for (i=1;i<=S->numPoints;i++) FREE(S->points[i].K);
+  }
   FREE(S->points);
+  /* the parameters of the weights, see diffweights_code.h */
+  FREE(S->Xpool);
+  FREE(S->Ypool);
+  FREE(S->u);
+  FREE(S->geom);
+  FREE(S->loctb);
+  FREE(S->Dsrc);
+  FREE(S->Dlsrc);
+  FREE(S->Dtsrc);
   SAFE_CLOSE(S->debug);
   SAFE_CLOSE(S->profile);
 #if MPI
+  FREE(S->active);
   /* Halo types of the levels that have been made */
   {
     MPI_Datatype **types[] = {
@@ -575,6 +635,17 @@ DESTROY_HEAD(elliptic) {
     }
   }
 #endif
+  {
+    int d;
+    for (d=0;d<3;d++) {
+      FREE(S->off[d]); FREE(S->g0[d]); FREE(S->glo[d]); FREE(S->ghi[d]); FREE(S->anchor[d]);
+    }
+    if (S->parN) {
+      int l;
+      for (l=0;l<=S->upper_level;l++) {FREE(S->parN[l]); FREE(S->parIdx[l]); FREE(S->parW[l]);}
+      FREE(S->parN); FREE(S->parIdx); FREE(S->parW);
+    }
+  }
   /* TODO: free all other multigrid objects ... */
 } DESTROY_TAIL(elliptic)
   
@@ -584,32 +655,45 @@ CREATE_HEAD(elliptic)
   DEVICE_REQUIRES_SYNC;
   int level=-1;
 
-  if (! ANISOTROPY_ON) EXPECTED_ERROR("elliptic is only implemented for the anisotropic case\n");
+  int hasexe;				/* whether any diffusivity is a =~ expression */
+
   if (s->nowhere) EXPECTED_ERROR("'nowhere' is not allowed\n");
-  if (0==s->listpoints==0) 
-    MESSAGE("/* listpoints=1 is mandatory in this device and enforced */\n");
-  else if (find_key("listpoints=",w))
-    MESSAGE("/* listpoints=1 is mandatory anyway*/\n");
-  s->listpoints=1;
+  if (find_key("listpoints=",w)) {	/* say something only if the user has a say */
+    if (s->listpoints==0)
+      MESSAGE("/* listpoints=1 is mandatory in this device and enforced */\n");
+    else
+      MESSAGE("/* listpoints=1 is mandatory anyway */\n");
+  }
+  if (!s->listpoints) {			/* otherwise already listed by accept_space() */
+    s->listpoints=1;
+    s->p=NULL;				/* signal that it has not be alloc'd yet */
+    if (SUCCESS != list_space(s))
+      ABORT("could not make list of points");
+  }
   
   ACCEPTF(debug,"wt","");
   ACCEPTF(profile,"wt","");
 #if MPI
   if (S->profile) MESSAGE("\n/* profiling not implemented for MPI; will proceed without profiling */");
 #endif	
-  ACCEPTR(Dpar,RNONE,0.,RNONE);
-  ACCEPTR(Dtrans,RNONE,0.,RNONE);
-  if (find_key("D=",w)) 
-    MESSAGE("The isotropic diffusion coefficient 'D' is not needed when anisotropy is active."
-	    "This parameter will be ignored.\n");
-  ACCEPTR(hx,RNONE,0.,RNONE);
+  /* The connection weights: the same parameters and code as in diff, see diffweights_code.h */
+  ACCEPTR(hx,RNONE,RSUCC(0.),RNONE);
+  if (!diff_weights_accept(S,w,&hasexe)) return 0;
+  /* The border of the device space: by default, connected to the tissue beyond */
+  /* it, whose values are then the Dirichlet boundary conditions; with          */
+  /* isolated=1, it is a no-flux boundary, as is the border of the tissue.      */
+  ACCEPTI(isolated,0,0,1);
+  S->w0=S->w1=-1;			/* the weights are kept in the device's pool */
   ACCEPTR(tolerance,RNONE,0.,RNONE);
   ACCEPTI(maxiter,INONE,1,INONE);
+  /* Normalization of the solution of the singular problem (no-flux at all borders): */
+  /* zero mean, or, if pin=1, u(xpin,ypin,zpin)=upin. Applied after the solution.    */
   ACCEPTI(pin,0,0,1);
   if (S->pin) {
-    ACCEPTI(xpin,INONE,dev->s.x0,dev->s.x1);
-    ACCEPTI(ypin,INONE,dev->s.y0,dev->s.y1);
-    ACCEPTI(zpin,INONE,dev->s.z0,dev->s.z1);
+    /* Global limits: in MPI, the pin point is in one subdomain only */
+    ACCEPTI(xpin,INONE,dev->s.global_x0,dev->s.global_x1);
+    ACCEPTI(ypin,INONE,dev->s.global_y0,dev->s.global_y1);
+    ACCEPTI(zpin,INONE,dev->s.global_z0,dev->s.global_z1);
     ACCEPTR(upin,RNONE,RNONE,RNONE);
   }
   /* ACCEPTI(vp,-1,-1,vmax-1); */
@@ -622,8 +706,9 @@ CREATE_HEAD(elliptic)
   
   /* S->started=0; */
 
-  if (ANISOTROPY_ON) /* always true for now, but retain this if for future development */
-    list_points(S,dev->s);
+  /* The connection weights at the listed points, and the device's list of points */
+  if (SUCCESS != diff_connect(S,s)) ABORT("could not make the connection weights");
+  if (!list_points(S,*s)) return 0;
   
 #if MPI
   /* We need one process that is guaranteed to be engaged in this device */
@@ -632,10 +717,54 @@ CREATE_HEAD(elliptic)
   /* Identifying the root process allows only one process to write debug output. */
   S->debugWriter = (mpi_rank == S->root);
   S->profileWriter = (mpi_rank == S->root);
+  /* Which processes are active: the multigrid's halos are exchanged only between */
+  /* them, as an inactive one has no points of the device space, and does not run. */
+  CALLOC(S->active,num_active_procs,sizeof(int));
+  MPIDO(MPI_Allgather(&(dev->s.runHere),1,MPI_INT,S->active,1,MPI_INT,ALL_ACTIVE_PROCS),
+	"Couldn't gather runHere flags.");
 #else
   S->debugWriter = 1;
   S->profileWriter = 1;
 #endif /* MPI */
+
+  /* No-flux conditions at all borders? Then the solution is up to a constant. */
+  /* NB in MPI this is collective over the active instances only; runHere is   */
+  /* not set in sequential mode, where the instance is always active.          */
+#if MPI
+  int active=dev->s.runHere;
+#else
+  int active=1;
+#endif
+  if (active) S->singular=is_singular(S);
+  if (S->pin && active) {
+    long found=0;
+    list_t i;
+    if (!S->singular)
+      EXPECTED_ERROR("pin=1 is only for the singular problem, with no-flux conditions at all borders;\n"
+		     "here the solution is unique, and is fixed by the Dirichlet boundary values.\n");
+    for (i=1;i<=S->numPoints;i++)
+      if ((long)S->points[i].x==S->xpin && (long)S->points[i].y==S->ypin && (long)S->points[i].z==S->zpin)
+	S->pinpoint=i;
+    found=(S->pinpoint!=0);
+#if MPI
+    MPIDO(MPI_Allreduce(MPI_IN_PLACE,&found,1,MPI_LONG,MPI_SUM,S->comm),"Couldn't find the pinning point.");
+#endif
+    if (!found)
+      EXPECTED_ERROR("the pinning point (%d,%d,%d) is not a point of the device space\n",
+		     S->xpin,S->ypin,S->zpin);
+  }
+  if (S->singular) {
+    if (S->pin)
+      MESSAGE("\n/* No Dirichlet boundary values: the problem is singular. The RHS will be made compatible\n"
+	      "   by subtracting its mean, and the solution shifted so that u(%d,%d,%d)=%g. */\n",
+	      S->xpin,S->ypin,S->zpin,S->upin);
+    else
+      MESSAGE("\n/* No Dirichlet boundary values: the problem is singular. The RHS will be made compatible\n"
+	      "   by subtracting its mean, and the solution normalized to zero mean. */\n");
+    if (!S->conservative)
+      MESSAGE("/* WARNING: with conservative=0 the operator is not symmetric, so subtracting the mean\n"
+	      "   of the RHS may not make it compatible, and the iterations may stall. */\n");
+  }
 
   ACCEPTI(upper_level,-1,-1,xmax);
   /* upper_level<0 means no multigrid, just straightforward GS iterations by old code. */
@@ -668,6 +797,8 @@ CREATE_HEAD(elliptic)
     ACCEPTI(vcycles,1,1,INONE);
     ACCEPTI(preiter,S->maxiter,0,INONE);
     ACCEPTI(postiter,S->maxiter,0,INONE);
+    ACCEPTI(coarseiter,100,0,INONE);
+    ACCEPTR(coarsereduce,1e-2,0.,1.);
 
     /* Allocate level arrays */
     CALLOC(S->tol,numLevels,sizeof(real));
@@ -680,6 +811,9 @@ CREATE_HEAD(elliptic)
     CALLOC(S->contributors,numLevels,sizeof(index_t **));
     CALLOC(S->P,numLevels,sizeof(real **));
     CALLOC(S->R,numLevels,sizeof(real **));
+    CALLOC(S->parN,numLevels,sizeof(int *));
+    CALLOC(S->parIdx,numLevels,sizeof(index_t *));
+    CALLOC(S->parW,numLevels,sizeof(real *));
 
     CALLOC(S->nx,numLevels,sizeof(coord_t));
     CALLOC(S->ny,numLevels,sizeof(coord_t));
@@ -704,7 +838,14 @@ CREATE_HEAD(elliptic)
     CALLOC(S->rgrid,numLevels,sizeof(real *));
     CALLOC(S->fgrid,numLevels,sizeof(real *));
     CALLOC(S->d,numLevels,sizeof(sindex_t *));
-    CALLOC(S->D,numLevels,sizeof(sindex_t *));
+    CALLOC(S->Dc,numLevels,sizeof(sindex_t *));
+    for (l=0;l<3;l++) {
+      CALLOC(S->off[l],numLevels,sizeof(int));
+      CALLOC(S->g0[l],numLevels,sizeof(long));
+      CALLOC(S->glo[l],numLevels,sizeof(long));
+      CALLOC(S->ghi[l],numLevels,sizeof(long));
+      CALLOC(S->anchor[l],numLevels,sizeof(long));
+    }
     
     /* Set tolerances iteration numbers at all levels */
     for (l=0;l<numLevels;l++) {
@@ -734,6 +875,11 @@ CREATE_HEAD(elliptic)
     }
 #endif
 
+#if MPI
+    /* An inactive instance has no multigrid to make: it is not collective over */
+    /* all processes, only over the active ones (S->comm and halo exchanges).   */
+    if (!dev->s.runHere) goto inactive;
+#endif
     /* Now make level 0 which recursively entails all others */
     make_level(0,S);
 
@@ -753,7 +899,7 @@ CREATE_HEAD(elliptic)
 #define Zero (0.0)
       for (level=0;level<=S->upper_level;level++) {
 	/*---------------------------------------------*/
-	if (level>0) { /* Checking R: level-1 -> level maps 1->1 */
+	if (level>0) { /* Checking R: level-1 -> level maps 1->1 in the interior (R=P^T/2^dim) */
 	  for (il=1;il<=S->nPoints[level-1];il++) 	/* set 1s thru lower level */
 	    S->fgrid[level-1][ S->pointIndex[level-1][il] ]=One;
 	  up_level(level-1,S);				/* apply R operator */
@@ -762,11 +908,11 @@ CREATE_HEAD(elliptic)
 	    err=fabs(S->fgrid[level][ S->pointIndex[level][ih] ]-One);
 	    if (err>maxerr) maxerr=err;
 	  } 
-	  MESSAGE("\n/* R matrix (%d->%d) is 1:1 to within %g. */",level-1,level,maxerr);
+	  MESSAGE("\n/* R matrix (%d->%d) is 1:1 to within %g (deviations are expected at borders). */",level-1,level,maxerr);
 	} /* if level */
 	
 	/*---------------------------------------------*/
-	if (level>0) { /* Checking P: level -> level-1 maps 1->1 */
+	if (level>0) { /* Checking P: level -> level-1 maps 1->1, except next to Dirichlet faces */
 	  index_t iwst;
 	  for (ih=1;ih<=S->nPoints[level];ih++) 	/* set 1s thru higher level */
 	    S->ugrid[level][ S->pointIndex[level][ih] ]=One;
@@ -780,7 +926,7 @@ CREATE_HEAD(elliptic)
 	      iwst=indl;
 	    }
 	  } 
-	  MESSAGE("\n/* P matrix (%d->%d) is 1:1 to within %g. */",level,level-1,maxerr);
+	  MESSAGE("\n/* P matrix (%d->%d) is 1:1 to within %g (deviations are expected next to Dirichlet faces). */",level,level-1,maxerr);
 	  if (maxerr>1.e-13) 
 	    MESSAGE("\n/*   worst offender: %d (%d,%d,%d)",
 		   (int)iwst,(int)gridX(level-1,iwst),
@@ -802,180 +948,66 @@ CREATE_HEAD(elliptic)
 	    if (err>maxerr) maxerr=err;
 	  }
 	} /* if level */
-	MESSAGE("\n/* A matrix (%d->%d) is 1:1 to within %g. */",level,level,maxerr);
+	MESSAGE("\n/* A matrix (%d->%d) maps 1 to 0 to within %g. */",level,level,maxerr);
       } /* for level */
 #undef One
 #undef Zero
       S->transferchoice=transfer_safe;
     } /* if Verbose debugging of 1-transferrals */
   } /* if upper_level >= 0 */
+#if MPI
+ inactive: ;
+#endif
 }
 CREATE_TAIL(elliptic,1)
 /*=============================================*/
 
-/* Make the list of tissue points with all their connections */
-/* as defined by the anisotropic geometry, */
-/* by the same code as in diff.c. */
-/* UPD 2025/12/15: implement here the "revolution" of July/August 2024 using d.s.p instead of global TissuePoints */
+/* Make the list of points of the device space with all their connections:  */
+/* the weights computed by diff_connect() at the listed points s.p, as in    */
+/* the diff device, rearranged into the 27-neighbour arrays K of this device, */
+/* in the multicolour order. Points without connections are left out, as     */
+/* their equations would be 0=f.                                             */
 static int list_points(STR *S,Space s) {
-  DEVICE_CONST(real,Dpar)
-  DEVICE_CONST(real,Dtrans)
-  DEVICE_CONST(real,hx)
-  DEVICE_CONST(int,v0);
-  DEVICE_CONST(int,v1);
-  coord_t x,y,z,x_shift,y_shift,z_shift;	/* Cartesian grid coords */
-  int j,k;					/* dimensions enumerators */
-  list_t i;					/* list counter */
-  index_t indh;
-  color_t color, the_color;
-    
-  /* Array dimensions are 4 to make indices match paper */
-  real f[4];				/* Fibre direction vector */
-  real D[4][4];			/* Diffusion tensor */
-  real dD[4][4];			/* Derivatives of diffusion tensor */
-  real c[4];				/* Derivatives of diffusion coefficients */
-  
-  /* Neighbours' enumerator */
-  neighbour_t nb;
-  /* Neighbours' vectors */
-  coord_t nx,ny,nz; /* Coords of negative neighbour */
-  coord_t px,py,pz; /* Coords of positive neighbour */
-  
-  /* The current point's structure */
-  AnisoPoint P;
-  
-  /***************************************************/
-  
-  /* Count tissue points and allocate array of AnisoPoints */
-  S->numPoints = 0;
-  for(x=s.x0;x<=s.x1;x++){
-    for(y=s.y0;y<=s.y1;y++){
-      for(z=s.z0;z<=s.z1;z++){
-	if(isTissue(x,y,z)) S->numPoints++;
-      }
-    }
-  }
-  CALLOC(S->points,S->numPoints+1,sizeof(AnisoPoint)); /* ENUMERATION STARTS WITH 1 !!! */
-  
-  i = 1; /* ENUMERATION STARTS WITH 1 !!! */
+  int off[a3nnb][3];			/* displacements of the diff stencil */
+  int nbtab[3][3][3];			/* this device's neighbour of a displacement */
+  int nnb, nb, a, b, c;
+  size_t ip;
+  list_t i, ndropped=0;
+  color_t color;
+
+  nnb=diff_stencil_offsets(ANISOTROPY_ON,S->manypoint,dim,off);
+  if (nnb!=S->nnb) ABORT("stencil size mismatch: %d vs %d\n",nnb,S->nnb);
+  for (a=0;a<3;a++) for (b=0;b<3;b++) for (c=0;c<3;c++) nbtab[a][b][c]=-1;
+  for (nb=0;nb<maxnb;nb++) nbtab[ndx[nb]+1][ndy[nb]+1][ndz[nb]+1]=nb;
+
+  CALLOC(S->points,s.np+1,sizeof(AnisoPoint)); /* ENUMERATION STARTS WITH 1 !!! */
+  i=1;
   for (color=0;color<8;color++) {
-    for (x=s.x0;x<=s.x1;x++) {
-      for (y=s.y0;y<=s.y1;y++) {
-	for (z=s.z0;z<=s.z1;z++) {
-	  the_color=(x%2)+2*(y%2)+4*(z%2);
-	  if (the_color==color) {
-	    if (isTissue(x,y,z)) {
-	      
-	      /*********************************/
-	      /* The diff tensor of this point */
-	      /* We shell treat dim<3 cases as dim=3 cases where the problem */
-	      /*   simply does not depend on z, or z and y, coords.          */
-	      
-	      /* Fibre direction cosines of this point */
-	      f[1] =  Geom[geom_ind(x,y,z,GEOM_FIBRE_1)];
-	      f[2] =  Geom[geom_ind(x,y,z,GEOM_FIBRE_2)];
-	      f[3] =  Geom[geom_ind(x,y,z,GEOM_FIBRE_3)];
-	      /* set up the tensor */
-	      for (j=1;j<=3;j++) {
-		for (k=1;k<=3;k++) {
-		  /* \mathbf{D} = 
-		   * D_\perp \mathbf{I} + (D_\parallel - D\perp)
-		   * \mathbf{A}\mathbf{A}^T
-		   */
-		  D[j][k] = ((Dpar-Dtrans)*f[j]*f[k]) + ((j==k)?Dtrans:0);
-		} /* for k */
-	      } /* for j */
-	      
-	      for (j=1;j<=3;j++) {
-		if(
-		   !isTissue( x+(j==1?1:0), y+(j==2?1:0), z+(j==3?1:0) ) ||
-		   !isTissue( x-(j==1?1:0), y-(j==2?1:0), z-(j==3?1:0) )
-		   ){
-		  for (k=1;k<=3;k++) {dD[j][k]=0.0;}
-		} else {
-		  for (k=1;k<=3;k++) {
-		    /* d^{11}_{+..} - d^{11}_{-..}
-		     * = (D_\parallel - D_\perp)(a_j a_k)_{+..} -(a_j a_k)_{-..}
-		     */
-		    nx = x-(j==1?1:0);
-		    ny = y-(j==2?1:0);
-		    nz = z-(j==3?1:0);
-		    px = x+(j==1?1:0);
-		    py = y+(j==2?1:0);
-		    pz = z+(j==3?1:0); /* spatial derivatives of the tensor */
-		    dD[j][k] =
-		      (Dpar - Dtrans) * 
-		      (
-		       (Geom[geom_ind(px,py,pz,(GEOM_FIBRE_1+j-1) )] *
-			Geom[geom_ind(px,py,pz,(GEOM_FIBRE_1+k-1) )] )-
-		       (Geom[geom_ind(nx,ny,nz,(GEOM_FIBRE_1+j-1) )] *
-			Geom[geom_ind(nx,ny,nz,(GEOM_FIBRE_1+k-1) )] )
-		       );
-		  } /* for k */
-		} /* else */
-	      } /* for j */
-	      
-	      for (j=1;j<=3;j++) {
-		c[j] = 0;
-		for (k=1;k<=3;k++) {
-		  c[j] += dD[k][j];
-		}
-	      }
-	      
-	      /******************************************/
-	      /* Compute the connections to the neighbours. */
-	      
-	      /* For dim<3 cases, some connections will be calculated but not used. */
-	      /* This can be optimized one day, to save memory.                 */
-	      
-	      CALLOC(P.K,maxnb,sizeof(real));
-	      
-	      /* Transform tensor coefficients into the sum weights. */
-	      /* For dim<3, if (isTissue) will automatically ignore some of these lines. */
-	      if (isTissue(x+1,y	 ,z  )) { P.K[poo]+=4*D[1][1]; P.K[ooo]-=4*D[1][1]; }
-	      if (isTissue(x-1,y	 ,z  ))	{ P.K[moo]+=4*D[1][1]; P.K[ooo]-=4*D[1][1]; }
-	      if (isTissue(x  ,y+1,z  ))	{ P.K[opo]+=4*D[2][2]; P.K[ooo]-=4*D[2][2]; }
-	      if (isTissue(x  ,y-1,z  ))	{ P.K[omo]+=4*D[2][2]; P.K[ooo]-=4*D[2][2]; }
-	      if (isTissue(x  ,y  ,z+1))	{ P.K[oop]+=4*D[3][3]; P.K[ooo]-=4*D[3][3]; }
-	      if (isTissue(x  ,y	 ,z-1))	{ P.K[oom]+=4*D[3][3]; P.K[ooo]-=4*D[3][3]; }
-	      if (isTissue(x+1,y  ,z  ) && isTissue(x-1,y  ,z  )) { P.K[poo]+=c[1]; P.K[moo]-=c[1]; }
-	      if (isTissue(x  ,y+1,z  ) && isTissue(x  ,y-1,z  )) { P.K[opo]+=c[2]; P.K[omo]-=c[2]; }
-	      if (isTissue(x  ,y  ,z+1) && isTissue(x  ,y  ,z-1)) { P.K[oop]+=c[3]; P.K[oom]-=c[3]; }
-	      if (isTissue(x+1,y+1,z  ) && isTissue(x+1,y-1,z  )) { P.K[ppo]+=2*D[1][2]; P.K[pmo]-=2*D[1][2]; }
-	      if (isTissue(x-1,y-1,z  ) && isTissue(x-1,y+1,z  )) { P.K[mmo]+=2*D[1][2]; P.K[mpo]-=2*D[1][2]; }
-	      if (isTissue(x+1,y  ,z+1) && isTissue(x+1,y  ,z-1)) { P.K[pop]+=2*D[1][3]; P.K[pom]-=2*D[1][3]; }
-	      if (isTissue(x-1,y  ,z-1) && isTissue(x-1,y  ,z+1)) { P.K[mom]+=2*D[1][3]; P.K[mop]-=2*D[1][3]; }
-	      if (isTissue(x  ,y+1,z+1) && isTissue(x  ,y+1,z-1)) { P.K[opp]+=2*D[2][3]; P.K[opm]-=2*D[2][3]; }
-	      if (isTissue(x  ,y-1,z-1) && isTissue(x  ,y-1,z+1)) { P.K[omm]+=2*D[2][3]; P.K[omp]-=2*D[2][3]; }
-	      
-	      /* Far corners maybe involved in coarsegrained connection matrices ? */
-	      P.K[ppp]=P.K[ppm]=P.K[pmp]=P.K[pmm]=P.K[mpp]=P.K[mpm]=P.K[mmp]=P.K[mmm]=0.0;
-
-	      /* Otherwise it will be division by zero full stop */
-	      if (P.K[ooo]==0) {
-		MESSAGE("P.K[ooo]=0 at x,y,z=%d,%d,%d; dropping this point\n",x,y,z);
-		continue;
-	      }
-
-	      /* Normalization chosen to make u and f of the same scale */
-	      for (nb=0;nb<maxnb;nb++) P.K[nb]/=(4*hx*hx);
-	      
-	      /* And the coordinates of this point */
-	      P.x = x;
-	      P.y = y;
-	      P.z = z;
-	      
-	      /******************************/
-	      /* Add this point to the list */
-	      S->points[i] = P;
-	      i++;
-	    } /* if isTissue */
-	  } /* if the_color */
-	} /* for z */
-      } /* for y */
-    } /* for x */
+    for (ip=0;ip<s.np;ip++) {
+      devicePoint *Q=s.p+ip;
+      real *X=(real *)(Q->X);
+      AnisoPoint P;
+      if ((Q->x%2)+2*(Q->y%2)+4*(Q->z%2)!=color) continue;
+      if (X[0]==0) {			/* no connections */
+	ndropped++;
+	continue;
+      }
+      CALLOC(P.K,maxnb,sizeof(real));
+      for (nb=0;nb<nnb;nb++)
+	P.K[nbtab[off[nb][0]+1][off[nb][1]+1][off[nb][2]+1]]=X[nb];
+      P.x=Q->x;
+      P.y=Q->y;
+      P.z=Q->z;
+      S->points[i++]=P;
+    } /* for ip */
   } /* for color */
+  S->numPoints=i-1;
+  if (ndropped)
+    MESSAGE("/* %ld point(s) of the device space have no connections and are left out */\n",(long)ndropped);
 
+  /* The weights are now in the list; the pools of diff_connect() are not needed */
+  FREE(S->Xpool);
+  FREE(S->Ypool);
   return 1;
 } /* list_points */
 /*=========================================*/
@@ -991,7 +1023,6 @@ static int make_level(int level,STR *S) {
   coord_t xng, yng, zng;
   coord_t nx, ny, nz;
   coord_t x, y, z;
-  scoord_t xpin, ypin, zpin; /* these may happen to be negative */
   scoord_t xcnl, ycnl, zcnl;
 
   coord_t levelsize;
@@ -1023,7 +1054,7 @@ static int make_level(int level,STR *S) {
     /* "Netto" limits (upper inclusive) */
     S->xmin[level]=ONE;    S->xmax[level]=nx-1+ONE;
     S->ymin[level]=TWO;    S->ymax[level]=ny-1+TWO;
-    S->zmin[level]=TRI;    S->zmax[level]=ny-1+TRI;
+    S->zmin[level]=TRI;    S->zmax[level]=nz-1+TRI;
     S->levelsize[level]=levelsize=xlen*ylen*zlen;
     CALLOC(S->ugrid[0],levelsize,sizeof(real));
     CALLOC(S->rgrid[0],levelsize,sizeof(real));
@@ -1068,18 +1099,18 @@ static int make_level(int level,STR *S) {
     S->d[0][mpm] = gridIndex(0,-1,+1,-1) - gridIndex(0,0,0,0);
     S->d[0][mmp] = gridIndex(0,-1,-1,+1) - gridIndex(0,0,0,0);
     S->d[0][mmm] = gridIndex(0,-1,-1,-1) - gridIndex(0,0,0,0);
-    CALLOC(S->D[0],maxcn,sizeof(sindex_t));
+    CALLOC(S->Dc[0],maxcn,sizeof(sindex_t));
     /* For the chosen vertex-centered grid, */
     /* neighbours' and contributors' vectors coincide */
-    for (nb=0;nb<maxnb;nb++) S->D[0][nb]=S->d[0][nb];
-    /* S->D[0][PPP] = gridIndex(0,+1,+1,+1) - gridIndex(0,0,0,0); */
-    /* S->D[0][PPM] = gridIndex(0,+1,+1,-1) - gridIndex(0,0,0,0); */
-    /* S->D[0][PMP] = gridIndex(0,+1,-1,+1) - gridIndex(0,0,0,0); */
-    /* S->D[0][PMM] = gridIndex(0,+1,-1,-1) - gridIndex(0,0,0,0); */
-    /* S->D[0][MPP] = gridIndex(0,-1,+1,+1) - gridIndex(0,0,0,0); */
-    /* S->D[0][MPM] = gridIndex(0,-1,+1,-1) - gridIndex(0,0,0,0); */
-    /* S->D[0][MMP] = gridIndex(0,-1,-1,+1) - gridIndex(0,0,0,0); */
-    /* S->D[0][MMM] = gridIndex(0,-1,-1,-1) - gridIndex(0,0,0,0); */
+    for (nb=0;nb<maxnb;nb++) S->Dc[0][nb]=S->d[0][nb];
+    /* S->Dc[0][PPP] = gridIndex(0,+1,+1,+1) - gridIndex(0,0,0,0); */
+    /* S->Dc[0][PPM] = gridIndex(0,+1,+1,-1) - gridIndex(0,0,0,0); */
+    /* S->Dc[0][PMP] = gridIndex(0,+1,-1,+1) - gridIndex(0,0,0,0); */
+    /* S->Dc[0][PMM] = gridIndex(0,+1,-1,-1) - gridIndex(0,0,0,0); */
+    /* S->Dc[0][MPP] = gridIndex(0,-1,+1,+1) - gridIndex(0,0,0,0); */
+    /* S->Dc[0][MPM] = gridIndex(0,-1,+1,-1) - gridIndex(0,0,0,0); */
+    /* S->Dc[0][MMP] = gridIndex(0,-1,-1,+1) - gridIndex(0,0,0,0); */
+    /* S->Dc[0][MMM] = gridIndex(0,-1,-1,-1) - gridIndex(0,0,0,0); */
 
     switch (dim) {
     case 1: S->numNeighbours=3;  nc=S->numContributors=3;  break;
@@ -1119,6 +1150,13 @@ static int make_level(int level,STR *S) {
 	} else if (Pg.K[nbh]) {		/* its outside space, neighbour's value is nonzero */
 	  P->K[nbh]=0;			/* no connection within the grid */
 	  S->numBClinks++;		/* but count links to outside values */
+	  /* and remember which faces of the space have Dirichlet links */
+	  if ((long)xng<(long)s.global_x0) S->dlo[0]=1;
+	  if ((long)xng>(long)s.global_x1) S->dhi[0]=1;
+	  if ((long)yng<(long)s.global_y0) S->dlo[1]=1;
+	  if ((long)yng>(long)s.global_y1) S->dhi[1]=1;
+	  if ((long)zng<(long)s.global_z0) S->dlo[2]=1;
+	  if ((long)zng>(long)s.global_z1) S->dhi[2]=1;
 	} else {			/* outside and no connection outside */
 	  P->K[nbh]=0;			/* no connection within the grid either */
 	}
@@ -1128,12 +1166,7 @@ static int make_level(int level,STR *S) {
     /* Now make the links to the outide values. */
     /* TODO: estimate max numBClinks so could do all work in one go? */
     if (S->numBClinks>0) {
-      if (S->pin) {
-	MESSAGE("/* Pinning was specified while non-homogenoues boundary conditions available.\n"
-		"   Pinning will be honoured but this may lead to trouble. */\n");
-      }
-
-      CALLOC(S->BClinks,sizeof(bclink),S->numBClinks);
+      CALLOC(S->BClinks,S->numBClinks,sizeof(bclink));
       l=0;
       for (i=1;i<=S->nPoints[0];i++) { /* ENUMERATION STARTS WITH 1 !!! */
 	AnisoPoint Pg=S->points[i];	  /* the global list */
@@ -1163,48 +1196,73 @@ static int make_level(int level,STR *S) {
       } /* for i */
     } /* if numBClinks */ 
 
-    /* Impose the pinning condition by discarding one of the equations             */
-    /* (they are linearly dependent anyway, if solvability condition is satisfied) */
-    if (S->pin) {
-      xpin=S->xpin-x0;			/* (S->xpin,...) are global coordinates,*/
-      ypin=S->ypin-y0;			/* xpin, ... are local coordinates      */
-      zpin=S->zpin-z0;
-      if (0<=xpin && xpin<nx && 0<=ypin && ypin<ny && 0<=zpin && zpin<nz) {
-	real *K;  /* the pointer to the array of connections==coefficients of the linear system */
-	indh = gridIndex(0,x,y,z);	/* 1D index of the pin point */
-	i=pointNumber(0,indh);		/* index of that point in the list */
-	if (i) {			/* make sure it is tissue */
-	  DEVICE_CONST(real,hx);
-	  K=S->gridPoints[0][i].K;	/* the array of coefficients */
-	  K[0]=PINCOEFF/(hx*hx);	/* we fix the value at the point; make coeff commensurate with others */
-	  for (nbh=1;nbh<S->numNeighbours;nbh++) K[nbh]=0; /* and ignore the neighbours */
-	} else {
-	  ABORT("pinning point (global %d,%d,%d, local %d,%d,%d) is not tissue\n",
-		S->xpin,S->ypin,S->zpin,xpin,ypin,zpin);
-	}
-	/* And the fixed value upin has to be applied at run time, not build time */
-      } /* otherwise the pinning point is in another subdomain so we don't care here */
-    }
 
-    if (!S->numBClinks && !S->pin) {
-      MESSAGE("/* Warning: Neumann problem without pinning condition detected. Expect troubles!!! */\n");
-    }
+    /* Coarsening geometry of level 0 */
+    S->g0[0][0]=x0; S->glo[0][0]=s.global_x0; S->ghi[0][0]=s.global_x1;
+    S->g0[1][0]=y0; S->glo[1][0]=s.global_y0; S->ghi[1][0]=s.global_y1;
+    S->g0[2][0]=z0; S->glo[2][0]=s.global_z0; S->ghi[2][0]=s.global_z1;
+#if MPI
+    MPIDO(MPI_Allreduce(MPI_IN_PLACE,S->dlo,3,MPI_INT,MPI_MAX,S->comm),"Couldn't reduce dlo.");
+    MPIDO(MPI_Allreduce(MPI_IN_PLACE,S->dhi,3,MPI_INT,MPI_MAX,S->comm),"Couldn't reduce dhi.");
+#endif
 
     /* end of level==0 case */
   } else {
     /* Sizes of the subgrid. Take care of the halos: they are not coarsened! */
-    /* "Netto" dimensions */
-    nx=(S->nx[level])=coarsex(S->nx[level-1]+1);
-    ny=(S->ny[level])=coarsey(S->ny[level-1]+1);
-    nz=(S->nz[level])=coarsez(S->nz[level-1]+1);
+    /* The coarse points are at the fine global positions with the parity of  */
+    /* the anchor, the boundary node of the domain (see set_anchor): so a     */
+    /* Dirichlet wall, or the outermost points at a no-flux border, are coarse */
+    /* grid positions on every level. The parity is global, which keeps the   */
+    /* coarse grids of neighbouring MPI subdomains consistent.                 */
+    {
+      int dd, nocoarse=0;
+      coord_t nn[3];
+      /* Can this level be made? Every (active) process must have coarse points, */
+      /* otherwise the nearest-neighbour halo exchanges would not work. If not,  */
+      /* the previous level is the coarsest, in all processes.                   */
+      for (dd=0;dd<dim;dd++) {
+	coord_t nf=(dd==0)?S->nx[level-1]:(dd==1)?S->ny[level-1]:S->nz[level-1];
+	int o=mod2(S->anchor[dd][level-1]-S->g0[dd][level-1]);
+	if ((long)nf-o+1<2) nocoarse=1;
+      }
+#if MPI
+      MPIDO(MPI_Allreduce(MPI_IN_PLACE,&nocoarse,1,MPI_INT,MPI_MAX,S->comm),"Couldn't reduce nocoarse.");
+#endif
+      if (nocoarse) {
+	MESSAGE("\n/* upper_level=%d is too large for this grid%s: some subdomain would have no points at level %d.\n"
+		"   The multigrid will use levels 0..%d. */\n",S->upper_level,mpi_size>1?" and decomposition":"",level,level-1);
+	S->upper_level=level-1;
+	if (S->FMGlevel>S->upper_level) S->FMGlevel=S->upper_level;
+	return 1;
+      }
+      for (dd=0;dd<3;dd++) {
+	coord_t nf=(dd==0)?S->nx[level-1]:(dd==1)?S->ny[level-1]:S->nz[level-1];
+	if (dd<dim) {
+	  long a=S->anchor[dd][level-1];
+	  int o=S->off[dd][level]=mod2(a-S->g0[dd][level-1]);
+	  nn[dd]=(nf-o+1)/2;
+	  S->g0[dd][level]=(S->g0[dd][level-1]+o-a)/2;	/* exact: numerator is even */
+	  S->glo[dd][level]=-fdiv2(a-S->glo[dd][level-1]); /* ceil((glo-a)/2) */
+	  S->ghi[dd][level]=fdiv2(S->ghi[dd][level-1]-a);	/* floor((ghi-a)/2) */
+	} else {
+	  S->off[dd][level]=0;
+	  nn[dd]=1;
+	  S->g0[dd][level]=S->glo[dd][level]=S->ghi[dd][level]=0;
+	}
+      }
+      /* "Netto" dimensions */
+      nx=(S->nx[level])=nn[0];
+      ny=(S->ny[level])=nn[1];
+      nz=(S->nz[level])=nn[2];
+    }
     /* "Brutto" dimensions */
     S->xlen[level]=nx+2*ONE;
     S->ylen[level]=ny+2*TWO;
-    S->zlen[level]=ny+2*TRI;
+    S->zlen[level]=nz+2*TRI;
     /* "Netto" limits (upper inclusive) */
     S->xmin[level]=ONE; S->xmax[level]=nx-1+ONE;
     S->ymin[level]=TWO; S->ymax[level]=ny-1+TWO;
-    S->zmin[level]=TRI; S->zmax[level]=ny-1+TRI;
+    S->zmin[level]=TRI; S->zmax[level]=nz-1+TRI;
     S->levelsize[level]=levelsize=S->xlen[level]*S->ylen[level]*S->zlen[level];
     CALLOC(S->ugrid[level],levelsize,sizeof(real));
     CALLOC(S->rgrid[level],levelsize,sizeof(real));
@@ -1239,10 +1297,10 @@ static int make_level(int level,STR *S) {
     S->d[level][mpm] = gridIndex(level,-1,+1,-1) - gridIndex(level,0,0,0);
     S->d[level][mmp] = gridIndex(level,-1,-1,+1) - gridIndex(level,0,0,0);
     S->d[level][mmm] = gridIndex(level,-1,-1,-1) - gridIndex(level,0,0,0);
-    CALLOC(S->D[level],maxcn,sizeof(sindex_t));
+    CALLOC(S->Dc[level],maxcn,sizeof(sindex_t));
     /* For the chosen vertex-centered grid, */
     /* neighbours' and contributors' vectors coincide */
-    for (nb=0;nb<maxnb;nb++) S->D[level][nb]=S->d[level][nb];
+    for (nb=0;nb<maxnb;nb++) S->Dc[level][nb]=S->d[level][nb];
 
     nc=S->numContributors;
 
@@ -1264,7 +1322,7 @@ static int make_level(int level,STR *S) {
 		-TWO<=ycnl && ycnl<=S->ny[level-1]+TWO &&
 		-TRI<=zcnl && zcnl<=S->nz[level-1]+TRI 
 		) {
-	      the_contributor=indl+S->D[level-1][ic];	/* contributor's would-be 1D index */
+	      the_contributor=indl+S->Dc[level-1][ic];	/* contributor's would-be 1D index */
         	      /* debug printout */
         	      if (the_contributor<0 || the_contributor >= S->levelsize[level-1]) {
         		ABORT("\nwrong contributor index %ld ic=%ld of point index %ld of level %ld\n",
@@ -1282,7 +1340,7 @@ static int make_level(int level,STR *S) {
     /* Count the non-empty vertices */
     npoints=0;
     for (xh=0;xh<nx;xh++) {
-      for (yh=0;yh<=ny;yh++) {
+      for (yh=0;yh<ny;yh++) {
 	for (zh=0;zh<nz;zh++) {
 	  indh=gridIndex(level,xh,yh,zh);
 	  if (S->ggrid[level][indh]>0) npoints++;
@@ -1303,7 +1361,7 @@ static int make_level(int level,STR *S) {
 
     for (color=0;color<8;color++) {
       for (xh=0;xh<nx;xh++) {
-	for (yh=0;yh<=ny;yh++) {
+	for (yh=0;yh<ny;yh++) {
 	  for (zh=0;zh<nz;zh++) {
 	    the_color=(xh%2)+2*(yh%2)+4*(zh%2);
 	    if (the_color==color) {
@@ -1330,14 +1388,16 @@ static int make_level(int level,STR *S) {
       } /* for xh */
     } /* for color */
 
-    /* Assign the weights of contributors */
-    for (i=1;i<=S->nPoints[level-1];i++) /* zero out the lower Pgrid of P row totals */
-	S->Pgrid[level-1][ S->pointIndex[level-1][i] ]=0;
-
-    /* levelsize=S->nx[level-1]*S->ny[level-1]*S->nz[level-1]; */
-    levelsize=S->levelsize[level-1];
-    for(indl=0;indl<levelsize;indl++) S->ugrid[level-1][indl]=0.0;
-
+    /* Prolongation weights. A fine point gets the bi/tri-linear weights wgt[] */
+    /* of its coarse parents (1D weight 2 from a coincident parent, 1 from each  */
+    /* of two neighbouring ones; 8 in total), normalized by the total weight of  */
+    /* the parents that count (see parent_kind): the coarse points in the device */
+    /* space, and the phantom ones beyond a Dirichlet face of it, which carry    */
+    /* zero correction. So P is the plain linear interpolation towards a         */
+    /* Dirichlet wall, and is renormalized next to a no-flux border, where it    */
+    /* still reproduces constants. The normalization is geometric rather than    */
+    /* accumulated over the local coarse points, so that it is the same on both  */
+    /* sides of an MPI subdomain interface, including at the fine halo points.   */
     for (xh=0;xh<nx;xh++) {
       xl=finex(xh);
       for (yh=0;yh<ny;yh++) {
@@ -1348,7 +1408,7 @@ static int make_level(int level,STR *S) {
 	  indh=gridIndex(level,xh,yh,zh);
 	  i=pointNumber(level,indh);			/* List number of high-level node. */
 	  if (i) {
-	    total_weight=0;				/* need sum of weights of existing contributors */
+	    total_weight=0;
 	    for (ic=0;ic<nc;ic++) {			/* loop through all contributors */
 	      xcnl=xl+cdx[ic];				/* check that the 3D coords of the contributor */
 	      ycnl=yl+cdy[ic];
@@ -1358,88 +1418,127 @@ static int make_level(int level,STR *S) {
 		  -TWO<=ycnl && ycnl<=S->ny[level-1]+TWO &&
 		  -TRI<=zcnl && zcnl<=S->nz[level-1]+TRI 
 		  ) {
-		the_contributor=indl+S->D[level-1][ic];		/* contributor's would-be 1D index */
+		the_contributor=indl+S->Dc[level-1][ic];		/* contributor's would-be 1D index */
 		S->contributors[level][i][ic]=the_contributor;	/* register it for fast access */
-		j=pointNumber(level-1,the_contributor);	/* number of that point in the list of points */
-		the_weight=(j)?(wgt[ic]):(0.0);		/* a real point has some weight */
-		S->R[level][i][ic]=the_weight;		/* register the P-weight */
-		S->P[level][i][ic]=the_weight;		/* register the R-weight */
-		total_weight+=the_weight;			/* update "row sum" for R matrix */
-		S->Pgrid[level-1][the_contributor]+=the_weight; /* update "row sum" for P matrix */
+		j=pointNumber(level-1,the_contributor);	/* nonzero if tissue (in the halo: the owner's number) */
+		if (j) {
+		  long f[3];
+		  f[0]=(long)xcnl; f[1]=(long)ycnl; f[2]=(long)zcnl;
+		  the_weight=wgt[ic]/fine_norm(level,f,S);
+		} else {
+		  the_weight=0.0;
+		}
+		S->P[level][i][ic]=the_weight;		/* R is made from P below */
+		total_weight+=the_weight;
 	      } /* if ic is within extended box */
 	    } /* for ic */
 	    ASSERT(total_weight>0);
-	    for(ic=0;ic<nc;ic++)			/* normalize the R matrix to unit row sums */
-	      S->R[level][i][ic]/=total_weight;
 	  } /* if i */
 	} /* for zh */
       } /* for yh */
     } /* for xh */
 
-    /* Normalize the P matrix to unit row sums */
-    for (xh=0;xh<nx;xh++) {
-      xl=finex(xh);
-      for (yh=0;yh<ny;yh++) {
-	yl=finey(yh);
-	for (zh=0;zh<nz;zh++) {
-	  zl=finez(zh);
-	  indl=gridIndex(level-1,xl,yl,zl);
-	  indh=gridIndex(level,xh,yh,zh);
-	  i=pointNumber(level,indh);			/* List number of high-level node. */
-	  if (i) {
-	    for (ic=0;ic<nc;ic++) {			/* loop through all possible contributors */
-	      the_contributor=indl+S->D[level-1][ic];		/* its would-be 1D index */
-	      j=pointNumber(level-1,the_contributor);	/* number of that point in the list of points */
-	      if (j) {
-		total_weight=S->Pgrid[level-1][the_contributor];
-		if (total_weight)			/* some corners are never reached, esp in 3D */
-		  S->P[level][i][ic]/=total_weight;
-	      } /* if j */
-	    } /* for ic */
-	  } /* if i */
-	} /* for zh */
-      } /* for yh */
-    } /* for xh */
+    /* The same P matrix by rows, for prolongation (see down_level): the parents */
+    /* of each fine point of this subdomain, which may be in the coarse halo.     */
+    CALLOC(S->parN[level],S->nPoints[level-1]+1,sizeof(int));
+    CALLOC(S->parIdx[level],8*(S->nPoints[level-1]+1),sizeof(index_t));
+    CALLOC(S->parW[level],8*(S->nPoints[level-1]+1),sizeof(real));
+    for (i=1;i<=S->nPoints[level-1];i++) {
+      AnisoPoint *Q=&(S->gridPoints[level-1][i]);
+      long f[3], k[8][3];
+      real w[8], norm;
+      int n, npar, m=0;
+      f[0]=(long)Q->x; f[1]=(long)Q->y; f[2]=(long)Q->z;
+      npar=fine_parents(level,f,k,w,S);
+      norm=fine_norm(level,f,S);
+      for (n=0;n<npar;n++) {
+	if (parent_kind(level,k[n],S)>0) {
+	  S->parIdx[level][8*i+m]=gridIndex(level,k[n][0],k[n][1],k[n][2]);
+	  S->parW[level][8*i+m]=w[n]/norm;
+	  m++;
+	}
+      }
+      ASSERT(m>0);
+      S->parN[level][i]=m;
+    }
 
-    /* Make the coarse system Q=RAP */
-    for (i=1;i<=S->nPoints[level];i++) { /* ENUMERATION STARTS WITH 1 !!! */
-                                                        /* Loop through higher level points */
-      real Rvalue, Pvalue, Avalue;
-      index_t the_main_contributor, the_side_contributor, the_main_contributors_neighbour;
-      the_point=S->pointIndex[level][i];		/* point's 1D index */
-      for (nbh=0;nbh<S->numNeighbours;nbh++) {		/* Loop over coarse neighbours */
-	the_neighbour=the_point+S->d[level][nbh];
-	if (0!=(j=pointNumber(level,the_neighbour))) {	/* if it is a real point */	
-	  for (ic=0;ic<nc;ic++) {			/* loop over main point contributors */
-	    if (0!=(Rvalue=S->R[level][i][ic])) {	/* main contributor's weight */
-	      the_main_contributor=S->contributors[level][i][ic];
-	      i1=pointNumber(level-1,the_main_contributor);
-	      if (!i1) {
-		ABORT("level=%d i=%d ic=%d Rvalue=%g "
-		      "level-1=%d the_main_contributor=%d i1=%d\n",
-		      (int)level,(int)i,(int)ic,(float)Rvalue,
-		      (int)(level-1),(int)the_main_contributor,(int)i1
-		      );
-	      }
-	      for (jc=0;jc<nc;jc++) {			/* loop over side point (=neighbour's) contributors */
-		if (0!=(Pvalue=S->P[level][j][jc])) {	/* side contributor's weight */
-		  the_side_contributor=S->contributors[level][j][jc];
-		  for (nbl=0;nbl<S->numNeighbours;nbl++) {/* Are the two contributors neighbours? */
-		    the_main_contributors_neighbour=the_main_contributor+S->d[level-1][nbl];
-		    if (the_main_contributors_neighbour==the_side_contributor) {	/* yes they are */
-		      Avalue=S->gridPoints[level-1][i1].K[nbl];	/* connection = element of A matrix */
-		      S->gridPoints[level][i].K[nbh] +=			/* element of RAP matrix */
-			Rvalue*Avalue*Pvalue;
-		    } /* if the_mcn==th_sc */
-		  } /* for nbl */
-		} /* if Pvalue */
-	      } /* for ic1 */
-	    } /* if Rvalue */
-	  } /* for ic */
-	} /* if j */
-      } /* for nbh */
-    } /* for i */
+
+    /* Restriction is the transpose of prolongation, R = P^T/2^dim (full       */
+    /* weighting in the interior). Then the Galerkin coarse operators RAP      */
+    /* inherit symmetry and definiteness, otherwise they can degrade at        */
+    /* irregular borders. The scaling must be uniform: a point-dependent       */
+    /* scaling of the rows of R, although harmless for this level's coarse    */
+    /* correction, acts as a column scaling in the next level's restriction.  */
+    {
+      real scale=1.0/(1<<dim);
+      for (i=1;i<=S->nPoints[level];i++)
+	for (ic=0;ic<nc;ic++)
+	  S->R[level][i][ic]=S->P[level][i][ic]*scale;
+    }
+
+    /* Make the coarse system Q=RAP:                                            */
+    /*   Q[I][J] = sum_p R[I][p] sum_q A[p][q] P[q][J],                          */
+    /* over the contributors p of the coarse point I and their neighbours q.     */
+    /* With MPI, some p are fine halo points: their rows of A are taken from     */
+    /* their owners by a halo exchange. Some q may lie beyond the fine halo, but */
+    /* P[q][J] is geometric (see fine_norm) and needs no data at q, since A[p][q]*/
+    /* is nonzero only if q is tissue. Q[I][J] is stored as K[nbh] with          */
+    /* J=I+(ndx,ndy,ndz)[nbh]; |J-I|<=1 in each direction.                        */
+    {
+      neighbour_t nnb=S->numNeighbours;
+      int nbtab[3][3][3], a, b, c;
+      real **Ag;
+      CALLOC(Ag,nnb,sizeof(real *));
+      for (nbl=0;nbl<nnb;nbl++) CALLOC(Ag[nbl],S->levelsize[level-1],sizeof(real));
+      for (i=1;i<=S->nPoints[level-1];i++)
+	for (nbl=0;nbl<nnb;nbl++)
+	  Ag[nbl][S->pointIndex[level-1][i]]=S->gridPoints[level-1][i].K[nbl];
+#if MPI
+      for (nbl=0;nbl<nnb;nbl++) halo_level(level-1,Ag[nbl],S);
+#endif
+      for (a=0;a<3;a++) for (b=0;b<3;b++) for (c=0;c<3;c++) nbtab[a][b][c]=-1;
+      for (nbh=0;nbh<nnb;nbh++) nbtab[ndx[nbh]+1][ndy[nbh]+1][ndz[nbh]+1]=nbh;
+
+      for (i=1;i<=S->nPoints[level];i++) { /* ENUMERATION STARTS WITH 1 !!! */
+	AnisoPoint *Q=&(S->gridPoints[level][i]);
+	long I[3];
+	I[0]=(long)Q->x; I[1]=(long)Q->y; I[2]=(long)Q->z;
+	for (ic=0;ic<nc;ic++) {
+	  real Rvalue=S->R[level][i][ic];
+	  index_t p;
+	  long f[3];
+	  if (Rvalue==0) continue;
+	  p=S->contributors[level][i][ic];
+	  f[0]=(long)finex(Q->x)+cdx[ic];
+	  f[1]=(long)finey(Q->y)+cdy[ic];
+	  f[2]=(long)finez(Q->z)+cdz[ic];
+	  for (nbl=0;nbl<nnb;nbl++) {
+	    real Avalue=Ag[nbl][p];
+	    long q[3], k[8][3];
+	    real w[8], norm;
+	    int n, npar;
+	    if (Avalue==0) continue;
+	    q[0]=f[0]+ndx[nbl]; q[1]=f[1]+ndy[nbl]; q[2]=f[2]+ndz[nbl];
+	    npar=fine_parents(level,q,k,w,S);
+	    norm=fine_norm(level,q,S);
+	    for (n=0;n<npar;n++) {
+	      long dx=k[n][0]-I[0], dy=k[n][1]-I[1], dz=k[n][2]-I[2];
+	      if (parent_kind(level,k[n],S)<=0) continue;
+	      if (dx<-1 || dx>1 || dy<-1 || dy>1 || dz<-1 || dz>1 || nbtab[dx+1][dy+1][dz+1]<0)
+		ABORT("level %d point %ld: coarse connection (%ld,%ld,%ld) out of stencil\n",
+		      level,(long)i,dx,dy,dz);
+	      Q->K[nbtab[dx+1][dy+1][dz+1]]+=Rvalue*Avalue*w[n]/norm;
+	    }
+	  } /* for nbl */
+	} /* for ic */
+      } /* for i */
+      for (nbl=0;nbl<nnb;nbl++) FREE(Ag[nbl]);
+      FREE(Ag);
+    }
   } /* level>0 case */
+
+  /* Parity of the coarsening of this level into the next one */
+  set_anchor(level,S);
 
 #if MPI
   define_halo_level(level,S);
@@ -1508,6 +1607,98 @@ static int make_level(int level,STR *S) {
 /*=========================================*/
 
 
+/* The anchor of a level: next level's points are at positions of its parity. */
+/* At level 0, in each direction, it is the boundary node of the domain, as  */
+/* in the classic vertex-centred coarsening: the Dirichlet wall (the position */
+/* next to the first or last point), or else the outermost point itself at a */
+/* no-flux border. Coarser levels keep the same alignment: the image of the  */
+/* fine anchor, which is position 0 in coarse global coordinates.            */
+static void set_anchor(int level,STR *S) {
+  long amin[3], amax[3];
+  list_t i;
+  int d;
+  if (level>0) {
+    for (d=0;d<3;d++) S->anchor[d][level]=(d<dim)?0:S->g0[d][level];
+    return;
+  }
+  for (d=0;d<3;d++) {amin[d]=LONG_MAX; amax[d]=-LONG_MAX;}
+  for (i=1;i<=S->nPoints[level];i++) {
+    AnisoPoint *Q=&(S->gridPoints[level][i]);
+    long g[3];
+    g[0]=S->g0[0][level]+(long)Q->x;
+    g[1]=S->g0[1][level]+(long)Q->y;
+    g[2]=S->g0[2][level]+(long)Q->z;
+    for (d=0;d<3;d++) {
+      if (g[d]<amin[d]) amin[d]=g[d];
+      if (g[d]>amax[d]) amax[d]=g[d];
+    }
+  }
+#if MPI
+  MPIDO(MPI_Allreduce(MPI_IN_PLACE,amin,3,MPI_LONG,MPI_MIN,S->comm),"Couldn't reduce anchors.");
+  MPIDO(MPI_Allreduce(MPI_IN_PLACE,amax,3,MPI_LONG,MPI_MAX,S->comm),"Couldn't reduce anchors.");
+#endif
+  for (d=0;d<3;d++) {
+    if (d>=dim || amin[d]==LONG_MAX) S->anchor[d][level]=S->g0[d][level];
+    else if (S->dlo[d]) S->anchor[d][level]=amin[d]-1;	/* Dirichlet wall at the low end */
+    else if (S->dhi[d]) S->anchor[d][level]=amax[d]+1;	/* Dirichlet wall at the high end */
+    else S->anchor[d][level]=amin[d];			/* no-flux: the outermost point */
+  }
+}
+/*=========================================*/
+
+/* The coarse parents (at the given level) of the point of level-1 with local */
+/* coordinates f: their local coordinates k, possibly in the halo or beyond,  */
+/* and their non-normalized weights w, the products of the 1D weights (2 for  */
+/* a coincident parent, 1 for each of two neighbouring ones), as in wgt[];    */
+/* the weights of all parents sum to 8. Returns the number of parents.        */
+static int fine_parents(int level,const long f[3],long k[8][3],real w[8],STR *S) {
+  long pk[3][2];
+  real pw[3][2];
+  int np[3], dd, a, b, c, n=0;
+  for (dd=0;dd<3;dd++) {
+    if (dd<dim) {
+      long r=f[dd]-S->off[dd][level];
+      if (mod2(r)==0) {np[dd]=1; pk[dd][0]=r/2; pw[dd][0]=2;}
+      else {np[dd]=2; pk[dd][0]=fdiv2(r); pk[dd][1]=fdiv2(r)+1; pw[dd][0]=pw[dd][1]=1;}
+    } else {np[dd]=1; pk[dd][0]=0; pw[dd][0]=2;}
+  }
+  for (a=0;a<np[0];a++) for (b=0;b<np[1];b++) for (c=0;c<np[2];c++) {
+    k[n][0]=pk[0][a]; k[n][1]=pk[1][b]; k[n][2]=pk[2][c];
+    w[n]=pw[0][a]*pw[1][b]*pw[2][c];
+    n++;
+  }
+  return n;
+}
+/*=========================================*/
+
+/* The kind of a potential coarse point, at local coordinates k of the level:  */
+/*  1: within the device space, so a real coarse point if it is a parent of a  */
+/*     tissue point (it belongs to the subdomain that owns its fine position); */
+/* -1: beyond a Dirichlet face of the device space: a phantom parent with zero */
+/*     correction, which counts in the normalization of P;                     */
+/*  0: beyond a no-flux border: does not count.                                */
+static int parent_kind(int level,const long k[3],STR *S) {
+  int dd, out=0, dir=0;
+  for (dd=0;dd<dim;dd++) {
+    long G=S->g0[dd][level]+k[dd];	/* global coarse coordinate */
+    if (G<S->glo[dd][level]) {out=1; if (S->dlo[dd]) dir=1;}
+    else if (G>S->ghi[dd][level]) {out=1; if (S->dhi[dd]) dir=1;}
+  }
+  return out?(dir?-1:0):1;
+}
+/*=========================================*/
+
+/* The normalization of the row of P of the point of level-1 at local        */
+/* coordinates f: the total weight of its parents that count (kind!=0).      */
+static real fine_norm(int level,const long f[3],STR *S) {
+  long k[8][3];
+  real w[8], norm=0;
+  int n, npar=fine_parents(level,f,k,w,S);
+  for (n=0;n<npar;n++) if (parent_kind(level,k[n],S)) norm+=w[n];
+  return norm;
+}
+/*=========================================*/
+
 /* This function does a GS iteration, lexicographic order, */
 /*	for the original data in New array. */
 /* TODO: consider extending/making version of this for Jacobi iterations */
@@ -1548,7 +1739,7 @@ static real iterate_base(int it, STR *S) {
       /* Centre point */
       u=New+ind(x,y,z,v1); 
       /* The righ-hand side */
-      f=New[ind(x,y,z,v0)]; 
+      f=New[ind(x,y,z,v0)]-S->fmean; 
       /* Sum by proper neighbours */
       sum = /* not including the center point */
 	+ u[DX]*P.K[poo] + u[-DX]*P.K[moo] 
@@ -1571,7 +1762,7 @@ static real iterate_base(int it, STR *S) {
       y = P.y;
       z = P.z;
       u=New+ind(x,y,z,v1); 
-      f=New[ind(x,y,z,v0)]; 
+      f=New[ind(x,y,z,v0)]-S->fmean; 
       sum =
 	+ u[DX]*P.K[poo] + u[-DX]*P.K[moo] 
 	+ u[DY]*P.K[opo] + u[-DY]*P.K[omo]
@@ -1589,7 +1780,7 @@ static real iterate_base(int it, STR *S) {
       y = P.y;
       z = P.z;
       u=New+ind(x,y,z,v1); 
-      f=New[ind(x,y,z,v0)]; 
+      f=New[ind(x,y,z,v0)]-S->fmean; 
       sum =
 	+ u[DX]*P.K[poo] + u[-DX]*P.K[moo];
       unew=(f-sum)/P.K[ooo];
@@ -1626,6 +1817,20 @@ static int do_level(int level,STR *S) {
   preiter=S->preIter[level];
   postiter=S->postIter[level];
 
+  /* The coarsest level: solve, i.e. iterate until the residual is reduced    */
+  /* by the factor coarsereduce (or is below the tolerance), but at most       */
+  /* coarseiter times. A fixed small number of sweeps here is not enough when  */
+  /* the coarsest grid is not very coarse, or is split between MPI subdomains, */
+  /* where the smoother is Jacobi-like across their interfaces.                */
+  if (level>0 && level==S->upper_level && S->coarseiter>0) {
+    real target=S->coarsereduce*iterate_level(level,0,S);
+    if (target<tolerance) target=tolerance;
+    for (it=0;it<S->coarseiter;it++)
+      if (target>iterate_level(level,S->damping,S)) break;
+    DEBUG("result: level=%d (coarsest) sweeps=%d rsn=%lg\n", level, it, (double)S->rsn[level]);
+    return 1;
+  }
+
   /* Pre-iterations */
   if (preiter>0) {
     for (it=0;it<preiter;it++)
@@ -1660,7 +1865,6 @@ static void to_level0(STR *S) {
   coord_t ny=S->ny[0];
   coord_t nz=S->nz[0];
   coord_t x,y,z;
-  scoord_t xpin,ypin,zpin;
   index_t indh;
   list_t l;
   int x0=s.x0; int x1=s.x1;
@@ -1687,17 +1891,13 @@ static void to_level0(STR *S) {
     }
   } 
 
-  /* and/or apply the pinning condition */
-  if (S->pin) {
-    xpin=S->xpin-x0;			/* (S->xpin,...) are global coordinates,*/
-    ypin=S->ypin-y0;			/* xpin, ... are local coordinates      */
-    zpin=S->zpin-z0;
-    if (0<=xpin && xpin<nx && 0<=ypin && ypin<ny && 0<=zpin && zpin<nz) {
-      DEVICE_CONST(real,hx);
-      indh = gridIndex(0,x,y,z);	/* 1D index of the pin point */
-      S->fgrid[0][indh]=S->upin*PINCOEFF/(hx*hx); /* scaling commensurate with other equations */
-    } /* otherwise the pinning point is in another domain so we don't care here */
-  } 
+  /* The singular problem: make the RHS compatible, i.e. orthogonal to the     */
+  /* null space of the (symmetric) operator, the constants: subtract its mean.  */
+  if (S->singular) {
+    list_t i;
+    real mean=points_mean(S->fgrid[0],S);
+    for (i=1;i<=S->nPoints[0];i++) S->fgrid[0][S->pointIndex[0][i]]-=mean;
+  }
 #if MPI
   halo_level(0,S->ugrid[0],S); /* "just in case" - do we really need it here? */
   halo_level(0,S->fgrid[0],S); /* "just in case" - do we really need it here? */
@@ -1721,12 +1921,18 @@ static void from_level0(STR *S) {
   int x0=s.x0; int x1=s.x1;
   int y0=s.y0; int y1=s.y1;
   int z0=s.z0; int z1=s.z1;
+  if (S->singular) {			/* the singular problem: normalize to zero mean */
+    list_t i;
+    real mean=points_mean(S->ugrid[0],S);
+    for (i=1;i<=S->nPoints[0];i++) S->ugrid[0][S->pointIndex[0][i]]-=mean;
+  }
   for (x=0;x<nx;x++) {
     for (y=0;y<ny;y++) {
       for (z=0;z<nz;z++) {
 	indh=gridIndex(0,x,y,z);
 	New[ind(x0+x,y0+y,z0+z,v1)]=S->ugrid[0][indh];
-	New[ind(x0+x,y0+y,z0+z,v0)]=S->fgrid[0][indh];
+	/* NB: do not copy fgrid back to v0: it contains the boundary-link and singular-problem
+	   modifications, which would corrupt the RHS layer for the next call or other devices */
       }
     }
   }
@@ -1764,6 +1970,15 @@ static int up_level(int level,STR *S) {
 
   if (S->transferchoice==correct)
     iterate_level(level,0,S);		/* Need residuals to move up. */
+#if MPI
+  /* The contributors of a coarse point include fine halo points */
+  if (S->transferchoice==correct) {
+    halo_level(level,rl,S);
+  } else {
+    halo_level(level,ul,S);
+    halo_level(level,fl,S);
+  }
+#endif
 
   PROFILE(UPLEVEL);
   number_of_coarse_points=S->nPoints[level+1];
@@ -1811,54 +2026,35 @@ static int up_level(int level,STR *S) {
 /*=========================================*/
 
 /* Implement the Prolongation Operator: get the correction from coarse system and add it */
-/* P: (level+1) -> (level) */
+/* P: (level+1) -> (level). Each fine point of this subdomain takes the contributions   */
+/* of its coarse parents (see make_level), which may be in the coarse halo.             */
 int down_level(int level,STR *S) {
-  list_t number_of_coarse_points, number_of_fine_points, i;
-  contr_t nc, ic;
-  index_t *the_contributors, the_contributor;
-  sindex_t indl, indh; /* may happen to be negative */
-  real *the_weights;
-  real the_weight;
-  real increment;
+  list_t number_of_fine_points, i;
+  int n, npar;
+  index_t indl;
+  real sum;
+  real *ul=S->ugrid[level];
+  real *uh=S->ugrid[level+1];
+  int *parN=S->parN[level+1];
+  index_t *parIdx=S->parIdx[level+1];
+  real *parW=S->parW[level+1];
 
   PROFILE(DOWNLEVEL);
 
-  /* Prolongation of the upper level will overwrite the lower level */
-  if (S->transferchoice==replace) {
-    number_of_fine_points=S->nPoints[level];
-    for (i=1;i<=number_of_fine_points;i++) { /* ENUMERATION STARTS WITH 1 !!! */
-      indl = S->pointIndex[level][i];
-              if (indl<0 || indl>=S->levelsize[level]) {
-        	ABORT("\nwrong index %ld of point %ld at level %ld\n",
-        	       (long)indl, (long)i, (long)level);
-              }
-      S->ugrid[level][indl]=0;
-    }
-  }
+#if MPI
+  halo_level(level+1,uh,S);
+#endif
 
-  number_of_coarse_points=S->nPoints[level+1];
-  for (i=1;i<=number_of_coarse_points;i++) { /* ENUMERATION STARTS WITH 1 !!! */
-    indh = S->pointIndex[level+1][i];
-              if (indh<0 || indh>=S->levelsize[level+1]) {
-        	ABORT("\nwrong index %ld of point %ld at level %ld\n",
-        	       (long)indh, (long)i, (long)level+1);
-              }
-    increment = S->ugrid[level+1][indh];
-    nc = S->numContributors;
-    ASSERT(nc>0);
-    the_contributors=S->contributors[level+1][i];
-    the_weights = S->P[level+1][i];	/* entries of the Prolongation matrix */
-    for(ic=0;ic<nc;ic++) {
-      the_contributor = the_contributors[ic];
-              if (/* the_contributor<0 && */ the_contributor>=S->levelsize[level]) {
-		ABORT("\nwrong contributor index %ld of contributor %ld "
-		       "of point %ld of level %ld\n",
-        	       (long)the_contributor,(long)ic,(long)i,(long)level+1);
-              }
-      the_weight = the_weights[ic];
-      /* This adds to 0 (replace) or to previous contents (correct) */
-      S->ugrid[level][the_contributor] += increment*the_weight;
-    }
+  number_of_fine_points=S->nPoints[level];
+  for (i=1;i<=number_of_fine_points;i++) { /* ENUMERATION STARTS WITH 1 !!! */
+    indl=S->pointIndex[level][i];
+    npar=parN[i];
+    for (sum=0,n=0;n<npar;n++)
+      sum+=parW[8*i+n]*uh[parIdx[8*i+n]];
+    if (S->transferchoice==replace)
+      ul[indl]=sum;			/* the upper level overwrites the lower level */
+    else
+      ul[indl]+=sum;			/* the upper level corrects the lower level */
   }
 
   PROFILE(ALLELSE);
@@ -2073,14 +2269,14 @@ static int halo_level(int level,real *grid,STR *S) {
   int nb; /* rank of a neighbour */
   /* X AXIS */
   if (mpi_ix % 2 == 0) {
-    if (0<=(nb=XP_NEIGHBOUR)) {
+    if (0<=(nb=XP_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->xp_type[level],nb,0,
 			 grid,1,S->xp_halo_type[level],XP_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
 	    "Failed to swap buffers with XP neighbour."); 
     }
   } else { 
-    if (0<=(nb=XN_NEIGHBOUR)) {
+    if (0<=(nb=XN_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->xn_type[level],nb,0,
 			 grid,1,S->xn_halo_type[level],XN_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
@@ -2089,14 +2285,14 @@ static int halo_level(int level,real *grid,STR *S) {
   }
 
   if (mpi_ix % 2 == 1) { 
-    if (0<=(nb=XP_NEIGHBOUR)) {
+    if (0<=(nb=XP_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->xp_type[level],nb,0,
 			 grid,1,S->xp_halo_type[level],XP_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
 	    "Failed to swap buffers with XP neighbour."); 
     } 
   } else { 
-    if (0<=(nb=XN_NEIGHBOUR)) {
+    if (0<=(nb=XN_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->xn_type[level],nb,0,
 			 grid,1,S->xn_halo_type[level],XN_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
@@ -2106,14 +2302,14 @@ static int halo_level(int level,real *grid,STR *S) {
 
   /* Y AXIS */ 
   if (mpi_iy % 2 == 0) { 
-    if (0<=(nb=YP_NEIGHBOUR)) {
+    if (0<=(nb=YP_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->yp_type[level],nb,0,
 			 grid,1,S->yp_halo_type[level],YP_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
 	    "Failed to swap buffers with YP neighbour.");
     } 
   } else { 
-    if (0<=(nb=YN_NEIGHBOUR)) {
+    if (0<=(nb=YN_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->yn_type[level],nb,0,
 			 grid,1,S->yn_halo_type[level],YN_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
@@ -2122,14 +2318,14 @@ static int halo_level(int level,real *grid,STR *S) {
   } 
 
   if (mpi_iy % 2 == 1) { 
-    if (0<=(nb=YP_NEIGHBOUR)) {
+    if (0<=(nb=YP_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->yp_type[level],nb,0,
 			 grid,1,S->yp_halo_type[level],YP_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
 	    "Failed to swap buffers with YP neighbour.");
     } 
   } else { 
-    if (0<=(nb=YN_NEIGHBOUR)) {
+    if (0<=(nb=YN_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->yn_type[level],nb,0,
 			 grid,1,S->yn_halo_type[level],YN_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
@@ -2139,14 +2335,14 @@ static int halo_level(int level,real *grid,STR *S) {
 
   /* Z AXIS */
   if (mpi_iz % 2 == 0) { 
-    if (0<=(nb=ZP_NEIGHBOUR)) {
+    if (0<=(nb=ZP_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->zp_type[level],nb,0,
 			 grid,1,S->zp_halo_type[level],ZP_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
 	    "Failed to swap buffers with ZP neighbour.");
     } 
   } else { 
-    if (0<=(nb=ZN_NEIGHBOUR)) {
+    if (0<=(nb=ZN_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->zn_type[level],nb,0,
 			 grid,1,S->zn_halo_type[level],ZN_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
@@ -2155,14 +2351,14 @@ static int halo_level(int level,real *grid,STR *S) {
   }
 
   if (mpi_iz % 2 == 1) { 
-    if (0<=(nb=ZP_NEIGHBOUR)) {
+    if (0<=(nb=ZP_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->zp_type[level],nb,0,
 			 grid,1,S->zp_halo_type[level],ZP_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
 	    "Failed to swap buffers with ZP neighbour.");
     }
   } else { 
-    if (0<=(nb=ZN_NEIGHBOUR)) {
+    if (0<=(nb=ZN_NEIGHBOUR) && S->active[nb]) {
       MPIDO(MPI_Sendrecv(grid,1,S->zn_type[level],nb,0,
 			 grid,1,S->zn_halo_type[level],ZN_NEIGHBOUR,0,
 			 ALL_ACTIVE_PROCS,MPI_STATUS_IGNORE),
@@ -2418,4 +2614,77 @@ static void profile_report(STR *S) {
   S->profile_lastlevel=-1;
 }
 #endif
+/*=========================================*/
+
+/*=========================================*/
+/* The singular problem: is no point of the device space linked to a value  */
+/* beyond it, in any subdomain? The links are the nonzero weights of the     */
+/* neighbours outside the device space (isolated=0, tissue beyond).          */
+static int is_singular(STR *S) {
+  Space s=S->s;
+  list_t i;
+  int nb;
+  long nlinks=0;
+  for (i=1;i<=S->numPoints;i++) {
+    AnisoPoint *P=&(S->points[i]);
+    for (nb=1;nb<maxnb;nb++) {
+      long x=(long)P->x+ndx[nb], y=(long)P->y+ndy[nb], z=(long)P->z+ndz[nb];
+      if (P->K[nb]!=0 &&
+	  (x<s.global_x0 || x>s.global_x1 || y<s.global_y0 || y>s.global_y1 ||
+	   z<s.global_z0 || z>s.global_z1)) nlinks++;
+    }
+  }
+#if MPI
+  MPIDO(MPI_Allreduce(MPI_IN_PLACE,&nlinks,1,MPI_LONG,MPI_SUM,S->comm),"Couldn't sum up the boundary links.");
+#endif
+  return nlinks==0;
+}
+/*=========================================*/
+
+/* Mean of a level-0 grid over the points of the device space, in all subdomains */
+static real points_mean(real *grid,STR *S) {
+  double sum[2]={0.0,0.0};
+  list_t i;
+  for (i=1;i<=S->nPoints[0];i++) sum[0]+=grid[S->pointIndex[0][i]];
+  sum[1]=S->nPoints[0];
+#if MPI
+  MPIDO(MPI_Allreduce(MPI_IN_PLACE,sum,2,MPI_DOUBLE,MPI_SUM,S->comm),"Couldn't sum up a mean.");
+#endif
+  return (sum[1]>0)?(sum[0]/sum[1]):0.0;
+}
+/*=========================================*/
+
+/* Mean of layer v over the points of the device space, in all subdomains */
+static real layer_mean(int v,STR *S) {
+  double sum[2]={0.0,0.0};
+  list_t i;
+  for (i=1;i<=S->numPoints;i++) sum[0]+=New[ind(S->points[i].x,S->points[i].y,S->points[i].z,v)];
+  sum[1]=S->numPoints;
+#if MPI
+  MPIDO(MPI_Allreduce(MPI_IN_PLACE,sum,2,MPI_DOUBLE,MPI_SUM,S->comm),"Couldn't sum up a mean.");
+#endif
+  return (sum[1]>0)?(sum[0]/sum[1]):0.0;
+}
+/*=========================================*/
+
+/* The singular problem with pin=1: add a constant to the solution in layer v1 */
+/* so that its value at the pinning point is upin.                              */
+static void apply_pin(STR *S) {
+  int v1=S->v1;
+  double value=0.0;
+  list_t i;
+  AnisoPoint *P;
+  if (S->pinpoint) {
+    P=&(S->points[S->pinpoint]);
+    value=New[ind(P->x,P->y,P->z,v1)];
+  }
+#if MPI
+  MPIDO(MPI_Allreduce(MPI_IN_PLACE,&value,1,MPI_DOUBLE,MPI_SUM,S->comm),"Couldn't get the value at the pinning point.");
+#endif
+  value=S->upin-value;
+  for (i=1;i<=S->numPoints;i++) {
+    P=&(S->points[i]);
+    New[ind(P->x,P->y,P->z,v1)]+=value;
+  }
+}
 /*=========================================*/

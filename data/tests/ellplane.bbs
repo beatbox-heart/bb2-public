@@ -1,0 +1,47 @@
+// Short test of the elliptic device: Dirichlet problem, anisotropic, with the fibres
+// rotating across the box, exact solution a plane wave; solved by multigrid and by
+// plain Gauss-Seidel (upper_level=-1). Output: the errors and some values of the solution.
+// A small version of ../scripts/sequential/elliptic_tests/ell_plane.bbs.
+def str out [1];
+def int nx 24; def int ny 24;
+def real Lbox 10.0; def real hx Lbox/nx;
+def real Dpar 2.0; def real Dtrans 0.5;
+def real deg pi/180; def real th0 30*deg; def real th1 90*deg;
+def real kx 2*pi*1.0/Lbox; def real ky 2*pi*0.6/Lbox; def real ph 0.3;
+def str ua 0; def str f 1; def str p 2; def str g 3; def str d 4;
+state xmax=nx+3 ymax=ny+3 zmax=1 vmax=5 anisotropy=1 pgm={
+  geom0=ge(x,1)*le(x,nx+1)*ge(y,1)*le(y,ny+1);
+  geom1=cos(th0+th1*(x-1)/nx); geom2=sin(th0+th1*(x-1)/nx); geom3=0;
+};
+// Exact solution and analytic RHS, see ell_plane.bbs
+k_func name=exact pgm={
+  def real X (x-1)*hx; def real Y (y-1)*hx;
+  def real th th0+th1*X/Lbox; def real thp th1/Lbox;
+  def real fx cos(th); def real fy sin(th);
+  def real fxp -sin(th)*thp; def real fyp cos(th)*thp;
+  def real fk fx*kx+fy*ky; def real fpk fxp*kx+fyp*ky;
+  def real psi kx*X+ky*Y+ph;
+  u[ua]=sin(psi);
+  u[f]=-Dtrans*(kx*kx+ky*ky)*sin(psi)+(Dpar-Dtrans)*((fxp*fk+fx*fpk)*cos(psi)-fk*fk*sin(psi));
+  u[p]=u[ua]; u[g]=u[ua];
+};
+k_func name=zero x0=2 x1=nx y0=2 y1=ny pgm={u[p]=0; u[g]=0;};
+// The solves: the outer nodes are the Dirichlet boundary values
+elliptic x0=2 x1=nx y0=2 y1=ny v0=[f] v1=[p] Dpar=Dpar Dtrans=Dtrans hx=hx
+  tolerance=1e-10 maxiter=1 upper_level=3 FMGlevel=0 vcycles=100 preiter=2 postiter=2;
+elliptic x0=2 x1=nx y0=2 y1=ny v0=[f] v1=[g] Dpar=Dpar Dtrans=Dtrans hx=hx
+  tolerance=1e-10 maxiter=100000 upper_level=-1;
+// The errors, and some values
+def real Eu; def real Eg; def real Epg; def real p1; def real p2; def real p3;
+k_func name=erru x0=2 x1=nx y0=2 y1=ny pgm={u[d]=max(u[p]-u[ua],u[ua]-u[p])};
+reduce x0=2 x1=nx y0=2 y1=ny v0=[d] v1=[d] operation="max" result=Eu;
+k_func name=errg x0=2 x1=nx y0=2 y1=ny pgm={u[d]=max(u[g]-u[ua],u[ua]-u[g])};
+reduce x0=2 x1=nx y0=2 y1=ny v0=[d] v1=[d] operation="max" result=Eg;
+k_func name=errpg x0=2 x1=nx y0=2 y1=ny pgm={u[d]=max(u[p]-u[g],u[g]-u[p])};
+reduce x0=2 x1=nx y0=2 y1=ny v0=[d] v1=[d] operation="max" result=Epg;
+sample x0=5 y0=7 v0=[p] result=p1;
+sample x0=13 y0=13 v0=[p] result=p2;
+sample x0=20 y0=17 v0=[p] result=p3;
+k_print nowhere=1 file=[out] append=0 valuesep="\n" list={Eu; Eg; Epg; p1; p2; p3};
+stop;
+end;

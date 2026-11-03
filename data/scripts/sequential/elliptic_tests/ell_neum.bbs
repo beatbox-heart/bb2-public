@@ -1,0 +1,121 @@
+// Reference test for the elliptic device: steady problem div(D grad u) = f
+// with no-flux boundary at the tissue border.
+//
+// The elliptic space covers the whole grid, so there are no Dirichlet links;
+// the boundary condition is whatever the device implies at the tissue border.
+// The problem is singular: the device makes the RHS compatible by subtracting
+// its mean, and with pin=1 shifts the solution by a constant so that it takes
+// the exact value at a reference point (xpin,ypin,zpin). The reference solution
+// is computed with upper_level=0 (plain GS sweeps on the multigrid's level 0).
+//
+// "Exact" solution: u = cos(ax X) cos(ay Y) cos(az Z), a_i = pi/L_i, D constant.
+// The border of the tissue is half a step beyond its outermost nodes, which is
+// where dropping the link to a missing neighbour imposes zero flux: so the
+// nodes 1..n+1 are at X=(x-1/2)hx, and L=(n+1)hx (in x, L=xe*hx).
+// It satisfies the no-flux condition only for a box with fibres along an axis
+// (th0=0 or 90, al=0); otherwise Eu is not a convergence measure and only
+// Er (MG vs reference) and Pp are meaningful.
+//
+// Usage: bb2s -nograph -- ell_neum.bbs geom nx ny nz th0 al ul refcyc FMGlevel vcycles xb isol
+//   geom        .bbg file made by: mkgeom.pl nx ny nz box|ball th0 0 al
+//   nx ny nz    intervals (nz=0 for 2D); tissue nodes within 1..n+1
+//   th0 al      constant fibre angle and elevation, degrees
+//   ul          multigrid depth of the tested solve (into layer p)
+//   refcyc      number of level-0 cycles (4 GS sweeps each) for the reference solve
+//               into layer g; 0 to skip it
+//   FMGlevel vcycles   multigrid schedule of the tested solve
+//   xb          0: the device space is the whole grid; >0: it is x<=xb, and the
+//               exact solution is for the tissue cut there (border at xb+1/2)
+//   isol        the 'isolated' parameter of the device: with xb>0 and tissue beyond
+//               it, isol=1 makes the border of the space no-flux, so the result must
+//               be the same as with the tissue cut at xb (mkgeom.pl ... xcut)
+//
+// Output (stdout, last line):
+//   Eu  = max|p - u_exact| over tissue
+//   Er  = max|p - g| over tissue (MG vs reference)
+//   Pp  = p(pin) - u_exact(pin) (should be ~0)
+
+def str geom [1];
+def int nx [2]; def int ny [3]; def int nz [4];
+def real th0 [5]; def real al [6];
+def int ul [7];
+def real refcyc [8];
+def int fmg [9];
+def int vcyc [10];
+def int xb [11];
+def int isol [12];
+def int xe ifgt0(xb,xb,nx+1);		// the last node of the device space
+
+// Layers
+def str ua 0;   // "exact" solution
+def str f 1;    // RHS
+def str p 2;    // tested multigrid solution
+def str g 3;    // reference solution
+def str d 4;    // work layer
+
+state geometry=[geom] anisotropy=1 vmax=5;
+
+def real Lbox 10.0;
+def real hx Lbox/nx;
+def real Dpar 2.0;
+def real Dtrans 0.5;
+def real deg pi/180;
+def real ax pi/(xe*hx);
+def real ay pi/((max(ny,1)+1)*hx)*gt(ny,0);
+def real az pi/((max(nz,1)+1)*hx)*gt(nz,0);
+def real fx cos(al*deg)*cos(th0*deg);
+def real fy cos(al*deg)*sin(th0*deg);
+def real fz sin(al*deg);
+def real Df Dpar-Dtrans;
+def real tol 1e-10;
+
+// The pinning point: off-centre (tissue also for the ball)
+def int xp nx/4+1;
+def int yp ifgt0(ny,ny/3+1,0);
+def int zp ifgt0(nz,nz/2+1,0);
+def real uref cos(ax*(xp-0.5)*hx)*cos(ay*(yp-0.5)*hx)*cos(az*(zp-0.5)*hx);
+
+k_func name=exact when=always pgm={
+  def real X (x-0.5)*hx;
+  def real Y (y-0.5)*hx;
+  def real Z (z-0.5)*hx;
+  def real cx cos(ax*X); def real sx sin(ax*X);
+  def real cy cos(ay*Y); def real sy sin(ay*Y);
+  def real cz cos(az*Z); def real sz sin(az*Z);
+  def real Hxx -ax*ax*cx*cy*cz;
+  def real Hyy -ay*ay*cx*cy*cz;
+  def real Hzz -az*az*cx*cy*cz;
+  def real Hxy ax*ay*sx*sy*cz;
+  def real Hxz ax*az*sx*cy*sz;
+  def real Hyz ay*az*cx*sy*sz;
+  u[ua]=cx*cy*cz;
+  u[f]=Dtrans*(Hxx+Hyy+Hzz)
+    +Df*(fx*fx*Hxx+fy*fy*Hyy+fz*fz*Hzz+2*fx*fy*Hxy+2*fx*fz*Hxz+2*fy*fz*Hyz);
+  u[p]=0;
+  u[g]=0;
+};
+
+// The tested solve
+elliptic when=always x1=xe isolated=isol v0=[f] v1=[p]
+  Dpar=Dpar Dtrans=Dtrans hx=hx tolerance=tol maxiter=1
+  pin=1 xpin=xp ypin=yp zpin=zp upin=uref
+  upper_level=ul smoother=GS FMGlevel=fmg vcycles=vcyc preiter=2 postiter=2
+  debug=[0]_p.dbg;
+// The reference solve: single level, many sweeps
+def real doref gt(refcyc,0);
+elliptic when=doref x1=xe isolated=isol v0=[f] v1=[g]
+  Dpar=Dpar Dtrans=Dtrans hx=hx tolerance=tol maxiter=1
+  pin=1 xpin=xp ypin=yp zpin=zp upin=uref
+  upper_level=0 smoother=GS FMGlevel=0 vcycles=max(refcyc,1) preiter=2 postiter=2
+  debug=[0]_g.dbg;
+
+def real Eu; def real Er; def real Pp;
+k_func name=errr x1=xe pgm={u[d]=max(u[p]-u[g],u[g]-u[p])};
+reduce x1=xe v0=[d] v1=[d] operation="max" result=Er;
+k_func name=erru x1=xe pgm={u[d]=max(u[p]-u[ua],u[ua]-u[p])};
+reduce x1=xe v0=[d] v1=[d] operation="max" result=Eu;
+sample x0=xp y0=yp z0=zp v0=[p] result=Pp;
+
+k_func when=always nowhere=1 debug=stdout pgm={Eu=Eu; Er=Er*doref; Pp=Pp-uref};
+stop when=always;
+end;

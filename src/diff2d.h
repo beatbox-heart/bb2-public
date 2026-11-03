@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -64,8 +64,10 @@ for (ipass=0;ipass<2;ipass++) {
   /* TODO: make haloSwap subarrays distinct for every device that might need it, */
   /*                             and include into them only the relevant layers! */
   /* TODO: consider making exchange buffers smaller by selecting only needed points ??? */
-  ASSERT(d0>=0);			/* here diff tensor has to be on the grid */
-  haloSwap();			/* make it available for neighbouring subdomains */
+  if (!TENSOR_FROM_GEOM) {		/* otherwise computed from Geom which has the halo */
+    ASSERT(d0>=0);			/* here diff tensor has to be on the grid */
+    haloSwap();				/* make it available for neighbouring subdomains */
+  }
  }
 #endif /* (VARIA || ANISO) && MPI */
 for (ip=0;ip<(ipass?((VARIA || ANISO)?nadjacent:0):np);ip++) {

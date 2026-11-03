@@ -1,0 +1,110 @@
+// Reference test for the elliptic device: steady problem div(D grad u) = f
+// with Dirichlet boundary conditions and a known exact solution.
+//
+// Exact solution: plane wave u = sin(k.r + phase).
+// Fibres (from the geometry file made by mkgeom.pl):
+//   f = (cos(al)cos(th), cos(al)sin(th), sin(al)),  th = th0 + th1*X/L,
+// so with th1!=0 the tensor varies in x and div(D) != 0.
+// Analytic RHS, with Df = Dpar-Dtrans, f' = df/dX, psi = k.r + phase:
+//   div(D grad u) = -Dtrans |k|^2 sin(psi)
+//                 + Df [ (f'_x (f.k) + f_x (f'.k)) cos(psi) - (f.k)^2 sin(psi) ]
+//
+// Usage: bb2s ell_plane.bbs geom nx ny nz th0 th1 al rhs upper_level gs FMGlevel vcycles
+//   geom          .bbg file made by: mkgeom.pl nx ny nz box th0 th1 al
+//   nx ny nz      intervals (nz=0 for 2D); tissue nodes 1..n+1, Dirichlet on outer layer
+//   th0 th1 al    fibre parameters in degrees, as given to mkgeom.pl
+//   rhs           0: analytic RHS (error = discretization + solver)
+//                 1: RHS = diff device applied to the exact solution
+//                    (error = mismatch of diff and elliptic operators + solver)
+//   upper_level   multigrid depth for the solve into layer p (-1: plain GS)
+//   gs            1: also solve by plain GS (upper_level=-1) into layer g, for comparison
+//   FMGlevel vcycles   multigrid schedule
+//
+// Output (stdout, last line): Eu=max|p-u_exact|, Eg=max|g-u_exact|, Epg=max|p-g|,
+// and elliptic iteration details in [0]_p.dbg and [0]_g.dbg.
+
+def str geom [1];
+def int nx [2]; def int ny [3]; def int nz [4];
+def real th0 [5]; def real th1 [6]; def real al [7];
+def real rhs [8];
+def int ul [9];
+def real gs [10];
+def int fmg [11];
+def int vcyc [12];
+
+// Layers
+def str ua 0;   // exact solution
+def str f 1;    // RHS
+def str p 2;    // multigrid solution
+def str g 3;    // plain GS solution
+def str d 4;    // work layer for norms
+
+state geometry=[geom] anisotropy=1 vmax=5;
+
+// Parameters
+def real Lbox 10.0;
+def real hx Lbox/nx;
+def real Dpar 2.0;
+def real Dtrans 0.5;
+def real deg pi/180;
+def real kx 2*pi*1.0/Lbox;
+def real ky 2*pi*0.6/Lbox*gt(ny,0);
+def real kz 2*pi*0.35/Lbox*gt(nz,0);
+def real ph 0.3;
+def real tol 1e-10;
+
+// Interior (unknowns) and boundary (Dirichlet) ranges
+def int xi0 2; def int xi1 nx;
+def int yi0 2*gt(ny,0); def int yi1 ifgt0(ny,ny,0);
+def int zi0 2*gt(nz,0); def int zi1 ifgt0(nz,nz,0);
+
+// Exact solution, analytic RHS, initial guesses (boundary values matter, interior zero)
+def str psi (kx*X+ky*Y+kz*Z+ph);
+k_func name=exact when=always pgm={
+  def real X (x-1)*hx;
+  def real Y (y-1)*hx*gt(ny,0);
+  def real Z (z-1)*hx*gt(nz,0);
+  def real th (th0+th1*X/Lbox)*deg;
+  def real thp th1*deg/Lbox;
+  def real fx cos(al*deg)*cos(th);
+  def real fy cos(al*deg)*sin(th);
+  def real fz sin(al*deg);
+  def real fxp -cos(al*deg)*sin(th)*thp;
+  def real fyp cos(al*deg)*cos(th)*thp;
+  def real fk fx*kx+fy*ky+fz*kz;
+  def real fpk fxp*kx+fyp*ky;
+  u[ua]=sin([psi]);
+  u[f]=-Dtrans*(kx*kx+ky*ky+kz*kz)*sin([psi])
+    +(Dpar-Dtrans)*((fxp*fk+fx*fpk)*cos([psi])-fk*fk*sin([psi]));
+  u[p]=u[ua];
+  u[g]=u[ua];
+};
+k_func name=zero when=always x0=xi0 x1=xi1 y0=yi0 y1=yi1 z0=zi0 z1=zi1 pgm={
+  u[p]=0; u[g]=0;
+};
+
+// Optionally replace the RHS by the diff device's discretization of div(D grad u_exact)
+diff when=rhs v0=[ua] v1=[f] Dpar=Dpar Dtrans=Dtrans hx=hx;
+
+// The solves
+elliptic when=always x0=xi0 x1=xi1 y0=yi0 y1=yi1 z0=zi0 z1=zi1 v0=[f] v1=[p]
+  Dpar=Dpar Dtrans=Dtrans hx=hx tolerance=tol maxiter=1
+  upper_level=ul smoother=GS FMGlevel=fmg vcycles=vcyc preiter=2 postiter=2
+  debug=[0]_p.dbg;
+elliptic when=gs x0=xi0 x1=xi1 y0=yi0 y1=yi1 z0=zi0 z1=zi1 v0=[f] v1=[g]
+  Dpar=Dpar Dtrans=Dtrans hx=hx tolerance=tol maxiter=10000000
+  upper_level=-1
+  debug=[0]_g.dbg;
+
+// Norms of the errors over the interior
+def real Eu; def real Eg; def real Epg;
+k_func name=errp x0=xi0 x1=xi1 y0=yi0 y1=yi1 z0=zi0 z1=zi1 pgm={u[d]=max(u[p]-u[ua],u[ua]-u[p])};
+reduce x0=xi0 x1=xi1 y0=yi0 y1=yi1 z0=zi0 z1=zi1 v0=[d] v1=[d] operation="max" result=Eu;
+k_func name=errg x0=xi0 x1=xi1 y0=yi0 y1=yi1 z0=zi0 z1=zi1 pgm={u[d]=max(u[g]-u[ua],u[ua]-u[g])};
+reduce x0=xi0 x1=xi1 y0=yi0 y1=yi1 z0=zi0 z1=zi1 v0=[d] v1=[d] operation="max" result=Eg;
+k_func name=errpg x0=xi0 x1=xi1 y0=yi0 y1=yi1 z0=zi0 z1=zi1 pgm={u[d]=max(u[p]-u[g],u[g]-u[p])};
+reduce x0=xi0 x1=xi1 y0=yi0 y1=yi1 z0=zi0 z1=zi1 v0=[d] v1=[d] operation="max" result=Epg;
+
+k_func when=always nowhere=1 debug=stdout pgm={Eu=Eu; Eg=Eg; Epg=Epg};
+stop when=always;
+end;

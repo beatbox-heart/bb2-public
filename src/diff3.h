@@ -1,5 +1,5 @@
 /**
- * Copyright (C) (2010-2025) Vadim Biktashev, Irina Biktasheva et al. 
+ * Copyright (C) (2010-2026) Vadim Biktashev, Irina Biktasheva et al. 
  * (see ../AUTHORS for the full list of contributors)
  *
  * This file is part of Beatbox.
@@ -22,6 +22,7 @@ switch(dim) {
  case 1: {
 #define _(x) (x),(0),(0)
 #define STC STC1D(ANISO,MANY,VARIA)
+   real Ddh=0.0, Dth=0.0;		/* unused in 1D, needed only to compile DNB_GEOM */
    DB("1D version with GEOM=%d ANISO=%d MANY=%d VARIA=%d\n",GEOM,ANISO,MANY,VARIA);   
 #include "diff1d.h"
 #undef STC

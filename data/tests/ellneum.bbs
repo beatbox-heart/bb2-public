@@ -1,0 +1,33 @@
+// Short test of the elliptic device: no-flux (singular) problem in a disc, anisotropic
+// with oblique fibres; the solution is pinned by u(xpin,ypin)=upin. Output: the value
+// at the pinning point, and some values of the solution.
+// A small version of ../scripts/sequential/elliptic_tests/ell_neum.bbs.
+def str out [1];
+def int nx 24; def int ny 24;
+def real Lbox 10.0; def real hx Lbox/nx;
+def real Dpar 2.0; def real Dtrans 0.5;
+def real deg pi/180; def real fx cos(30*deg); def real fy sin(30*deg);
+def real ax pi/((nx+1)*hx); def real ay pi/((ny+1)*hx);
+def str f 1; def str p 2;
+state xmax=nx+3 ymax=ny+3 zmax=1 vmax=3 anisotropy=1 pgm={
+  geom0=le(hypot(x-1-nx/2,y-1-ny/2),nx/2);
+  geom1=fx; geom2=fy; geom3=0;
+};
+// The RHS, as for u=cos(ax X)cos(ay Y) (not a solution here, as the domain is a disc)
+k_func name=rhs pgm={
+  def real X (x-0.5)*hx; def real Y (y-0.5)*hx;
+  def real cx cos(ax*X); def real sx sin(ax*X); def real cy cos(ay*Y); def real sy sin(ay*Y);
+  u[f]=-Dtrans*(ax*ax+ay*ay)*cx*cy
+    +(Dpar-Dtrans)*(-fx*fx*ax*ax*cx*cy-fy*fy*ay*ay*cx*cy+2*fx*fy*ax*ay*sx*sy);
+  u[p]=0;
+};
+elliptic v0=[f] v1=[p] Dpar=Dpar Dtrans=Dtrans hx=hx pin=1 xpin=8 ypin=11 zpin=0 upin=0.5
+  tolerance=1e-10 maxiter=1 upper_level=3 FMGlevel=0 vcycles=100 preiter=2 postiter=2;
+def real pp; def real p1; def real p2; def real p3;
+sample x0=8 y0=11 v0=[p] result=pp;
+sample x0=5 y0=13 v0=[p] result=p1;
+sample x0=13 y0=13 v0=[p] result=p2;
+sample x0=20 y0=9 v0=[p] result=p3;
+k_print nowhere=1 file=[out] append=0 valuesep="\n" list={pp; p1; p2; p3};
+stop;
+end;

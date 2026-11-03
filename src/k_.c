@@ -88,5 +88,7 @@ int k_expr_depends (char *expr, char *varname)
   /*    Normally, regexec() returns 0 for success and the non-zero code */
   /*    REG_NOMATCH for failure.  Other non-zero error codes may be returned in */
   /*    exceptional situations; see DIAGNOSTICS. */
+  FREE(matchptr);
+  regfree(&compiled);
   return (err == 0);
 }

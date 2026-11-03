@@ -3,13 +3,9 @@ COMMENT=${warning making $@ out of $+ because of $? :}
 else
 COMMENT=${warning } ${shell echo making "\x1B[1;31m" $@ "\x1B[0m" out of $+  because of "\033[32m" $? "\033[0m" :}
 endif
-DVIPS=${shell which dvips}
-
-# COMMENT=@echo making "'$@'" stem "'$*'" out of "'$+'" due to "'$?'"
-# COMMENT=\#@ignore
-# COMMENT=
 BBXS=bb2s
 BBXP=bb2p
+#MPIOPT:=`mpirun --version | perl -ane '$$.==1 and $$v=pop @F and $$f=substr($$v,0,1) and $$f>=3 and print("--oversubscribe");'`
 MPIOPT:=${shell mpirun --version | perl -ane '$$.==1 and $$v=pop @F and $$f=substr($$v,0,1) and $$f>=3 and print("--oversubscribe");'}
 MPIRUN:=export TMPDIR=/tmp; mpirun $(MPIOPT) -np
 
@@ -17,12 +13,14 @@ TEST=echo -n test $* :
 OK=echo ' ok'
 FAIL=echo ' failed'; ./admitfailure
 
-NEGATIVE=nodev depth nexist notype reserved noname declared divzero diff0d nomem nomem-4
+#NEGATIVE=nodev depth nexist notype reserved noname declared divzero diff0d nomem nomem-4
+NEGATIVE=nodev depth nexist notype reserved noname declared divzero diff0d
 POSITIVE=funcs matout record reduce reduce-4 \
 	fhn0 fhn1 fhn2 fhn3 fhn3side fhn3side-16 fhn3sidebox fhn3sidebox-4 \
-bkl3cont-0 bkl3cont-4 br0 hh52mrl \
+	bkl3cont-0 bkl3cont-4 br0 hh52mrl \
 	ballf ballfcont-0 ballfcont-4 balldcont-0 balldcont-4 \
-	diffsub diffsub-4 diffwhere diffwhere-4 diffopen diffopen-4 diffopennl
+	diffsub diffsub-4 diffwhere diffwhere-4 diffopen diffopen-4 diffopennl \
+	ellplane ellplane-4 ellneum ellneum-4 ellvar ellvar-4
 ALL=$(NEGATIVE) $(POSITIVE)
 all: clean closeenough admitfailure ${foreach t,$(ALL),$t.test}
 clean:

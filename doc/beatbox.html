@@ -6044,7 +6044,11 @@ below the table of parameters.
   <td>-</td>
   <td>-</td>
   <td>
-    Time step 
+    Time step. If positive, it is checked against the stability limit of
+    the forward Euler step, computed from the actual connection weights,
+    which for the standard stencils is
+    <code>D*ht/hx^2<=1/(2*dim)</code>; a warning is issued if
+    the limit is exceeded, at the start or after any reweighting.
   </td>
 </tr>
 
@@ -6104,14 +6108,13 @@ below the table of parameters.
 <tr>
   <td><code>int</code></td>
   <td><code>conservative</code></td>
-  <td> see &rightarrow; </td>
+  <td><code>1</code></td>
   <td><code>0</code></td>
   <td><code>1</code></td>
   <td>
     Flag to use conservative scheme.
-    Only useful for spatially-dependentd
-    diffusivities.
-    Default is <code>1</code> in 1D, <code>0</code> otherwise.
+    Only matters if the diffusion tensor is space-dependent,
+    which includes the anisotropic case with variable fibre directions.
   </td>
 </tr>
 
@@ -6149,7 +6152,8 @@ below the table of parameters.
   <td>
     If <code>1</code>, the border of the device space is a no-flux boundary;
     if <code>0</code>, the device space is connected to the tissue beyond its border.
-    Default is <code>1</code> if the diffusivity is anisotropic or space-dependent,
+    Default is <code>1</code> if the diffusivity is anisotropic, or space-dependent,
+    or any of the diffusion coefficients is given by a <code>=~</code> expression;
     <code>0</code> otherwise. See below.
   </td>
 </tr>
@@ -6183,7 +6187,8 @@ below the table of parameters.
   <td><code>-1</code></td>
   <td><code>vmax-1</code></td>
   <td>
-    (if non-negative) Lower bound of the layer range containing unique diffusion tensor components
+    (if non-negative) Lower bound of the layer range containing unique diffusion tensor components.
+    Mandatory in MPI if the diffusivity is space-dependent; see below.
   </td>
 </tr>
 
@@ -6206,10 +6211,15 @@ space, isotropic and anisotropic, constant and
 time-and/or-space-variable diffusivity, in 1D, 2D and 3D.
 The anisotropic case implies variable diffusivity tensor via
 potentially variable fiber directions, even if they are in fact
-constant. Space variability is also implied if any of the diffusion
-coefficients is specified using <code>=~</code> syntax. Time
+constant. A diffusion coefficient is space-dependent if it is
+specified using <code>=~</code> syntax with an expression that involves
+any of the local variables <code>x</code>, <code>y</code>, <code>z</code>,
+<code>u0</code>, <code>u1</code>, ... or <code>geom0</code>, <code>geom1</code>, ...;
+an expression involving only global variables, such
+as <code>D=~2*Dglob</code>, is constant in space. Time
 variability is achieved by recomputing connection weights whenever
-<code>reweight</code> is nonzero. 
+<code>reweight</code> is nonzero; for that, the coefficients may depend on
+global variables that change in time.
 </p>
 
 <p> Diffusion coefficients have synonyms, which may be used instead
@@ -6262,8 +6272,18 @@ tensor (remember it is symmetric), and is as follows:
   <li> <code>1</code> in isotropic 3D; </li>
   <li> <code>6</code> in 3D. </li>
 </ul>
-Finally, for technical reasons, variable or anisotropic
-diffusivity in MPI demands a valid range <code>d0..d1</code>.
+The weights at a point depend on the diffusion tensor not only at that
+point but also at its neighbours. If the diffusivity is constant and
+isotropic, the tensor is the same everywhere. If the diffusivity is
+anisotropic with constant <code>Dl</code> and <code>Dt</code>, the tensor
+at a neighbour is computed from its fibre direction, which is
+available everywhere including the neighbouring MPI subdomains, so
+the range <code>d0..d1</code> is not needed. If any of the diffusion
+coefficients is space-dependent, as defined above, then the tensor at neighbours in other MPI
+subdomains is available only through the layers, so in MPI a
+valid range <code>d0..d1</code> is mandatory in that case, for
+both the conservative and the non-conservative scheme. In the sequential
+version, <code>d0..d1</code> is never mandatory.
 </p>
 
 <p>
@@ -6281,7 +6301,10 @@ or updated by another <code>diff</code> instance. The latter is
 correct, in particular conservative, only if both instances have the
 same diffusivity at their common border, which is guaranteed if it is
 constant and isotropic. Hence the default: <code>isolated=0</code> for
-constant isotropic diffusivity, and <code>isolated=1</code> otherwise.
+constant isotropic diffusivity, and <code>isolated=1</code> otherwise;
+for compatibility with earlier versions, any <code>=~</code> expression,
+even one of global variables only, also implies <code>isolated=1</code>
+by default.
 To model a medium consisting of parts with different diffusivities,
 it is safer to use one <code>diff</code> device with a space-dependent
 diffusivity. If <code>isolated=0</code> and the device space does
@@ -6616,25 +6639,46 @@ Laplace-Beltrami operator,
 \[ \def\r{\vec{r}}
   \nabla\left( \hat{D}(\r) \nabla \Phi(\r) \right) = \rho(\r)
 \]
-with tensor \(\hat{D}(\vec{r})\) corresponding to the fiber direction field \(\vec{n}(\vec{r})\),
+where the diffusion tensor \(\hat{D}(\vec{r})\) is defined exactly as in the <code>diff</code> device:
+isotropic, \(\hat{D}=D\,\hat{I}\), or anisotropic,
 \[
-  \hat{D}=(D_{jk}), \qquad D_{jk} = D_{\bot} \delta_{jk} + D_{\|} n_j n_k 
+  \hat{D}=(D_{jk}), \qquad D_{jk} = D_{\bot} \delta_{jk} + (D_{\|}-D_{\bot}) n_j n_k ,
 \]
-of the current geometry and given diffusion coefficients along
+with the fibre direction field \(\vec{n}(\vec{r})\) of the current geometry
+and the diffusion coefficients along
 (\(D_{\|}\)) and
-across fibers (\(D_{\bot}\)), as in <code>diff</code> device. The primary intended
+across fibres (\(D_{\bot}\)), which may be constant or space-dependent. The discretization
+is the same as in <code>diff</code>, by the same code, so <code>elliptic</code> inverts exactly the
+operator that <code>diff</code> applies with the same parameters. The primary intended
 use is calculation of the extracellular (or intracellular) potential
-field for a given transmembrane field in the bidomain model.  The
-method of solution is Full Multigrid with vertex-centered
-restrition/prolongation operators with bi/tri-linear interpolation,
-and (multicoloured) Gauss-Seidel or Jacobi smoother. Can be used
-either for <strong>Dirichlet</strong> boundary conditions, where boundary values are
-those that are just outside the devices space, or <strong>Neumann</strong> boundary
-conditions, when the device's space is identical to the current
-geometry. In the latter case, solving the problem this will require an extra "pinning"
-condition, to select a unique solution out of infinitely many: the
-solution at a given point should have a given value. 
+field for a given transmembrane field in the bidomain model.
+</p>
 
+<p>
+The boundary conditions are of two kinds. At the border of the tissue, and, if
+<code>isolated=1</code>, at the border of the device space, they are no-flux
+(<strong>Neumann</strong>). If <code>isolated=0</code> (the default), the device space is
+connected to the tissue beyond its border, and the values of
+<code>v1</code> there are the <strong>Dirichlet</strong> boundary values.
+If there are no Dirichlet values at all, i.e. the boundary is no-flux everywhere,
+the problem is singular: its solution is defined up to a constant, and
+exists only if the right-hand side is compatible. In this case the right-hand side
+is made compatible by subtracting its mean over the device space, and the
+solution is normalized to have zero mean over the device space, or, if <code>pin=1</code>,
+to have the value <code>upin</code> at the point (<code>xpin</code>,<code>ypin</code>,<code>zpin</code>).
+Either normalization is just a constant added to the solution after it
+has been found, so it does not affect the convergence.
+</p>
+
+<p>
+The method of solution is geometric multigrid, with Galerkin coarse-grid
+operators, vertex-centered coarsening aligned with the boundary, bi/tri-linear
+prolongation and its transpose for restriction,
+(multicoloured) Gauss-Seidel or Jacobi smoother, and iterations to convergence at the
+coarsest level; optionally, with Full Multigrid. It works in MPI, with the multigrid
+levels built across the subdomains, so that the result does not depend on the number of
+processes. If some subdomain would have no points at a coarse level, the
+number of levels is reduced accordingly, with a message.
 </p>
 
 <h3>Parameters</h3>
@@ -6668,21 +6712,114 @@ solution at a given point should have a given value.
 </tr>
 
 <tr>
-  <td><code>real</code></td>
-  <td><code>Dpar</code></td>
+  <td><code>real codelink</code></td>
+  <td><code>D</code></td>
   <td>-</td>
-  <td><code>0</code></td>
   <td>-</td>
-  <td> Diffusivity along the fibres (\(D_{\|}\)) </td>
+  <td>-</td>
+  <td>
+    Isotropic (scalar) diffusion coefficient. Synonym: <code>Ds</code>.
+    As in <code>diff</code>: mandatory if the anisotropy is off; if specified when it is on,
+    it is used at the exceptional points where the fibre directions are not defined.
+  </td>
 </tr>
-  
+
 <tr>
-  <td><code>real</code></td>
-  <td><code>Dtrans</code></td>
+  <td><code>real codelink</code></td>
+  <td><code>Dl</code></td>
   <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td>
+    Diffusion coefficient along the fibres (\(D_{\|}\)). Synonym: <code>Dpar</code>.
+  </td>
+</tr>
+
+<tr>
+  <td><code>real codelink</code></td>
+  <td><code>Dt</code></td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td>
+    Diffusion coefficient across the fibres (\(D_{\bot}\)). Synonym: <code>Dtrans</code>.
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>manypoint</code></td>
   <td><code>0</code></td>
-  <td>-</td>
-  <td> Diffusivity across the fibres (\(D_{\bot}\)) </td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
+  <td>
+    As in <code>diff</code>: 9-point stencil in 2D and 19-point stencil in 3D;
+    only for isotropic constant diffusivity.
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>conservative</code></td>
+  <td><code>1</code></td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
+  <td>
+    As in <code>diff</code>: flag to use the conservative scheme, which matters if the
+    diffusion tensor is space-dependent. NB with <code>conservative=0</code> the discrete
+    operator is not symmetric, so in the singular case (no-flux boundary everywhere)
+    subtracting the mean may not make the right-hand side compatible, and the
+    iterations may then stall; a warning is issued.
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>harmonic</code></td>
+  <td><code>0</code></td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
+  <td>
+    As in <code>diff</code>: arithmetic (<code>0</code>) or harmonic (<code>1</code>) mean diffusivities
+    in the conservative scheme.
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>isolated</code></td>
+  <td><code>0</code></td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
+  <td>
+    If <code>1</code>, the border of the device space is a no-flux boundary;
+    if <code>0</code>, the device space is connected to the tissue beyond its border, whose
+    values of <code>v1</code> are then the Dirichlet boundary values. NB the default is
+    different from that of <code>diff</code>.
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>d0</code></td>
+  <td><code>-1</code></td>
+  <td><code>-1</code></td>
+  <td><code>vmax-1</code></td>
+  <td>
+    As in <code>diff</code>: (if non-negative) lower bound of the layer range for the unique
+    diffusion tensor components. Mandatory in MPI if the diffusivity is space-dependent.
+  </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>d1</code></td>
+  <td><code>-1</code></td>
+  <td><code>-1</code></td>
+  <td><code>vmax-1</code></td>
+  <td>
+    As in <code>diff</code>: (if non-negative) upper bound of that layer range.
+  </td>
 </tr>
 
 
@@ -6701,8 +6838,9 @@ solution at a given point should have a given value.
   <td>-</td>
   <td><code>0</code></td>
   <td>-</td>  
-  <td> One step tolerance: if maximal pointwise change of solution
-  during one iteration, the iterations are considered converged.</td>
+  <td> Tolerance: when the maximal pointwise residual of the discrete equations is
+  below it, the iterations are considered converged. With multigrid, it applies
+  at level 0, and is multiplied by <code>delta</code> for each coarser level.</td>
 </tr>
 
 <tr>
@@ -6721,24 +6859,29 @@ solution at a given point should have a given value.
   <td><code>0</code></td>
   <td><code>0</code></td>
   <td><code>1</code></td>
-  <td>  If nonzero, then a pinning condition will be engaged  </td>  
+  <td>  Only for the singular problem (no-flux boundary everywhere): if nonzero,
+  the solution is shifted by a constant so that its value at the point
+  (<code>xpin</code>,<code>ypin</code>,<code>zpin</code>) is <code>upin</code>; otherwise it is normalized to
+  zero mean over the device space. It is an error to use it when there are
+  Dirichlet boundary values.  </td>  
 </tr>
 
 <tr>
   <td><code>int</code></td>
   <td><code>xpin</code></td>
   <td>-</td>
-  <td><code>x0</code></td>
-  <td><code>x1</code></td>
-  <td>  x-coordinate of the pinning point (if <code>pin=1</code>)  </td>  
+  <td>-</td>
+  <td>-</td>
+  <td>  x-coordinate of the pinning point (if <code>pin=1</code>), which must be a point of
+  the device space  </td>  
 </tr>
 
 <tr>
   <td><code>int</code></td>
   <td><code>ypin</code></td>
   <td>-</td>
-  <td><code>y0</code></td>
-  <td><code>y1</code></td>
+  <td>-</td>
+  <td>-</td>
   <td>  y-coordinate of the pinning point (if <code>pin=1</code>)  </td>  
 </tr>
 
@@ -6746,8 +6889,8 @@ solution at a given point should have a given value.
   <td><code>int</code></td>
   <td><code>zpin</code></td>
   <td>-</td>
-  <td><code>z0</code></td>
-  <td><code>z1</code></td>
+  <td>-</td>
+  <td>-</td>
   <td> z-coordinate of the pinning point (if <code>pin=1</code>)  </td>  
 </tr>
 
@@ -6877,6 +7020,29 @@ solution at a given point should have a given value.
   The number of post-iterations in a V-cycle.
 </tr>
 
+<tr>
+  <td><code>int</code></td>
+  <td><code>coarseiter</code></td>
+  <td><code>100</code></td>
+  <td><code>0</code></td>
+  <td>-</td>
+  <td>
+  The maximal number of iterations at the coarsest level, where instead of
+  <code>preiter</code>+<code>postiter</code> iterations, the coarse problem is solved: iterated until its
+  residual is reduced by the factor <code>coarsereduce</code>, or is below the tolerance of that level.
+  If <code>0</code>, the coarsest level is treated as the others.
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>coarsereduce</code></td>
+  <td><code>0.01</code></td>
+  <td><code>0</code></td>
+  <td><code>1</code></td>
+  <td>
+  The factor by which the residual at the coarsest level is to be reduced, see <code>coarseiter</code>.
+</tr>
+
 
 <! ============================= >
 
@@ -6964,6 +7130,48 @@ for a front propagating at the angle of 30 degrees wrt the x-axis.
 For comparison, there is a file <code>zfkmod2.bbs</code> script in the
 same directory, which solves a similar problem in the monodomain
 formulation. 
+
+<p>
+A set of reference tests of <code>elliptic</code>, which can also serve as examples of its use,
+is in the directory
+<pre>
+beatbox/data/scripts/sequential/elliptic_tests/
+</pre>
+Each test solves one steady problem with a known exact solution, and reports
+the error of the solution, the number of multigrid cycles and the mean convergence
+factor per cycle. The scripts are:
+<ul>
+<li><code>ell_plane.bbs</code>: Dirichlet problem, anisotropic, with constant or
+  variable fibre directions; the exact solution is a plane wave. The right-hand
+  side is either analytic, or computed by the <code>diff</code> device from the exact solution,
+  in which case <code>elliptic</code> should reproduce the exact solution to the tolerance.</li>
+<li><code>ell_neum.bbs</code>: no-flux (singular) problem, pinned, in a box or a ball; or,
+  with <code>isolated=1</code>, on a part of the tissue.</li>
+<li><code>ell_coef.bbs</code>, <code>ell_coefiso.bbs</code>, <code>ell_coefng.bbs</code>: Dirichlet problem with
+  various diffusion coefficients: isotropic, constant (with or without geometry, with
+  or without <code>manypoint</code>) or space-dependent (<code>D=~</code>...), and anisotropic with
+  space-dependent <code>Dl=~</code>...; the common parts are in <code>ell_coef.par</code> and
+  <code>ell_coef.inc</code>.</li>
+</ul>
+Their arguments are described in comments at the beginning of each script. Geometry files
+for <code>ell_plane.bbs</code> and <code>ell_neum.bbs</code> are made by the Perl script <code>mkgeom.pl</code>. The
+tests are run by <code>make</code>, using the <code>Makefile</code> in that directory:
+<code>make all</code> runs all of them, sequential and MPI; <code>make serial</code> or <code>make mpi</code>,
+only those; <code>make dirichlet</code>, <code>make neumann</code>, <code>make coef</code>, <code>make isolated</code>,
+a group of tests, printed as a table; <code>make u2d32</code>, any single test (<code>make list</code>
+lists them all). The results of each test are kept, so it is rerun only if the
+scripts or the Beatbox executables have changed; <code>make clean</code> removes them all. The
+executables are <code>bb2s</code> and <code>bb2p</code> from the <code>PATH</code>, unless given by the
+variables <code>BBXS</code> and <code>BBXP</code>, e.g. <code>make BBXS=/path/to/bb2s mpi</code>; the numbers of MPI
+processes are given by the variable <code>NPS</code>, default <code>"1 2 4"</code>. One test is run by the
+shell script <code>elltest.sh</code>, whose comments also explain the columns of the tables.
+</p>
+
+<p>
+Short versions of some of these tests are part of the test suite in
+<code>beatbox/data/tests</code>: <code>ellplane.bbs</code>, <code>ellneum.bbs</code> and <code>ellvar.bbs</code>,
+each run sequentially and with 4 MPI processes.
+</p>
 
 <!-- ========================= -->
 <h2 class="numbered">euler</h2>

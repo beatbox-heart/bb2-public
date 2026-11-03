@@ -1,0 +1,6 @@
+// As ell_coef.bbs, but without geometry: the whole grid is tissue (isotropic only).
+// The nodes 0 and n+2 are tissue, too, but are not neighbours of the device space.
+// See ell_coef.par for the arguments.
+<ell_coef.par>
+state xmax=nx+3 ymax=ifgt0(ny,ny+3,1) zmax=ifgt0(nz,nz+3,1) vmax=d0+6;
+<ell_coef.inc>

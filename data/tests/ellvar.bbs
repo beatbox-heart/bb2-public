@@ -1,0 +1,32 @@
+// Short test of the elliptic device: Dirichlet problem, isotropic, with a space-dependent
+// diffusivity given by a =~ expression (kept in layer d0 for MPI), exact solution a plane
+// wave. Output: the error and some values of the solution.
+// A small version of the kind 3 tests in ../scripts/sequential/elliptic_tests (ell_coef.par).
+def str out [1];
+def int nx 24; def int ny 24;
+def real Lbox 10.0; def real hx Lbox/nx;
+def real D0 0.7; def real va 0.3; def real bx 2*pi*0.5/Lbox; def real by 2*pi*0.3/Lbox;
+def real kx 2*pi*1.0/Lbox; def real ky 2*pi*0.6/Lbox; def real ph 0.3;
+def str ua 0; def str f 1; def str p 2; def str d 3; def str dd 4;
+state xmax=nx+3 ymax=ny+3 zmax=1 vmax=5 pgm={geom0=ge(x,1)*le(x,nx+1)*ge(y,1)*le(y,ny+1);};
+k_func name=exact pgm={
+  def real X (x-1)*hx; def real Y (y-1)*hx;
+  def real psi kx*X+ky*Y+ph;
+  def real Di D0*(1+va*sin(bx*X+by*Y));
+  def real DiX D0*va*bx*cos(bx*X+by*Y); def real DiY D0*va*by*cos(bx*X+by*Y);
+  u[ua]=sin(psi);
+  u[f]=-Di*(kx*kx+ky*ky)*sin(psi)+(DiX*kx+DiY*ky)*cos(psi);
+  u[p]=u[ua];
+};
+k_func name=zero x0=2 x1=nx y0=2 y1=ny pgm={u[p]=0;};
+elliptic x0=2 x1=nx y0=2 y1=ny v0=[f] v1=[p] D=~D0*(1+va*sin(bx*(x-1)*hx+by*(y-1)*hx)) d0=[dd] d1=[dd]
+  hx=hx tolerance=1e-10 maxiter=1 upper_level=3 FMGlevel=0 vcycles=100 preiter=2 postiter=2;
+def real Eu; def real p1; def real p2; def real p3;
+k_func name=erru x0=2 x1=nx y0=2 y1=ny pgm={u[d]=max(u[p]-u[ua],u[ua]-u[p])};
+reduce x0=2 x1=nx y0=2 y1=ny v0=[d] v1=[d] operation="max" result=Eu;
+sample x0=5 y0=7 v0=[p] result=p1;
+sample x0=13 y0=13 v0=[p] result=p2;
+sample x0=20 y0=17 v0=[p] result=p3;
+k_print nowhere=1 file=[out] append=0 valuesep="\n" list={Eu; p1; p2; p3};
+stop;
+end;

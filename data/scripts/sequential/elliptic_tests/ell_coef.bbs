@@ -1,0 +1,12 @@
+// Reference test for the elliptic device with various diffusion coefficients,
+// with Dirichlet boundary conditions and a known exact solution, a plane wave.
+// The tissue is the box of nodes 1..n+1, defined by the state's geometry program.
+// This one is anisotropic (kinds 4,5); ell_coefiso.bbs is the same isotropic
+// (kinds 1,2,3), and ell_coefng.bbs is isotropic without geometry (kind 0).
+// See ell_coef.par for the arguments.
+<ell_coef.par>
+state xmax=nx+3 ymax=ifgt0(ny,ny+3,1) zmax=ifgt0(nz,nz+3,1) vmax=d0+6 anisotropy=1 pgm={
+  geom0=ge(x,1)*le(x,nx+1)*ifgt0(ny,ge(y,1)*le(y,ny+1),1)*ifgt0(nz,ge(z,1)*le(z,nz+1),1);
+  geom1=fx; geom2=fy; geom3=fz;
+};
+<ell_coef.inc>
