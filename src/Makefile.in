@@ -142,44 +142,45 @@ am__bb2p_SOURCES_DIST = beatbox.c beatbox.h activation.c ap.c b02.c \
 	crnach_par.h crnach_step.h crnach_var.h ctlpoint.c ctlpoint.h \
 	d_dt.c d_dx.c d_dy.c device.c device.h devlist.h diff.c \
 	diff1.h diff2.h diff3.h diff1d.h diff2d.h diff3d.h \
-	diff_printweights.h displayName.h dump.c dump_types.h \
-	dynamic.c dynamic.h ecg.c elliptic.c error.c error.h euler.c \
-	extern.h fhncub.c fhnbkl.c fhncubpar.c fk.c fk.h fkmod.c \
-	fkmod.h flip.c flow2d.c front.c geometry.c geometry.h glerr.h \
-	globalfunc.c gpcell.c gpcell.h gpc_var.h grad2d.c ha.c \
-	ha_cur.h ha_par.h ha_un.h ha_var.h hh.c hh.h init.c init.h \
-	inner_bc.c ionic.h ioniclist.h kernik19.c kernik19_const.h \
-	kernik19_fddt.h kernik19_ftab.h kernik19_fun.h \
-	kernik19_ngate.h kernik19_other.h kernik19_par.h \
-	kernik19_tgate.h kernik19_tie.h k_.c k_.h k_calc.h k_code.h \
-	k_comp.c k_comp.h k_def.h k_errors.h k_exec.c k_exec.h \
-	k_expr.h k_free.h k_func.c k_poincare.c k_print.c l_abs.c \
-	l_add.c l_axpy.c l_copy.c l_max.c l_min.c l_move.c l_mult.c \
-	l_prod.c l_scal.c l_sum.c l_swap.c load.c localfunc.c \
-	localprint.c lrd.c lrd_par.h lrd_step.h lrd_var.h mchtb.c \
-	mchtb.h mchtbpar.h mchtbvar.h mouse.c mouse_init.h mouse_par.h \
-	mouse_step.h mousevent.c mousevent_init.h mousevent_par.h \
-	mousevent_step.h mpi_io_choice.h mpipaint.c mpipaint.h ms.c \
-	n62.c n62.h neum2d.c neum3d.c noble.c noble.h noblecns.h \
-	nobleft1.h nobleft2.h nobleft3.h nobleftn.c nobleftn.h \
-	nobleglb.h nobleini.h nobleloc.h noblest2.c noblest2.h \
-	noblestu.c noblestu.h noble2.c noble2.h noblen.c noblen.h \
-	noble_gbk.c nograph.h ord.c ord_par.h ord_step.h ord_init.h \
-	p2clib.c p2c.h pause.c pipe.c pipe.h poincare.c ppcpash18.c \
-	ppcpash18_fun.h ppcpash18_ngate.h ppcpash18_other.h \
-	ppcpash18_par.h ppcpash18_tgate.h ppcpash18_const.h \
-	ppcpash18_ftab.h ppcpash18_fddt.h paci18.c paci18_fun.h \
-	paci18_ngate.h paci18_other.h paci18_par.h paci18_tgate.h \
-	paci18_const.h paci18_ftab.h paci18_fddt.h paci20.c \
-	paci20_fun.h paci20_ngate.h paci20_other.h paci20_par.h \
-	paci20_tgate.h paci20_const.h paci20_ftab.h paci20_fddt.h \
-	paci20_tie.h pgmout.c ppmout.c pw_mult.c qpp.c qpp.h reduce.c \
-	regular.c rhs.h rhslist.h rk4.c rushlarsen.c sample.c scr.h \
-	screen.c screen.h singz.c sequence.c sequence.h shell.c \
-	state.c state.h stop.c system.c system.h tb.c tbpar.h tbvar.h \
-	textbuf.c textbuf.h ttnp.c ttnp_par.h ttnp_step.h ttnp_init.h \
-	ttnnp04.c ttnnp04_par.h ttnnp04_var.h ttnnp04_step.h ttp06.c \
-	ttp06_par.h ttp06_step.h ttp06_var.h ttp2006.c ttp2006_const.h \
+	diff_printweights.h diffweights.h diffweights_str.h \
+	diffweights_code.h displayName.h dump.c dump_types.h dynamic.c \
+	dynamic.h ecg.c elliptic.c error.c error.h euler.c extern.h \
+	fhncub.c fhnbkl.c fhncubpar.c fk.c fk.h fkmod.c fkmod.h flip.c \
+	flow2d.c front.c geometry.c geometry.h glerr.h globalfunc.c \
+	gpcell.c gpcell.h gpc_var.h grad2d.c ha.c ha_cur.h ha_par.h \
+	ha_un.h ha_var.h hh.c hh.h init.c init.h inner_bc.c ionic.h \
+	ioniclist.h kernik19.c kernik19_const.h kernik19_fddt.h \
+	kernik19_ftab.h kernik19_fun.h kernik19_ngate.h \
+	kernik19_other.h kernik19_par.h kernik19_tgate.h \
+	kernik19_tie.h k_.c k_.h k_calc.h k_code.h k_comp.c k_comp.h \
+	k_def.h k_errors.h k_exec.c k_exec.h k_expr.h k_free.h \
+	k_func.c k_poincare.c k_print.c l_abs.c l_add.c l_axpy.c \
+	l_copy.c l_max.c l_min.c l_move.c l_mult.c l_prod.c l_scal.c \
+	l_sum.c l_swap.c load.c localfunc.c localprint.c lrd.c \
+	lrd_par.h lrd_step.h lrd_var.h mchtb.c mchtb.h mchtbpar.h \
+	mchtbvar.h mouse.c mouse_init.h mouse_par.h mouse_step.h \
+	mousevent.c mousevent_init.h mousevent_par.h mousevent_step.h \
+	mpi_io_choice.h mpipaint.c mpipaint.h ms.c n62.c n62.h \
+	neum2d.c neum3d.c noble.c noble.h noblecns.h nobleft1.h \
+	nobleft2.h nobleft3.h nobleftn.c nobleftn.h nobleglb.h \
+	nobleini.h nobleloc.h noblest2.c noblest2.h noblestu.c \
+	noblestu.h noble2.c noble2.h noblen.c noblen.h noble_gbk.c \
+	nograph.h ord.c ord_par.h ord_step.h ord_init.h p2clib.c p2c.h \
+	pause.c pipe.c pipe.h poincare.c ppcpash18.c ppcpash18_fun.h \
+	ppcpash18_ngate.h ppcpash18_other.h ppcpash18_par.h \
+	ppcpash18_tgate.h ppcpash18_const.h ppcpash18_ftab.h \
+	ppcpash18_fddt.h paci18.c paci18_fun.h paci18_ngate.h \
+	paci18_other.h paci18_par.h paci18_tgate.h paci18_const.h \
+	paci18_ftab.h paci18_fddt.h paci20.c paci20_fun.h \
+	paci20_ngate.h paci20_other.h paci20_par.h paci20_tgate.h \
+	paci20_const.h paci20_ftab.h paci20_fddt.h paci20_tie.h \
+	pgmout.c ppmout.c pw_mult.c qpp.c qpp.h reduce.c regular.c \
+	rhs.h rhslist.h rk4.c rushlarsen.c sample.c scr.h screen.c \
+	screen.h singz.c sequence.c sequence.h shell.c state.c state.h \
+	stop.c system.c system.h tb.c tbpar.h tbvar.h textbuf.c \
+	textbuf.h ttnp.c ttnp_par.h ttnp_step.h ttnp_init.h ttnnp04.c \
+	ttnnp04_par.h ttnnp04_var.h ttnnp04_step.h ttp06.c ttp06_par.h \
+	ttp06_step.h ttp06_var.h ttp2006.c ttp2006_const.h \
 	ttp2006_fddt.h ttp2006_ftab.h ttp2006_fun.h ttp2006_ngate.h \
 	ttp2006_other.h ttp2006_par.h ttp2006_tgate.h trivial.c \
 	update.c vtkout2.c windraw.c windraw.h zeeman.c zfk.c \
@@ -737,44 +738,45 @@ common_sources = beatbox.c beatbox.h activation.c ap.c b02.c bgi.c \
 	crnach_par.h crnach_step.h crnach_var.h ctlpoint.c ctlpoint.h \
 	d_dt.c d_dx.c d_dy.c device.c device.h devlist.h diff.c \
 	diff1.h diff2.h diff3.h diff1d.h diff2d.h diff3d.h \
-	diff_printweights.h displayName.h dump.c dump_types.h \
-	dynamic.c dynamic.h ecg.c elliptic.c error.c error.h euler.c \
-	extern.h fhncub.c fhnbkl.c fhncubpar.c fk.c fk.h fkmod.c \
-	fkmod.h flip.c flow2d.c front.c geometry.c geometry.h glerr.h \
-	globalfunc.c gpcell.c gpcell.h gpc_var.h grad2d.c ha.c \
-	ha_cur.h ha_par.h ha_un.h ha_var.h hh.c hh.h init.c init.h \
-	inner_bc.c ionic.h ioniclist.h kernik19.c kernik19_const.h \
-	kernik19_fddt.h kernik19_ftab.h kernik19_fun.h \
-	kernik19_ngate.h kernik19_other.h kernik19_par.h \
-	kernik19_tgate.h kernik19_tie.h k_.c k_.h k_calc.h k_code.h \
-	k_comp.c k_comp.h k_def.h k_errors.h k_exec.c k_exec.h \
-	k_expr.h k_free.h k_func.c k_poincare.c k_print.c l_abs.c \
-	l_add.c l_axpy.c l_copy.c l_max.c l_min.c l_move.c l_mult.c \
-	l_prod.c l_scal.c l_sum.c l_swap.c load.c localfunc.c \
-	localprint.c lrd.c lrd_par.h lrd_step.h lrd_var.h mchtb.c \
-	mchtb.h mchtbpar.h mchtbvar.h mouse.c mouse_init.h mouse_par.h \
-	mouse_step.h mousevent.c mousevent_init.h mousevent_par.h \
-	mousevent_step.h mpi_io_choice.h mpipaint.c mpipaint.h ms.c \
-	n62.c n62.h neum2d.c neum3d.c noble.c noble.h noblecns.h \
-	nobleft1.h nobleft2.h nobleft3.h nobleftn.c nobleftn.h \
-	nobleglb.h nobleini.h nobleloc.h noblest2.c noblest2.h \
-	noblestu.c noblestu.h noble2.c noble2.h noblen.c noblen.h \
-	noble_gbk.c nograph.h ord.c ord_par.h ord_step.h ord_init.h \
-	p2clib.c p2c.h pause.c pipe.c pipe.h poincare.c ppcpash18.c \
-	ppcpash18_fun.h ppcpash18_ngate.h ppcpash18_other.h \
-	ppcpash18_par.h ppcpash18_tgate.h ppcpash18_const.h \
-	ppcpash18_ftab.h ppcpash18_fddt.h paci18.c paci18_fun.h \
-	paci18_ngate.h paci18_other.h paci18_par.h paci18_tgate.h \
-	paci18_const.h paci18_ftab.h paci18_fddt.h paci20.c \
-	paci20_fun.h paci20_ngate.h paci20_other.h paci20_par.h \
-	paci20_tgate.h paci20_const.h paci20_ftab.h paci20_fddt.h \
-	paci20_tie.h pgmout.c ppmout.c pw_mult.c qpp.c qpp.h reduce.c \
-	regular.c rhs.h rhslist.h rk4.c rushlarsen.c sample.c scr.h \
-	screen.c screen.h singz.c sequence.c sequence.h shell.c \
-	state.c state.h stop.c system.c system.h tb.c tbpar.h tbvar.h \
-	textbuf.c textbuf.h ttnp.c ttnp_par.h ttnp_step.h ttnp_init.h \
-	ttnnp04.c ttnnp04_par.h ttnnp04_var.h ttnnp04_step.h ttp06.c \
-	ttp06_par.h ttp06_step.h ttp06_var.h ttp2006.c ttp2006_const.h \
+	diff_printweights.h diffweights.h diffweights_str.h \
+	diffweights_code.h displayName.h dump.c dump_types.h dynamic.c \
+	dynamic.h ecg.c elliptic.c error.c error.h euler.c extern.h \
+	fhncub.c fhnbkl.c fhncubpar.c fk.c fk.h fkmod.c fkmod.h flip.c \
+	flow2d.c front.c geometry.c geometry.h glerr.h globalfunc.c \
+	gpcell.c gpcell.h gpc_var.h grad2d.c ha.c ha_cur.h ha_par.h \
+	ha_un.h ha_var.h hh.c hh.h init.c init.h inner_bc.c ionic.h \
+	ioniclist.h kernik19.c kernik19_const.h kernik19_fddt.h \
+	kernik19_ftab.h kernik19_fun.h kernik19_ngate.h \
+	kernik19_other.h kernik19_par.h kernik19_tgate.h \
+	kernik19_tie.h k_.c k_.h k_calc.h k_code.h k_comp.c k_comp.h \
+	k_def.h k_errors.h k_exec.c k_exec.h k_expr.h k_free.h \
+	k_func.c k_poincare.c k_print.c l_abs.c l_add.c l_axpy.c \
+	l_copy.c l_max.c l_min.c l_move.c l_mult.c l_prod.c l_scal.c \
+	l_sum.c l_swap.c load.c localfunc.c localprint.c lrd.c \
+	lrd_par.h lrd_step.h lrd_var.h mchtb.c mchtb.h mchtbpar.h \
+	mchtbvar.h mouse.c mouse_init.h mouse_par.h mouse_step.h \
+	mousevent.c mousevent_init.h mousevent_par.h mousevent_step.h \
+	mpi_io_choice.h mpipaint.c mpipaint.h ms.c n62.c n62.h \
+	neum2d.c neum3d.c noble.c noble.h noblecns.h nobleft1.h \
+	nobleft2.h nobleft3.h nobleftn.c nobleftn.h nobleglb.h \
+	nobleini.h nobleloc.h noblest2.c noblest2.h noblestu.c \
+	noblestu.h noble2.c noble2.h noblen.c noblen.h noble_gbk.c \
+	nograph.h ord.c ord_par.h ord_step.h ord_init.h p2clib.c p2c.h \
+	pause.c pipe.c pipe.h poincare.c ppcpash18.c ppcpash18_fun.h \
+	ppcpash18_ngate.h ppcpash18_other.h ppcpash18_par.h \
+	ppcpash18_tgate.h ppcpash18_const.h ppcpash18_ftab.h \
+	ppcpash18_fddt.h paci18.c paci18_fun.h paci18_ngate.h \
+	paci18_other.h paci18_par.h paci18_tgate.h paci18_const.h \
+	paci18_ftab.h paci18_fddt.h paci20.c paci20_fun.h \
+	paci20_ngate.h paci20_other.h paci20_par.h paci20_tgate.h \
+	paci20_const.h paci20_ftab.h paci20_fddt.h paci20_tie.h \
+	pgmout.c ppmout.c pw_mult.c qpp.c qpp.h reduce.c regular.c \
+	rhs.h rhslist.h rk4.c rushlarsen.c sample.c scr.h screen.c \
+	screen.h singz.c sequence.c sequence.h shell.c state.c state.h \
+	stop.c system.c system.h tb.c tbpar.h tbvar.h textbuf.c \
+	textbuf.h ttnp.c ttnp_par.h ttnp_step.h ttnp_init.h ttnnp04.c \
+	ttnnp04_par.h ttnnp04_var.h ttnnp04_step.h ttp06.c ttp06_par.h \
+	ttp06_step.h ttp06_var.h ttp2006.c ttp2006_const.h \
 	ttp2006_fddt.h ttp2006_ftab.h ttp2006_fun.h ttp2006_ngate.h \
 	ttp2006_other.h ttp2006_par.h ttp2006_tgate.h trivial.c \
 	update.c vtkout2.c windraw.c windraw.h zeeman.c zfk.c \
