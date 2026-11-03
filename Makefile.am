@@ -332,3 +332,12 @@ dist_tests = \
 # viz3d examples
 dist_scripts_viz3d  = \
                 $(vizdir)/ppmz.task12
+
+# Run the regression test suite in data/tests (uses the installed
+# bb2s/bb2p, so do "make install" first if the sources have changed).
+# "make check" does the same.
+.PHONY: tests
+tests:
+	$(MAKE) -C $(testdir) all
+
+check-local: tests
