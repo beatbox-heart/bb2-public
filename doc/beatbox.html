@@ -909,6 +909,43 @@ g=[v] g0=vmin g1=vmax
 b=[i] b0=0 b1=255;
 </pre>
 
+<p>
+Several string macros with consecutive integer values can be defined
+in one command, similar to <code>enum</code> in C:
+</p>
+
+<pre>
+def strenum &lt;name&gt;[=&lt;value&gt;], &lt;name&gt;[=&lt;value&gt;], ...;
+</pre>
+
+<p>
+The names are separated by commas (or blanks). The first macro gets the
+value 0 and each next one the value of the previous one plus 1. A name
+may be followed by <code>=&lt;value&gt;</code>, where <code>&lt;value&gt;</code>
+is an integer expression extending to the next comma; it sets the
+value of that macro, and the counting continues from it. For example,
+</p>
+
+<pre>
+def strenum U, V, I;           // [U] is '0', [V] is '1', [I] is '2'
+def strenum a=5, b, c=10, d;   // [a] is '5', [b] is '6', [c] is '10', [d] is '11'
+</pre>
+
+<p>
+is equivalent to
+</p>
+
+<pre>
+def str U 0; def str V 1; def str I 2;
+def str a 5; def str b 6; def str c 10; def str d 11;
+</pre>
+
+<p>
+This is a convenient way to name the layers of the grid, as
+in <code>r=[U]</code> in the example above. As with <code>def str</code>, each of
+the names must not have been declared before.
+</p>
+
 <h2 class="numbered">Defining Global Variables with the def Command</h2>
 
 <p> String macros explained above is one example of global objects
