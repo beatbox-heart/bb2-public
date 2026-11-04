@@ -1,0 +1,38 @@
+// Short test of the diffsi device: Crank-Nicolson steps of isotropic diffusion in a square
+// with zero Dirichlet borders, far beyond the forward Euler stability limit, starting from
+// two Fourier modes, which are eigenvectors of the discrete operator. Output: the error
+// vs the exact solution of the scheme (should be ~1e-10), the time discretization error,
+// and some values of the solution.
+// A small version of the tests in ../scripts/sequential/diffsi_tests (dsi_mode.bbs).
+def str out [1];
+def int n 24; def int nsteps 5; def int m 6;
+def real Lbox 10.0; def real hx Lbox/n; def real D 0.7;
+def real theta 0.5; def real ht 0.4;
+def str u 0; def str r 1; def str ud 2; def str us 3; def str e 4;
+state xmax=n+3 ymax=n+3 zmax=1 vmax=5 pgm={geom0=ge(x,1)*le(x,n+1)*ge(y,1)*le(y,n+1);};
+def real a1 pi/n; def real am m*pi/n;
+def real l1 -8*D/hx**2*sin(a1/2)**2; def real lm -8*D/hx**2*sin(am/2)**2;
+def real g1 (1+(1-theta)*ht*l1)/(1-theta*ht*l1);
+def real gm (1+(1-theta)*ht*lm)/(1-theta*ht*lm);
+def str phi1 (sin(a1*(x-1))*sin(a1*(y-1)));
+def str phim (sin(am*(x-1))*sin(am*(y-1)));
+def real begin; def real end;
+k_func name=control nowhere=1 pgm={begin=eq(t,0); end=eq(t,nsteps-1);};
+k_func name=init when=begin pgm={u[u]=[phi1]+0.5*[phim]; u[r]=0;};
+diffsi x0=2 x1=n y0=2 y1=n v0=[u] v1=[r] D=D hx=hx ht=ht theta=theta
+  tolerance=1e-10 maxiter=1 upper_level=2 FMGlevel=0 vcycles=50 preiter=2 postiter=2;
+k_func name=exact when=end pgm={
+  u[ud]=g1**(t+1)*[phi1]+0.5*gm**(t+1)*[phim];
+  u[us]=exp(l1*(t+1)*ht)*[phi1]+0.5*exp(lm*(t+1)*ht)*[phim];
+};
+def real Ed; def real Es; def real p1; def real p2; def real p3;
+k_func name=errd when=end x0=2 x1=n y0=2 y1=n pgm={u[e]=max(u[u]-u[ud],u[ud]-u[u])};
+reduce when=end x0=2 x1=n y0=2 y1=n v0=[e] v1=[e] operation="max" result=Ed;
+k_func name=errs when=end x0=2 x1=n y0=2 y1=n pgm={u[e]=max(u[u]-u[us],u[us]-u[u])};
+reduce when=end x0=2 x1=n y0=2 y1=n v0=[e] v1=[e] operation="max" result=Es;
+sample when=end x0=5 y0=7 v0=[u] result=p1;
+sample when=end x0=13 y0=13 v0=[u] result=p2;
+sample when=end x0=20 y0=17 v0=[u] result=p3;
+k_print when=end nowhere=1 file=[out] append=0 valuesep="\n" list={Ed; Es; p1; p2; p3};
+stop when=end;
+end;

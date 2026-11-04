@@ -3,8 +3,11 @@ COMMENT=${warning making $@ out of $+ because of $? :}
 else
 COMMENT=${warning } ${shell echo making "\x1B[1;31m" $@ "\x1B[0m" out of $+  because of "\033[32m" $? "\033[0m" :}
 endif
-BBXS=bb2s
-BBXP=bb2p
+# The executables of this distribution, if built, else those found in the PATH;
+# either can be overridden, e.g. make BBXS=/path/to/bb2s BBXP=/path/to/bb2p
+SRCDIR=../../src
+BBXS:=$(if $(wildcard $(SRCDIR)/bb2s),$(abspath $(SRCDIR)/bb2s),bb2s)
+BBXP:=$(if $(wildcard $(SRCDIR)/bb2p),$(abspath $(SRCDIR)/bb2p),bb2p)
 #MPIOPT:=`mpirun --version | perl -ane '$$.==1 and $$v=pop @F and $$f=substr($$v,0,1) and $$f>=3 and print("--oversubscribe");'`
 MPIOPT:=${shell mpirun --version | perl -ane '$$.==1 and $$v=pop @F and $$f=substr($$v,0,1) and $$f>=3 and print("--oversubscribe");'}
 MPIRUN:=export TMPDIR=/tmp; mpirun $(MPIOPT) -np
@@ -20,7 +23,8 @@ POSITIVE=funcs matout record reduce reduce-4 \
 	bkl3cont-0 bkl3cont-4 br0 hh52mrl \
 	ballf ballfcont-0 ballfcont-4 balldcont-0 balldcont-4 \
 	diffsub diffsub-4 diffwhere diffwhere-4 diffopen diffopen-4 diffopennl \
-	ellplane ellplane-4 ellneum ellneum-4 ellvar ellvar-4
+	ellplane ellplane-4 ellneum ellneum-4 ellvar ellvar-4 \
+	dsi dsi-4
 ALL=$(NEGATIVE) $(POSITIVE)
 all: clean closeenough admitfailure ${foreach t,$(ALL),$t.test}
 clean:
