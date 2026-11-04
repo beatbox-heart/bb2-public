@@ -6368,6 +6368,164 @@ for <code>fhn1.bbs</code>, <code>fhn2.bbs</code>, and
 
 
 <!-- ========================= -->
+<h2 class="numbered">diffsi</h2>
+
+<h3>Overview</h3>
+
+<p>
+Makes a (semi-)implicit step of diffusion, by the \(\theta\)-scheme
+\[
+  u^{n+1} - \theta\,h_t\,L u^{n+1} = u^n + (1-\theta)\,h_t\,L u^n ,
+  \qquad L u = \nabla\left(\hat{D}\nabla u\right),
+\]
+with \(\theta=1\) (backward Euler, the default) or \(\theta=1/2\) (Crank-Nicolson).
+It does the job of <code>diff</code> with <code>ht</code>&gt;0 (the forward Euler step, \(\theta=0\)), but
+without its stability limit on the time step.
+</p>
+
+<p>
+The operator \(L\) is discretized exactly as in <code>diff</code>, by the same code, with the
+same parameters, and the linear system for \(u^{n+1}\) is solved by the multigrid of
+<code>elliptic</code>, again by the same code, with the same parameters; see these devices for
+the details. The system is solved in the form
+\((I-\theta h_t L)\,u^{n+1} = u^n + (1-\theta)\,h_t\,L u^n\), so <code>tolerance</code> is the
+admitted maximal residual in the units of \(u\). The solution of the previous step is the
+initial guess. The matrix is never singular, so the parameters <code>pin</code>,
+<code>xpin</code>, <code>ypin</code>, <code>zpin</code>, <code>upin</code> of <code>elliptic</code> do not apply.
+</p>
+
+<p>
+As in <code>diff</code>, the border of the tissue is no-flux, and the border of the device space is
+no-flux if <code>isolated=1</code>, or else is connected to the tissue beyond it, whose values
+of <code>v0</code> are the Dirichlet boundary values, kept at their current values during the step.
+The default of <code>isolated</code> is the same as in <code>diff</code>. The points of the device space
+that have no connections at all are left unchanged.
+</p>
+
+<p>
+The backward Euler scheme is first order in \(h_t\), and damps all modes, however stiff;
+Crank-Nicolson is second order, but damps the stiff modes only weakly when \(h_t\) is
+large, so that they may persist as oscillations in time. The weights of \(L\) are computed
+once, at the start (there is no <code>reweight</code> as in <code>diff</code>), so the diffusivity may
+depend on space but not on time, and <code>ht</code> and <code>theta</code> are constant.
+</p>
+
+<h3>Parameters</h3>
+
+<table border="1">
+<tr>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Default</th>
+  <th>Min</th>
+  <th>Max</th>
+  <th>Description</th>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v0</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td> The diffusive field \(u\), updated in place. </td>
+</tr>
+
+<tr>
+  <td><code>int</code></td>
+  <td><code>v1</code></td>
+  <td>-</td>
+  <td><code>0</code></td>
+  <td><code>vmax-1</code></td>
+  <td> Auxiliary layer, different from <code>v0</code>; after the step it contains the
+  right-hand side of the system, \(u^n + (1-\theta)\,h_t\,L u^n\). </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>ht</code></td>
+  <td>-</td>
+  <td>&gt;<code>0</code></td>
+  <td>-</td>
+  <td> Time step. </td>
+</tr>
+
+<tr>
+  <td><code>real</code></td>
+  <td><code>theta</code></td>
+  <td><code>1</code></td>
+  <td>&gt;<code>0</code></td>
+  <td><code>1</code></td>
+  <td> Implicitness of the scheme: <code>1</code> backward Euler, <code>0.5</code> Crank-Nicolson. </td>
+</tr>
+
+<tr>
+  <td></td>
+  <td><code>D</code>, <code>Dl</code>, <code>Dt</code>, <code>manypoint</code>, <code>conservative</code>, <code>harmonic</code>,
+    <code>isolated</code>, <code>d0</code>, <code>d1</code>, <code>hx</code></td>
+  <td colspan="4"> The diffusion operator: as in <code>diff</code>, with the same defaults. </td>
+</tr>
+
+<tr>
+  <td></td>
+  <td><code>tolerance</code>, <code>maxiter</code>, <code>upper_level</code>, <code>smoother</code>, <code>alternate</code>,
+    <code>transfer</code>, <code>damping</code>, <code>delta</code>, <code>FMGlevel</code>, <code>vcycles</code>, <code>preiter</code>,
+    <code>postiter</code>, <code>coarseiter</code>, <code>coarsereduce</code>, <code>tol0</code>,..., <code>preiter0</code>,...,
+    <code>postiter0</code>,..., <code>debug</code>, <code>profile</code></td>
+  <td colspan="4"> The solver: as in <code>elliptic</code>, with the same defaults. NB
+    <code>upper_level=-1</code> by default means no multigrid, just Gauss-Seidel iterations,
+    which may be enough if <code>ht</code> is not much above the stability limit of <code>diff</code>. </td>
+</tr>
+</table>
+
+<h3>Typical Syntax</h3>
+
+<p>
+Instead of the forward Euler step by
+<pre>
+diff v0=[u] v1=[i] D=D hx=hx ht=ht;
+</pre>
+a backward Euler step with multigrid by
+<pre>
+diffsi v0=[u] v1=[i] D=D hx=hx ht=ht
+  tolerance=1e-8 maxiter=1 upper_level=3 FMGlevel=0 vcycles=50 preiter=2 postiter=2;
+</pre>
+</p>
+
+<h3>Instances of <code>diffsi</code> in Example Scripts</h3>
+
+<p>
+A set of tests of <code>diffsi</code>, which can also serve as examples of its use, is in the directory
+<pre>
+beatbox/data/scripts/sequential/diffsi_tests/
+</pre>
+The scripts are:
+<ul>
+<li><code>dsi_mode.bbs</code>: decay of two Fourier modes in a segment, square or cube, with
+  Dirichlet or no-flux border. For the isotropic 3, 5 or 7-point stencil, these are
+  eigenvectors of the discrete operator, so the exact solutions of both the
+  \(\theta\)-scheme and the semi-discrete problem are known: the difference from the
+  former is at the level of the tolerance, however large the time step, and from the
+  latter, shows the order of the scheme in \(h_t\).</li>
+<li><code>dsi_resid.bbs</code>: one step in an anisotropic medium with rotating fibres, in a box or
+  an ellipse/ellipsoid, whose result is checked by computing the residual of the
+  \(\theta\)-scheme with <code>diff</code>.</li>
+</ul>
+They are run by <code>make</code>, with the <code>Makefile</code> in that directory, in the same way as the
+tests of <code>elliptic</code>: <code>make all</code>, <code>make serial</code>, <code>make mpi</code>, a group
+<code>make mode</code>, <code>make order</code>, <code>make resid</code>, or a single test, e.g. <code>make e2d</code>
+(<code>make list</code> lists them); one test is run by the shell script <code>dsitest.sh</code>,
+whose comments explain the columns of the tables. The geometries are made by
+<code>../elliptic_tests/mkgeom.pl</code>.
+</p>
+
+<p>
+A short version of <code>dsi_mode.bbs</code> is part of the test suite in <code>beatbox/data/tests</code>:
+<code>dsi.bbs</code>, run sequentially and with 4 MPI processes.
+</p>
+
+
+<!-- ========================= -->
 <h2 class="numbered">diffstep</h2>
 
 <p> This is now obsoleted by the new <code>diff</code> device </p>
@@ -6652,6 +6810,7 @@ is the same as in <code>diff</code>, by the same code, so <code>elliptic</code> 
 operator that <code>diff</code> applies with the same parameters. The primary intended
 use is calculation of the extracellular (or intracellular) potential
 field for a given transmembrane field in the bidomain model.
+The same multigrid, by the same code, makes the implicit steps of diffusion in <code>diffsi</code>.
 </p>
 
 <p>
