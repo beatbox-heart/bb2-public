@@ -347,6 +347,43 @@ static int valid_name (char *s)
 
 
 /*
+ * "def strenum a, b=5, c;" is the same as "def str a 0; def str b 5; def str c 6;"
+ * s is the list after the word "strenum". The names are separated by commas
+ * or blanks; an optional "=expr" (an integer k-expression up to the next
+ * comma) resets the counter. Each item is passed to def(), which uses
+ * strtok(); that is why the list is scanned here by hand, not by strtok().
+ */
+static int def_strenum (char *s) {
+  char name[MAXPATH], expr[MAXPATH], cmd[2*MAXPATH+16];
+  char *p=s, *q;
+  INT value=0;
+  int n=0;
+  for (;;) {
+    p+=strspn(p,SEPARATORS",");			/* to the next name */
+    if (!*p) break;
+    q=p+strcspn(p,SEPARATORS",=");
+    if (q-p>=MAXPATH) EXPECTED_ERROR("strenum: name too long in '%s'\n",p);
+    memcpy(name,p,q-p); name[q-p]='\0';
+    p=q+strspn(q," \t\r\n");
+    if (*p=='=') {				/* explicit value */
+      p++;
+      q=p+strcspn(p,",");
+      if (q-p>=MAXPATH) EXPECTED_ERROR("strenum: expression too long in '%s'\n",p);
+      memcpy(expr,p,q-p); expr[q-p]='\0';
+      if (!calc(&value,t_int,expr))
+	EXPECTED_ERROR("strenum: cannot interpret value '%s' of %s\n",expr,name);
+      p=q;
+    }
+    snprintf(cmd,sizeof(cmd),"str %s %ld",name,(long)value);
+    if (!def(cmd)) return 0;
+    value++;
+    n++;
+  }
+  if (!n) EXPECTED_ERROR("strenum: no names given\n");
+  return 1;
+}
+
+/*
  * Defines a k_variable
  */
 /* TODO: this function allocates memory (newvar)             */
@@ -355,6 +392,9 @@ int def (char *s) {
   char *typename, *parname, *expr, tabname[MAXPATH+2];
   p_vb newvar=NULL;
   int restype, flag;
+  s+=strspn(s,SEPARATORS);
+  if (0==strncmp(s,"strenum",7) && (s[7]=='\0' || strchr(SEPARATORS,s[7])))
+    return def_strenum(s+7);
   typename = strtok(s, SEPARATORS);
   parname  = strtok(NULL, SEPARATORS"=");
   expr     = strtok(NULL, "" /*SEPARATORS*/);
@@ -423,6 +463,7 @@ int def_local(char *s, p_tb table){
   else if (0==strcmp(typename,"double")) restype=t_real;
   else if (0==strcmp(typename,"real"))   restype=t_real;
   else if (0==strcmp(typename,"str"))   EXPECTED_ERROR("String macros cannot be defined as local variables.\n")
+  else if (0==strcmp(typename,"strenum")) EXPECTED_ERROR("String macros cannot be defined as local variables.\n")
   else EXPECTED_ERROR("unknown type %s",typename)
   
   strcpy(tabname,parname);
