@@ -67,7 +67,7 @@ RUN_HEAD(k_func)
   DEVICE_CONST(FILE *,debug)
   DEVICE_CONST(p_tb, loctb)
   SPACE_CONST(int,restricted)
-  int ix, iy, iz, iv, ip, ip1, icode, n, touchPoint;
+  int ix, iy, iz, iv, ip, ip1, icode, n, touchPoint, inWhere;
   double p, q;
 
   /* DEBUG("enter\n"); */
@@ -86,7 +86,10 @@ RUN_HEAD(k_func)
 	  fflush(debug);
 	}
 		
-	touchPoint = !s.nowhere && (restricted==0 || isTissue(ix,iy,iz));
+	/* The points excluded by where= are treated as the void points: not updated.  */
+	/* NB the where-code uses the fields of the device's own Space, not of its copy s */
+	inWhere = s.nowhere || s.wherecode==NULL || in_space(&(dev[idev].s),ix,iy,iz);
+	touchPoint = !s.nowhere && (restricted==0 || isTissue(ix,iy,iz)) && inWhere;
 	/* No need to maintain local values if running nowhere. */
 	if(touchPoint) memcpy(S->u,New+ind(ix,iy,iz,0),vmax*sizeof(real));
 	if(!s.nowhere && geom_vmax) memcpy(S->geom,Geom+geom_ind(ix,iy,iz,0),geom_vmax*sizeof(real));
@@ -135,7 +138,7 @@ RUN_HEAD(k_func)
 	}
 	
 	if(touchPoint) memcpy(New+ind(ix,iy,iz,0),S->u,vmax*sizeof(real));
-	if(!s.nowhere && geom_vmax) memcpy(Geom+geom_ind(ix,iy,iz,0),S->geom,geom_vmax*sizeof(real));
+	if(!s.nowhere && geom_vmax && inWhere) memcpy(Geom+geom_ind(ix,iy,iz,0),S->geom,geom_vmax*sizeof(real));
       } /* for ix */
     } /* for iy */
   } /* for iz */

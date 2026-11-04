@@ -72,6 +72,7 @@ common_sources = \
 	devlist.h \
 	diff.c diff1.h diff2.h diff3.h diff1d.h diff2d.h diff3d.h diff_printweights.h \
 	diffweights.h diffweights_str.h diffweights_code.h \
+	diffsi.c \
 	displayName.h \
 	dump.c \
 	dump_types.h \
@@ -137,6 +138,7 @@ common_sources = \
 	mpi_io_choice.h \
 	mpipaint.c mpipaint.h \
 	ms.c \
+	multigrid.h multigrid_str.h multigrid_code.h \
 	n62.c n62.h \
 	neum2d.c \
 	neum3d.c \
